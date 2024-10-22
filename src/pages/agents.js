@@ -11,6 +11,10 @@ import {
   TagLabel,
   Icon,
   Button,
+  Input,
+  Textarea,
+  FormControl,
+  FormErrorMessage,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
@@ -18,14 +22,24 @@ import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
 import { FiCalendar } from 'react-icons/fi'
 
-function ViewAgents() {
+function Agents() {
   const [agents, setAgents] = useState([])
   const [selectedAgent, setSelectedAgent] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [recentBackroomConversations, setRecentBackroomConversations] =
     useState([])
   const [backroomTags, setBackroomTags] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [editMode, setEditMode] = useState(false)
+  const [errors, setErrors] = useState({})
+
   const router = useRouter()
+
+  // Input state for editing agent details
+  const [agentName, setAgentName] = useState('')
+  const [traits, setTraits] = useState('')
+  const [focus, setFocus] = useState('')
+
+  // Fetch agents
   const fetchAgents = async () => {
     try {
       const response = await fetch('/api/agents')
@@ -37,6 +51,7 @@ function ViewAgents() {
       setLoading(false)
     }
   }
+
   useEffect(() => {
     fetchAgents()
   }, [])
@@ -45,6 +60,13 @@ function ViewAgents() {
     const agentId = event.target.value
     const agent = agents.find(agent => agent._id === agentId)
     setSelectedAgent(agent)
+
+    // Pre-fill the edit form
+    setAgentName(agent.name)
+    setTraits(agent.traits)
+    setFocus(agent.focus)
+
+    setEditMode(false) // Initially show agent details, not edit mode
 
     // Fetch recent backroom conversations related to this agent
     try {
@@ -66,6 +88,62 @@ function ViewAgents() {
       setBackroomTags(Array.from(new Set(tagsFromConversations))) // Remove duplicate tags
     } catch (error) {
       console.error('Error fetching recent backroom conversations:', error)
+    }
+  }
+
+  const handleEditClick = () => {
+    setEditMode(true)
+  }
+
+  const handleValidation = () => {
+    let valid = true
+    let errors = {}
+
+    if (!agentName) {
+      errors.agentName = 'Agent Name is required'
+      valid = false
+    }
+    if (!traits) {
+      errors.traits = 'Traits are required'
+      valid = false
+    }
+    if (!focus) {
+      errors.focus = 'Focus is required'
+      valid = false
+    }
+
+    setErrors(errors)
+    return valid
+  }
+
+  const handleUpdateAgent = async () => {
+    if (!handleValidation()) return
+
+    try {
+      const response = await fetch(`/api/agents`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: agentName,
+          traits,
+          focus,
+          id: selectedAgent._id,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update agent')
+      }
+      await fetchAgents()
+      // Manually update selectedAgent with updated values
+      const updatedAgent = { ...selectedAgent, name: agentName, traits, focus }
+      setSelectedAgent(updatedAgent) // Update selectedAgent with the new values
+
+      setEditMode(false) // Exit edit mode
+    } catch (error) {
+      console.error('Error updating agent:', error)
     }
   }
 
@@ -134,7 +212,7 @@ function ViewAgents() {
             </Heading>
             <Button
               colorScheme="blue"
-              onClick={() => router.push('/create-agent')} // Redirect to create a backroom page
+              onClick={() => router.push('/create-agent')} // Redirect to create an agent page
               size="md"
               fontWeight="bold"
             >
@@ -160,8 +238,8 @@ function ViewAgents() {
             </Select>
           </Flex>
 
-          {/* Display agent details */}
-          {selectedAgent && (
+          {/* Display agent details or edit form */}
+          {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch">
               {/* Top Box with Agent Info */}
               <Box
@@ -253,14 +331,10 @@ function ViewAgents() {
                       </Box>
                     </Box>
                   </Box>
-                  <Box minWidth="120px" textAlign="right">
-                    <Flex alignItems="center" justifyContent="flex-end">
-                      <Icon as={FiCalendar} mr={1} />
-                      <Text fontSize="sm" color="#7f8c8d" whiteSpace="nowrap">
-                        Created: {new Date().toLocaleDateString()}
-                      </Text>
-                    </Flex>
-                  </Box>
+                  {/* Edit button */}
+                  <Button colorScheme="blue" onClick={handleEditClick} mt={4}>
+                    Edit
+                  </Button>
                 </Flex>
               </Box>
 
@@ -296,6 +370,123 @@ function ViewAgents() {
               </Box>
             </VStack>
           )}
+          {/* Edit Agent Form */}
+          {selectedAgent && editMode && (
+            <VStack spacing={6} align="stretch">
+              <Box
+                p={4}
+                bg="#ffffff"
+                borderRadius="lg"
+                border="2px solid #ecf0f1"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+              >
+                <Heading fontSize="2xl" color="#2980b9" mb={4}>
+                  Edit Agent Details
+                </Heading>
+
+                {/* Agent Name */}
+                <FormControl isInvalid={errors.agentName}>
+                  <Flex alignItems="center" mb={4}>
+                    {/* Label */}
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Agent Name:
+                    </Text>
+
+                    {/* Input */}
+                    <Input
+                      placeholder="Agent Name"
+                      value={agentName}
+                      onChange={e => setAgentName(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={errors.agentName ? 'red.500' : '#ecf0f1'}
+                      _hover={{ borderColor: '#3498db' }}
+                    />
+                  </Flex>
+                  {errors.agentName && (
+                    <FormErrorMessage>{errors.agentName}</FormErrorMessage>
+                  )}
+                </FormControl>
+
+                {/* Traits */}
+                <FormControl isInvalid={errors.traits}>
+                  <Flex alignItems="center" mb={4}>
+                    {/* Label */}
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Traits:
+                    </Text>
+
+                    {/* Textarea */}
+                    <Textarea
+                      placeholder="Traits (e.g., Friendly, Curious, Adventurous)"
+                      value={traits}
+                      onChange={e => setTraits(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={errors.traits ? 'red.500' : '#ecf0f1'}
+                      _hover={{ borderColor: '#3498db' }}
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.traits && (
+                    <FormErrorMessage>{errors.traits}</FormErrorMessage>
+                  )}
+                </FormControl>
+
+                {/* Focus */}
+                <FormControl isInvalid={errors.focus}>
+                  <Flex alignItems="center" mb={4}>
+                    {/* Label */}
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Focus:
+                    </Text>
+
+                    {/* Textarea */}
+                    <Textarea
+                      placeholder="Focus (e.g., AI Ethics, Cryptocurrency, Exploration)"
+                      value={focus}
+                      onChange={e => setFocus(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={errors.focus ? 'red.500' : '#ecf0f1'}
+                      _hover={{ borderColor: '#3498db' }}
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.focus && (
+                    <FormErrorMessage>{errors.focus}</FormErrorMessage>
+                  )}
+                  <Flex justifyContent="flex-end" mt={4}>
+                    <Button
+                      colorScheme="blue"
+                      onClick={handleUpdateAgent}
+                      mt={4}
+                    >
+                      Update Agent
+                    </Button>
+                  </Flex>
+                </FormControl>
+              </Box>
+            </VStack>
+          )}
 
           {loading && (
             <Flex justifyContent="center" mt={4}>
@@ -308,4 +499,4 @@ function ViewAgents() {
   )
 }
 
-export default withMetaMaskCheck(ViewAgents)
+export default withMetaMaskCheck(Agents)

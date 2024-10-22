@@ -36,8 +36,36 @@ export default async function handler(req, res) {
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch agents' })
     }
+  } else if (req.method === 'PUT') {
+    // Handle agent update logic
+    try {
+      const { name, traits, focus, id } = req.body
+
+      // Check if all required fields are provided
+      if (!id || !name || !traits || !focus) {
+        return res
+          .status(400)
+          .json({ error: 'All fields are required: id, name, traits, focus' })
+      }
+
+      // Find the agent by ID and update it
+      const updatedAgent = await Agent.findByIdAndUpdate(
+        id,
+        { name, traits, focus },
+        { new: true } // This returns the updated document
+      )
+
+      // If agent not found, return an error
+      if (!updatedAgent) {
+        return res.status(404).json({ error: 'Agent not found' })
+      }
+
+      res.status(200).json(updatedAgent)
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update agent' })
+    }
   } else {
-    res.setHeader('Allow', ['POST', 'GET'])
+    res.setHeader('Allow', ['POST', 'GET', 'PUT'])
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
