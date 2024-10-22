@@ -72,25 +72,46 @@ export default async function handler(req, res) {
         Traits: ${explorer.traits}
         Focus: ${explorer.focus}
         
-        Based on the following conversation, provide a new updated description for the agent, incorporating any new learnings or evolution from the discussion:
+        Based on the following conversation, provide a new updated description for the agent.
+        
+        Please include:
+        1. Evolution: Describe how the agent has evolved from the conversation.
+        2. Traits: Summarize any changes or new traits for the agent.
 
+        Conversation:
         ${conversationResponse.choices[0].message.content}
       `;
 
       const recapResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'You are summarizing the evolution of an agent based on a conversation.' },
+          { role: 'system', content: 'You are summarizing the evolution and traits of an agent based on a conversation.' },
           { role: 'user', content: recapPrompt }
         ],
         max_tokens: 500,
         temperature: 0.7,
       });
 
-      // Evolve Agent
-      explorer.traits = `${explorerDescription}\n\nRecap: ${recapResponse.choices[0].message.content}`;
-      await explorer.save();
+      const recapContent = recapResponse.choices[0].message.content;
 
+      // Extract Evolution and Traits from the recap response using regex
+      const evolutionRegex = /Evolution:\s*([\s\S]*?)(Traits:|$)/i;
+      const traitsRegex = /Traits:\s*([\s\S]*)$/i;
+
+      const evolutionMatch = recapContent.match(evolutionRegex);
+      const traitsMatch = recapContent.match(traitsRegex);
+
+      const evolution = evolutionMatch ? evolutionMatch[1].trim() : 'No evolution found.';
+      const traits = traitsMatch ? traitsMatch[1].trim() : 'No traits found.';
+
+      // Update Agent with Description, Evolution, and Traits
+      explorer.traits = `
+        Description: ${explorerDescription.trim()}\n\n
+        Evolution: ${evolution}\n\n
+        Traits: ${traits}
+      `.trim();
+      
+      await explorer.save();
 
       res.status(201).json(newBackroom);
     } catch (error) {

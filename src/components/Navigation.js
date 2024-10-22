@@ -37,6 +37,9 @@ function Navigation() {
           <Link onClick={() => router.push('/backrooms')} fontFamily="Arial, sans-serif" _hover={{ color: '#3498db' }}>
             Backrooms
           </Link>
+          <Link onClick={() => router.push('/agents')} fontFamily="Arial, sans-serif" _hover={{ color: '#3498db' }}>
+              Agents
+            </Link>
           <Link onClick={() => router.push('/create-agent')} fontFamily="Arial, sans-serif" _hover={{ color: '#3498db' }}>
             Create Agent
           </Link>
@@ -81,6 +84,9 @@ function Navigation() {
           <VStack spacing={4} align="stretch" px={4}>
             <Link onClick={() => router.push('/backrooms')} fontFamily="Arial, sans-serif" _hover={{ color: '#3498db' }}>
               Backrooms
+            </Link>
+            <Link onClick={() => router.push('/agents')} fontFamily="Arial, sans-serif" _hover={{ color: '#3498db' }}>
+              Agents
             </Link>
             <Link onClick={() => router.push('/create-agent')} fontFamily="Arial, sans-serif" _hover={{ color: '#3498db' }}>
               Create Agent

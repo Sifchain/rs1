@@ -5,31 +5,47 @@ import withMetaMaskCheck from '../components/withMetaMaskCheck';
 import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 
+// Helper function to extract agent focus directly from agent object
+const getAgentFocus = (agents, agentName) => {
+  const agent = agents.find(agent => agent.name === agentName);
+  return agent ? agent.focus : 'Unknown';
+};
 
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([]);
+  const [agents, setAgents] = useState([]); // Store agents here
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState('All');
+  const [selectedFocus, setSelectedFocus] = useState('All');
   const [expandedIndex, setExpandedIndex] = useState(null);
   const toast = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    const fetchBackrooms = async () => {
+    const fetchBackroomsAndAgents = async () => {
       try {
-        const response = await fetch('/api/backrooms');
-        if (!response.ok) {
+        // Fetch agents first
+        const agentsResponse = await fetch('/api/agents');
+        if (!agentsResponse.ok) {
+          throw new Error('Failed to fetch agents');
+        }
+        const agentsData = await agentsResponse.json();
+        setAgents(agentsData);
+
+        // Fetch backrooms
+        const backroomsResponse = await fetch('/api/backrooms');
+        if (!backroomsResponse.ok) {
           throw new Error('Failed to fetch backrooms');
         }
-        const data = await response.json();
-        setBackrooms(data);
+        const backroomsData = await backroomsResponse.json();
+        setBackrooms(backroomsData);
       } catch (error) {
         console.log(error);
       } finally {
         setLoading(false);
       }
     };
-    fetchBackrooms();
+    fetchBackroomsAndAgents();
   }, [toast]);
 
   useEffect(() => {
@@ -49,8 +65,12 @@ function Backrooms() {
 
   const filteredBackrooms = backrooms.filter((backroom) => {
     if (selectedAgent !== 'All' && backroom.agentName !== selectedAgent) return false;
+    if (selectedFocus !== 'All' && getAgentFocus(agents, backroom.agentName) !== selectedFocus) return false;
     return true;
   });
+
+  // Collect all unique focuses from agents
+  const uniqueFocuses = Array.from(new Set(agents.map((agent) => agent.focus)));
 
   if (loading) {
     return (
@@ -83,6 +103,7 @@ function Backrooms() {
           </Heading>
 
           <Stack direction={{ base: 'column', md: 'row' }} spacing={4} mb={8} alignItems="center" justifyContent="center">
+            {/* Select by agent */}
             <Select
               placeholder="Select Agent"
               value={selectedAgent}
@@ -97,6 +118,25 @@ function Backrooms() {
               {Array.from(new Set(backrooms.map((backroom) => backroom.agentName))).map((agent, index) => (
                 <option key={index} value={agent}>
                   {agent}
+                </option>
+              ))}
+            </Select>
+
+            {/* New Select by focus */}
+            <Select
+              placeholder="Select Focus"
+              value={selectedFocus}
+              onChange={(e) => setSelectedFocus(e.target.value)}
+              maxW="300px"
+              bg="#ffffff"
+              color="#34495e"
+              border="2px solid #ecf0f1"
+              _hover={{ borderColor: '#3498db' }}
+            >
+              <option value="All">All Focuses</option>
+              {uniqueFocuses.map((focus, index) => (
+                <option key={index} value={focus}>
+                  {focus}
                 </option>
               ))}
             </Select>

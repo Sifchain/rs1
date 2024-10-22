@@ -16,20 +16,14 @@ function CreateBackroom() {
   const [errors, setErrors] = useState({});
   const router = useRouter();
 
-  const defaultAgents = [
-    { _id: 'default1', name: 'Terminal of Truth', traits: 'Honest, Direct, Inquisitive', focus: 'Provide factual answers and clarify misconceptions' },
-    { _id: 'default2', name: 'Knowledge Keeper', traits: 'Wise, Calm, Patient', focus: 'Share insights and wisdom on diverse topics' },
-    { _id: 'default3', name: 'Innovative Explorer', traits: 'Creative, Enthusiastic, Visionary', focus: 'Explore new ideas and brainstorm solutions' }
-  ];
-
   useEffect(() => {
     const fetchAgents = async () => {
       try {
         const response = await fetch('/api/agents');
         const data = await response.json();
-        setAgents([...data, ...defaultAgents]);
+        setAgents([...data]);
       } catch (error) {
-        setAgents(defaultAgents); // Fallback to default agents in case of error
+        setAgents([]); // Fallback to default agents in case of error
       }
     };
     fetchAgents();
