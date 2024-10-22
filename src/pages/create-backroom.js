@@ -28,13 +28,14 @@ function CreateBackroom() {
   const [terminalAgent, setTerminalAgent] = useState("Terminal of Truth");
   const [terminalDescription, setTerminalDescription] = useState("");
   const [agents, setAgents] = useState([]);
-  const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null); // Holds explorer agent details
-  const [selectedTerminalInfo, setSelectedTerminalInfo] = useState(null); // Holds terminal agent details
+  const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null);
+  const [selectedTerminalInfo, setSelectedTerminalInfo] = useState(null);
   const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const router = useRouter();
 
+  // Fetch agents once the component mounts
   useEffect(() => {
     const fetchAgents = async () => {
       try {
@@ -49,11 +50,18 @@ function CreateBackroom() {
   }, []);
 
   useEffect(() => {
-    const { agent } = router.query;
+    const { agent, agentId } = router.query;
 
     if (agent && agents.length > 0) {
+      // Select explorer by name
       const selectedExplorer = agents.find((ag) => ag.name === agent);
       setExplorerAgent(agent);
+      setSelectedExplorerInfo(selectedExplorer);
+      setSelectedExplorerEvolutions(selectedExplorer?.evolutions || []);
+    } else if (agentId && agents.length > 0) {
+      // Select explorer by id
+      const selectedExplorer = agents.find((ag) => ag._id === agentId);
+      setExplorerAgent(selectedExplorer?.name || "");
       setSelectedExplorerInfo(selectedExplorer);
       setSelectedExplorerEvolutions(selectedExplorer?.evolutions || []);
     }

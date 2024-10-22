@@ -10,6 +10,7 @@ import {
     Tag,
     TagLabel,
     Icon,
+    Link
   } from "@chakra-ui/react";
   import { useState, useEffect } from "react";
   import Navigation from "../components/Navigation";
@@ -263,8 +264,28 @@ import {
                   <Divider mb={4} />
                   {displayRecentBackrooms()}
                 </Box>
+
+                {/* Display Tweets */}
+                <Box mt={10}>
+                    <Heading size="lg" mb={4}>
+                        Tweets
+                    </Heading>
+                    {selectedAgent.tweets && selectedAgent.tweets.length > 0 ? (
+                        selectedAgent.tweets.map((tweetUrl, index) => (
+                        <Box key={index} mb={3}>
+                            <Link href={tweetUrl} isExternal color="blue.500">
+                            {tweetUrl}
+                            </Link>
+                        </Box>
+                        ))
+                    ) : (
+                        <Text>No tweets yet.</Text>
+                    )}
+                </Box>
               </VStack>
             )}
+
+            
   
             {loading && (
               <Flex justifyContent="center" mt={4}>
