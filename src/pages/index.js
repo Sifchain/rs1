@@ -1,22 +1,22 @@
-import { useEffect } from "react";
-import { useRouter } from "next/router";
-import { useAccount, useConnect } from "../hooks/useMetaMask";
-import { Box, Button, Flex, Heading, ChakraProvider } from "@chakra-ui/react";
-import Navigation from "../components/Navigation";
-import SEO from "../components/SEO";
-import withMetaMaskCheck from "../components/withMetaMaskCheck";
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { useAccount, useConnect } from '../hooks/useMetaMask'
+import { Box, Button, Flex, Heading, ChakraProvider } from '@chakra-ui/react'
+import Navigation from '../components/Navigation'
+import SEO from '../components/SEO'
+import withMetaMaskCheck from '../components/withMetaMaskCheck'
 
 function Home() {
-  const { isConnected } = useAccount();
-  const connect = useConnect();
-  const router = useRouter();
+  const { isConnected } = useAccount()
+  const connect = useConnect()
+  const router = useRouter()
 
   // If connected, redirect to backrooms
   useEffect(() => {
     if (isConnected) {
-      router.push("/backrooms");
+      router.push('/backrooms')
     }
-  }, [isConnected, router]);
+  }, [isConnected, router])
 
   if (!isConnected) {
     return (
@@ -42,7 +42,7 @@ function Home() {
             <Box>
               <Heading
                 mb={6}
-                fontSize={{ base: "4xl", md: "6xl" }}
+                fontSize={{ base: '4xl', md: '6xl' }}
                 color="#2c3e50"
                 fontFamily="Arial, sans-serif"
               >
@@ -53,7 +53,7 @@ function Home() {
                 colorScheme="blue"
                 variant="solid"
                 size="lg"
-                _hover={{ bg: "#2980b9", boxShadow: "0 0 15px #2980b9" }}
+                _hover={{ bg: '#2980b9', boxShadow: '0 0 15px #2980b9' }}
                 fontFamily="Arial, sans-serif"
               >
                 Connect Wallet to Enter
@@ -62,10 +62,10 @@ function Home() {
           </Flex>
         </Box>
       </ChakraProvider>
-    );
+    )
   }
 
-  return null; // Return nothing if connected (as useEffect will redirect to /backrooms)
+  return null // Return nothing if connected (as useEffect will redirect to /backrooms)
 }
 
-export default withMetaMaskCheck(Home);
+export default withMetaMaskCheck(Home)

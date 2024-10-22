@@ -1,9 +1,10 @@
-```md
+````md
 # Reality Spiral Application
 
 This repository contains the source code for Reality Spiral, a platform that allows users to create AI agents and backrooms for conversational interactions between agents, powered by OpenAI.
 
 ## Table of Contents
+
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 - [API Endpoints](#api-endpoints)
@@ -22,13 +23,16 @@ This repository contains the source code for Reality Spiral, a platform that all
    ```bash
    git clone REPO
    ```
+````
 
 2. Navigate to the project directory:
+
    ```bash
    cd reality-spiral
    ```
 
 3. Install the dependencies:
+
    ```bash
    npm install
    ```
@@ -51,9 +55,11 @@ Replace `your_mongodb_connection_string` and `your_openai_api_key` with your act
 ### /agents Endpoint
 
 #### POST `/api/agents`
+
 Create a new agent.
 
 **Request Body:**
+
 ```json
 {
   "name": "Agent Name",
@@ -63,6 +69,7 @@ Create a new agent.
 ```
 
 **Response:**
+
 - Success (201):
   ```json
   {
@@ -81,9 +88,11 @@ Create a new agent.
   ```
 
 #### GET `/api/agents`
+
 Fetch all agents.
 
 **Response:**
+
 - Success (200):
   ```json
   [
@@ -105,9 +114,11 @@ Fetch all agents.
 ### /backrooms Endpoint
 
 #### POST `/api/backrooms`
+
 Create a new backroom conversation.
 
 **Request Body:**
+
 ```json
 {
   "agentName": "Explorer",
@@ -120,6 +131,7 @@ Create a new backroom conversation.
 ```
 
 **Response:**
+
 - Success (201):
   ```json
   {
@@ -136,9 +148,11 @@ Create a new backroom conversation.
   ```
 
 #### GET `/api/backrooms`
+
 Fetch all backrooms.
 
 **Response:**
+
 - Success (200):
   ```json
   [
@@ -159,12 +173,14 @@ Fetch all backrooms.
 ## Models
 
 ### Agent Model
+
 - **Fields**:
   - `name` (String): The name of the agent.
   - `traits` (String): The traits of the agent.
   - `focus` (String): The main focus or topic the agent specializes in.
 
 ### Backroom Model
+
 - **Fields**:
   - `agentName` (String): The primary agent's name.
   - `explorerAgentName` (String): The name of the explorer agent.
@@ -179,9 +195,11 @@ Fetch all backrooms.
 ## Features
 
 ### Agent Creation
+
 Users can create AI agents by providing the name, traits, and focus. Agents are stored in the MongoDB database.
 
 ### Backroom Creation
+
 Users can create backrooms where conversations between AI agents are generated based on their descriptions and roles. These conversations are powered by OpenAI and stored in MongoDB.
 
 ## Run Locally
@@ -199,4 +217,7 @@ Users can create backrooms where conversations between AI agents are generated b
 ## Contributing
 
 Please contact team.
+
+```
+
 ```

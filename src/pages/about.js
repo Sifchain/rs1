@@ -5,24 +5,24 @@ import {
   Flex,
   Button,
   Text,
-} from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import Navigation from "../components/Navigation";
-import { useAccount, useConnect } from "../hooks/useMetaMask";
-import { useRouter } from "next/router";
-import SEO from "../components/SEO";
-import withMetaMaskCheck from "../components/withMetaMaskCheck";
+} from '@chakra-ui/react'
+import { useEffect, useState } from 'react'
+import Navigation from '../components/Navigation'
+import { useAccount, useConnect } from '../hooks/useMetaMask'
+import { useRouter } from 'next/router'
+import SEO from '../components/SEO'
+import withMetaMaskCheck from '../components/withMetaMaskCheck'
 
 function About() {
-  const { address, isConnected } = useAccount();
-  const connect = useConnect();
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const { address, isConnected } = useAccount()
+  const connect = useConnect()
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setLoading(false), 500)
+    return () => clearTimeout(timer)
+  }, [])
 
   if (loading) {
     return (
@@ -45,7 +45,7 @@ function About() {
           </Flex>
         </Box>
       </ChakraProvider>
-    );
+    )
   }
 
   return (
@@ -72,7 +72,7 @@ function About() {
           <Box>
             <Heading
               mb={6}
-              fontSize={{ base: "4xl", md: "6xl" }}
+              fontSize={{ base: '4xl', md: '6xl' }}
               color="#2c3e50"
               fontFamily="Arial, sans-serif"
             >
@@ -80,7 +80,7 @@ function About() {
             </Heading>
             <Text
               mb={8}
-              fontSize={{ base: "lg", md: "2xl" }}
+              fontSize={{ base: 'lg', md: '2xl' }}
               fontFamily="Arial, sans-serif"
               maxWidth="600px"
               color="#2c3e50"
@@ -96,18 +96,18 @@ function About() {
                 colorScheme="blue"
                 variant="solid"
                 size="lg"
-                _hover={{ bg: "#2980b9", boxShadow: "0 0 15px #2980b9" }}
+                _hover={{ bg: '#2980b9', boxShadow: '0 0 15px #2980b9' }}
                 fontFamily="Arial, sans-serif"
               >
                 Connect Wallet to Enter
               </Button>
             ) : (
               <Button
-                onClick={() => router.push("/backrooms")}
+                onClick={() => router.push('/backrooms')}
                 colorScheme="green"
                 variant="solid"
                 size="lg"
-                _hover={{ bg: "#27ae60", boxShadow: "0 0 15px #27ae60" }}
+                _hover={{ bg: '#27ae60', boxShadow: '0 0 15px #27ae60' }}
                 fontFamily="Arial, sans-serif"
               >
                 Explore Backrooms
@@ -126,7 +126,7 @@ function About() {
         </Box>
       </Box>
     </ChakraProvider>
-  );
+  )
 }
 
-export default withMetaMaskCheck(About);
+export default withMetaMaskCheck(About)
