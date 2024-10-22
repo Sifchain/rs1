@@ -12,22 +12,26 @@ import {
   TagLabel,
   Button,
   Collapse,
+  IconButton,
+  Tooltip,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/Navigation';
 import SEO from '../components/SEO';
+import { FiShare2, FiClipboard } from 'react-icons/fi';
 
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedIndex, setExpandedIndex] = useState(null);  // This tracks which conversation is expanded
+  const [expandedIndex, setExpandedIndex] = useState(null); // This tracks which conversation is expanded
   const [tags, setTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const router = useRouter();
-  const { expanded } = router.query; // Get 'expanded' parameter from the URL
+  const { expanded, tags: queryTags } = router.query; // Get 'expanded' and 'tags' parameters from the URL
 
   useEffect(() => {
     const fetchBackrooms = async () => {
@@ -36,10 +40,8 @@ function Backrooms() {
         const data = await response.json();
         setBackrooms(data);
 
-        // Extract unique tags for filtering
-        const uniqueTags = Array.from(
-          new Set(data.flatMap((backroom) => backroom.tags || []))
-        );
+        // Extract unique tags for filtering and keep the # for display purposes
+        const uniqueTags = Array.from(new Set(data.flatMap((backroom) => backroom.tags || [])));
         setTags(uniqueTags);
 
         // If 'expanded' is present in the URL, find the matching backroom
@@ -49,6 +51,12 @@ function Backrooms() {
             setExpandedIndex(index); // Set the matching backroom to be expanded
           }
         }
+
+        // If 'tags' are present in the URL, set them as selected tags for filtering
+        if (queryTags) {
+          const queryTagArray = queryTags.split(',').map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
+          setSelectedTags(queryTagArray);
+        }
       } catch (error) {
         console.error('Error fetching backrooms:', error);
       } finally {
@@ -57,17 +65,51 @@ function Backrooms() {
     };
 
     fetchBackrooms();
-  }, [expanded]);
+  }, [expanded, queryTags]);
+
+  const handleTagSelection = (tag) => {
+    let updatedTags = [...selectedTags];
+    if (updatedTags.includes(tag)) {
+      updatedTags = updatedTags.filter((t) => t !== tag); // Remove tag if already selected
+    } else {
+      updatedTags.push(tag); // Add tag if not selected
+    }
+    setSelectedTags(updatedTags);
+
+    // Update the URL with the new tags selection
+    const tagQueryString = updatedTags.map((tag) => tag.replace('#', '')).join(',');
+    router.push(`/backrooms?tags=${tagQueryString}`);
+  };
 
   const filteredBackrooms = backrooms.filter((backroom) => {
-    return (
-      (selectedAgent === 'All' || backroom.agentName === selectedAgent) &&
-      (searchQuery === '' ||
-        backroom.tags.some((tag) =>
-          tag.toLowerCase().includes(searchQuery.toLowerCase())
-        ))
-    );
+    const agentMatch = selectedAgent === 'All' || backroom.agentName === selectedAgent;
+    const tagMatch =
+      selectedTags.length === 0 ||
+      selectedTags.every((tag) => backroom.tags?.includes(tag));
+    return agentMatch && tagMatch;
   });
+
+  const handleShare = (backroomId) => {
+    const shareUrl = `${window.location.origin}/backrooms?expanded=${backroomId}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'Check out this Backroom Conversation',
+        url: shareUrl,
+      }).catch(console.error);
+    } else {
+      // Fallback for older browsers
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Link copied to clipboard!');
+      });
+    }
+  };
+
+  const handleCopyToClipboard = (backroomId) => {
+    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Link copied to clipboard!');
+    });
+  };
 
   if (loading) {
     return (
@@ -130,7 +172,6 @@ function Backrooms() {
                 ))}
             </Select>
 
-
             <Input
               placeholder="Search conversations via hashtags"
               value={searchQuery}
@@ -146,8 +187,8 @@ function Backrooms() {
                 key={index}
                 m={1}
                 cursor="pointer"
-                colorScheme="blue"
-                onClick={() => setSearchQuery(tag)}
+                colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
+                onClick={() => handleTagSelection(tag)}
               >
                 <TagLabel>{tag}</TagLabel>
               </Tag>
@@ -170,30 +211,68 @@ function Backrooms() {
                       <Text fontSize="lg" fontWeight="bold" color="#2980b9">
                         {backroom.agentName} &rarr; {backroom.terminalAgentName}
                       </Text>
-                      <Text fontSize="sm" color="#7f8c8d" mb={2}>
-                        {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
-                        {new Date(backroom.createdAt).toLocaleTimeString()}
-                      </Text>
-                      <Text color="#34495e" mb={4}>
-                        {backroom.snippetContent}
-                      </Text>
-                      <Flex wrap="wrap">
-                        {backroom.tags.map((tag, index) => (
-                          <Tag size="md" key={index} m={1} colorScheme="blue">
-                            <TagLabel>{tag}</TagLabel>
-                          </Tag>
-                        ))}
-                      </Flex>
                     </Box>
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      variant="outline"
-                      onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
-                    >
-                      {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
-                    </Button>
+
+                    {/* Buttons next to the title */}
+                    <Flex>
+                      <Tooltip label="Share" hasArrow>
+                        <IconButton
+                          aria-label="Share Backroom"
+                          icon={<FiShare2 />}
+                          onClick={() => handleShare(backroom._id)}
+                          colorScheme="blue"
+                          variant="outline"
+                          size="sm"
+                          mr={2}
+                        />
+                      </Tooltip>
+                      <Tooltip label="Copy Link" hasArrow>
+                        <IconButton
+                          aria-label="Copy Link"
+                          icon={<FiClipboard />}
+                          onClick={() => handleCopyToClipboard(backroom._id)}
+                          colorScheme="blue"
+                          variant="outline"
+                          size="sm"
+                          mr={2}
+                        />
+                      </Tooltip>
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        variant="outline"
+                        onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
+                      >
+                        {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
+                      </Button>
+                    </Flex>
                   </Flex>
+
+                  {/* Snippet content moved below */}
+                  <Text fontSize="sm" color="#7f8c8d" mb={2}>
+                    {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
+                    {new Date(backroom.createdAt).toLocaleTimeString()}
+                  </Text>
+                  <Text color="#34495e" mb={4}>
+                    {backroom.snippetContent}
+                  </Text>
+                  
+                  {/* Tags are now clickable here as well */}
+                  <Flex wrap="wrap">
+                    {backroom.tags.map((tag, index) => (
+                      <Tag
+                        size="md"
+                        key={index}
+                        m={1}
+                        cursor="pointer"
+                        colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
+                        onClick={() => handleTagSelection(tag)}
+                      >
+                        <TagLabel>{tag}</TagLabel>
+                      </Tag>
+                    ))}
+                  </Flex>
+
                   <Collapse in={expandedIndex === index} animateOpacity>
                     <Box mt={4}>
                       <Text whiteSpace="pre-wrap">{backroom.content}</Text>

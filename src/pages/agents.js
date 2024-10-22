@@ -7,15 +7,24 @@ import {
     Text,
     VStack,
     Divider,
+    Tag,
+    TagLabel,
+    Icon,
   } from "@chakra-ui/react";
   import { useState, useEffect } from "react";
   import Navigation from "../components/Navigation";
   import withMetaMaskCheck from "../components/withMetaMaskCheck";
+  import { useRouter } from "next/router";
+  import { FiCalendar } from "react-icons/fi";
   
   function ViewAgents() {
     const [agents, setAgents] = useState([]);
     const [selectedAgent, setSelectedAgent] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [recentBackroomConversations, setRecentBackroomConversations] = useState([]);
+    const [backroomTags, setBackroomTags] = useState([]);
+  
+    const router = useRouter();
   
     useEffect(() => {
       const fetchAgents = async () => {
@@ -32,50 +41,82 @@ import {
       fetchAgents();
     }, []);
   
-    const handleAgentSelection = (event) => {
+    const handleAgentSelection = async (event) => {
       const agentId = event.target.value;
       const agent = agents.find((agent) => agent._id === agentId);
       setSelectedAgent(agent);
+  
+      // Fetch recent backroom conversations related to this agent
+      try {
+        const response = await fetch(`/api/backrooms?agentName=${agent.name}`);
+        const data = await response.json();
+  
+        // Filter backrooms where the agent is involved as explorer or terminal
+        const filteredConversations = data.filter(
+          (backroom) =>
+            backroom.explorerAgentName === agent.name || backroom.terminalAgentName === agent.name
+        );
+        setRecentBackroomConversations(filteredConversations);
+  
+        // Extract tags from these conversations
+        const tagsFromConversations = filteredConversations.flatMap(
+          (backroom) => backroom.tags || []
+        );
+        setBackroomTags(Array.from(new Set(tagsFromConversations))); // Remove duplicate tags
+      } catch (error) {
+        console.error("Error fetching recent backroom conversations:", error);
+      }
     };
   
-    // Extract agent description
-    const extractDescription = (description) => {
-      return description ? description.trim() : "Description not available.";
-    };
-  
-    // Extract traits directly from agent data
-    const extractTraits = (traits) => {
-      return traits ? traits.trim() : "Traits not available.";
-    };
-  
-    // Display evolutions in descending order with correct numbering
-    const displayEvolutions = (evolutions) => {
+    const displayJourney = (evolutions) => {
       if (!evolutions || evolutions.length === 0) {
-        return <Text>No evolutions recorded.</Text>;
+        return <Text>No journey updates recorded.</Text>;
       }
   
-      const evolutionsCount = evolutions.length;
+      return evolutions.map((evolution, index) => (
+        <Box key={index} mb={4}>
+          <Text fontWeight="bold" color="#2980b9">
+            Conversation with {selectedAgent.name}
+          </Text>
+          <Text fontFamily="'Arial', sans-serif" color="#34495e">
+            {evolution}
+          </Text>
+        </Box>
+      ));
+    };
   
-      return evolutions
-        .slice()
-        .reverse() // Reverse the array to show the latest first
-        .map((evolution, index) => (
-          <Box
-            key={index}
-            bg="#f7f9fb"
-            p={4}
-            borderRadius="md"
-            boxShadow="0 0 10px rgba(0, 0, 0, 0.05)"
-            mb={4}
-          >
-            <Text fontWeight="bold" color="#2980b9" mb={2}>
-              Evolution {evolutionsCount - index} {/* Display numbers starting from the highest */}
-            </Text>
-            <Text fontFamily="'Arial', sans-serif" color="#34495e">
-              {evolution}
-            </Text>
-          </Box>
-        ));
+    const displayRecentBackrooms = () => {
+      if (recentBackroomConversations.length === 0) {
+        return <Text>No recent backroom conversations available.</Text>;
+      }
+  
+      return recentBackroomConversations.map((backroom, index) => (
+        <Flex
+          key={index}
+          justifyContent="space-between"
+          alignItems="center"
+          p={3}
+          bg="white"
+          borderRadius="md"
+          boxShadow="0 0 10px rgba(0, 0, 0, 0.05)"
+          mb={3}
+          cursor="pointer"
+          onClick={() => router.push(`/backrooms?expanded=${backroom._id}`)}
+        >
+          <Text>
+            Conversation with {backroom.terminalAgentName || "Unknown"}
+          </Text>
+          <Text fontSize="sm" color="#7f8c8d">
+            {new Date(backroom.createdAt).toLocaleDateString()}
+          </Text>
+        </Flex>
+      ));
+    };
+  
+    const handleTagClick = (tag) => {
+      // Navigate to the backrooms page with the tag as a URL parameter
+      const tagWithoutHash = tag.replace('#', '');
+      router.push(`/backrooms?tags=${encodeURIComponent(tagWithoutHash)}`);
     };
   
     return (
@@ -115,6 +156,7 @@ import {
             {/* Display agent details */}
             {selectedAgent && (
               <VStack spacing={6} align="stretch">
+                {/* Top Box with Agent Info */}
                 <Box
                   p={4}
                   bg="#ffffff"
@@ -122,14 +164,76 @@ import {
                   border="2px solid #ecf0f1"
                   boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
                 >
-                  <Text fontSize="lg" fontWeight="bold" color="#2980b9">
-                    Name:
-                  </Text>
-                  <Text fontFamily="'Arial', sans-serif" color="#34495e">
-                    {selectedAgent.name}
-                  </Text>
+                  <Flex justifyContent="space-between" alignItems="flex-start">
+                    <Box>
+                      <Text fontSize="2xl" fontWeight="bold" color="#2980b9">
+                        {selectedAgent.name}
+                      </Text>
+                      <Tag size="lg" colorScheme="blue" mt={2}>
+                        <TagLabel>{selectedAgent.role || "Explorer Role"}</TagLabel>
+                      </Tag>
+  
+                      {/* Display Focus */}
+                      <Box mt={3}>
+                        <Text fontSize="lg" fontWeight="bold" color="#2980b9" mt={3}>
+                          Focus:
+                        </Text>
+                        <Tag size="md" colorScheme="blue" mr={2}>
+                          {selectedAgent.focus}
+                        </Tag>
+                      </Box>
+  
+                      {/* Display Traits */}
+                      <Box mt={3}>
+                        <Text fontSize="lg" fontWeight="bold" color="#2980b9" mt={3}>
+                          Traits:
+                        </Text>
+                        <Box mt={2}>
+                          {selectedAgent.traits.split(', ').map((trait, index) => (
+                            <Tag size="md" colorScheme="gray" key={index} mr={2}>
+                              {trait}
+                            </Tag>
+                          ))}
+                        </Box>
+                      </Box>
+  
+                      {/* Display All Tags */}
+                      <Box mt={3}>
+                        <Text fontSize="lg" fontWeight="bold" color="#2980b9" mt={3}>
+                          Backroom Tags:
+                        </Text>
+                        <Box mt={2}>
+                          {backroomTags.length > 0 ? (
+                            backroomTags.map((tag, index) => (
+                              <Tag
+                                size="md"
+                                colorScheme="blue"
+                                key={index}
+                                mr={2}
+                                cursor="pointer"
+                                onClick={() => handleTagClick(tag)}
+                              >
+                                {tag}
+                              </Tag>
+                            ))
+                          ) : (
+                            <Text>No tags available.</Text>
+                          )}
+                        </Box>
+                      </Box>
+                    </Box>
+                    <Box minWidth="120px" textAlign="right">
+                      <Flex alignItems="center" justifyContent="flex-end">
+                        <Icon as={FiCalendar} mr={1} />
+                        <Text fontSize="sm" color="#7f8c8d" whiteSpace="nowrap">
+                          Created: {new Date().toLocaleDateString()}
+                        </Text>
+                      </Flex>
+                    </Box>
+                  </Flex>
                 </Box>
   
+                {/* Agent Journey */}
                 <Box
                   p={4}
                   bg="#ffffff"
@@ -138,13 +242,14 @@ import {
                   boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
                 >
                   <Text fontSize="lg" fontWeight="bold" color="#2980b9">
-                    Description:
+                    Agent Description & Journey
                   </Text>
-                  <Text fontFamily="'Arial', sans-serif" color="#34495e">
-                    {extractDescription(selectedAgent.description)}
-                  </Text>
+                  <Divider mb={4} />
+                  <Text color="#34495e">{selectedAgent.description}</Text>
+                  <Box mt={4}>{displayJourney(selectedAgent.evolutions)}</Box>
                 </Box>
   
+                {/* Recent Backroom Conversations */}
                 <Box
                   p={4}
                   bg="#ffffff"
@@ -153,39 +258,10 @@ import {
                   boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
                 >
                   <Text fontSize="lg" fontWeight="bold" color="#2980b9">
-                    Traits:
+                    Recent Backroom Conversations
                   </Text>
-                  <Text fontFamily="'Arial', sans-serif" color="#34495e">
-                    {extractTraits(selectedAgent.traits)}
-                  </Text>
-                </Box>
-  
-                <Box
-                  p={4}
-                  bg="#ffffff"
-                  borderRadius="lg"
-                  border="2px solid #ecf0f1"
-                  boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
-                >
-                  <Text fontSize="lg" fontWeight="bold" color="#2980b9">
-                    Evolutions:
-                  </Text>
-                  <Box mt={4}>{displayEvolutions(selectedAgent.evolutions)}</Box>
-                </Box>
-  
-                <Box
-                  p={4}
-                  bg="#ffffff"
-                  borderRadius="lg"
-                  border="2px solid #ecf0f1"
-                  boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
-                >
-                  <Text fontSize="lg" fontWeight="bold" color="#2980b9">
-                    Focus:
-                  </Text>
-                  <Text fontFamily="'Arial', sans-serif" color="#34495e">
-                    {selectedAgent.focus}
-                  </Text>
+                  <Divider mb={4} />
+                  {displayRecentBackrooms()}
                 </Box>
               </VStack>
             )}
