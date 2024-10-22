@@ -50,10 +50,12 @@ function CreateBackroom() {
 
   useEffect(() => {
     const { agent } = router.query;
-    if (agent) {
-      setExplorerAgent(agent);
+
+    if (agent && agents.length > 0) {
       const selectedExplorer = agents.find((ag) => ag.name === agent);
-      setSelectedExplorerInfo(selectedExplorer); // Update agent info for the selected explorer
+      setExplorerAgent(agent);
+      setSelectedExplorerInfo(selectedExplorer);
+      setSelectedExplorerEvolutions(selectedExplorer?.evolutions || []);
     }
   }, [router.query, agents]);
 
