@@ -1,83 +1,79 @@
-import { ChakraProvider, Box, Heading, Text, VStack, Flex, Spinner, useToast, Container, Select, Stack, Button, Collapse } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import Navigation from '../components/Navigation';
-import withMetaMaskCheck from '../components/withMetaMaskCheck';
+import {
+  ChakraProvider,
+  Box,
+  Heading,
+  Text,
+  VStack,
+  Flex,
+  Spinner,
+  Select,
+  Input,
+  Tag,
+  TagLabel,
+  Button,
+  Collapse,
+} from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Navigation from '../components/Navigation';
 import SEO from '../components/SEO';
-
-const getAgentFocus = (agents, agentName) => {
-  const agent = agents.find(agent => agent.name === agentName);
-  return agent ? agent.focus : 'Unknown';
-};
 
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([]);
-  const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState('All');
-  const [selectedFocus, setSelectedFocus] = useState('All');
-  const [expandedIndex, setExpandedIndex] = useState(null);
-  const toast = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedIndex, setExpandedIndex] = useState(null);  // This tracks which conversation is expanded
+  const [tags, setTags] = useState([]);
+
   const router = useRouter();
+  const { expanded } = router.query; // Get 'expanded' parameter from the URL
 
   useEffect(() => {
-    const fetchBackroomsAndAgents = async () => {
+    const fetchBackrooms = async () => {
       try {
-        const agentsResponse = await fetch('/api/agents');
-        if (!agentsResponse.ok) {
-          throw new Error('Failed to fetch agents');
-        }
-        const agentsData = await agentsResponse.json();
-        setAgents(agentsData);
+        const response = await fetch('/api/backrooms');
+        const data = await response.json();
+        setBackrooms(data);
 
-        const backroomsResponse = await fetch('/api/backrooms');
-        if (!backroomsResponse.ok) {
-          throw new Error('Failed to fetch backrooms');
+        // Extract unique tags for filtering
+        const uniqueTags = Array.from(
+          new Set(data.flatMap((backroom) => backroom.tags || []))
+        );
+        setTags(uniqueTags);
+
+        // If 'expanded' is present in the URL, find the matching backroom
+        if (expanded) {
+          const index = data.findIndex((backroom) => backroom._id === expanded);
+          if (index !== -1) {
+            setExpandedIndex(index); // Set the matching backroom to be expanded
+          }
         }
-        const backroomsData = await backroomsResponse.json();
-        setBackrooms(backroomsData);
       } catch (error) {
-        console.log(error);
+        console.error('Error fetching backrooms:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchBackroomsAndAgents();
-  }, [toast]);
 
-  useEffect(() => {
-    const { agent, expanded } = router.query;
-
-    if (agent) {
-      setSelectedAgent(agent);
-    }
-
-    if (expanded) {
-      const index = backrooms.findIndex((backroom) => backroom._id === expanded);
-      if (index !== -1) {
-        setExpandedIndex(index);
-      }
-    }
-  }, [router.query, backrooms]);
+    fetchBackrooms();
+  }, [expanded]);
 
   const filteredBackrooms = backrooms.filter((backroom) => {
-    if (selectedAgent !== 'All' && backroom.agentName !== selectedAgent) return false;
-    if (selectedFocus !== 'All' && getAgentFocus(agents, backroom.agentName) !== selectedFocus) return false;
-    return true;
+    return (
+      (selectedAgent === 'All' || backroom.agentName === selectedAgent) &&
+      (searchQuery === '' ||
+        backroom.tags.some((tag) =>
+          tag.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
+    );
   });
 
-  const uniqueFocuses = Array.from(new Set(agents.map((agent) => agent.focus)));
-
-  const handleCopyLink = (backroomId) => {
-    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`;
-    navigator.clipboard.writeText(link);
-  };
-  
   if (loading) {
     return (
       <ChakraProvider>
-        <Flex height="100vh" alignItems="center" justifyContent="center" bg="#f0f4f8">
-          <Spinner size="xl" color="#3498db" />
+        <Flex height="100vh" alignItems="center" justifyContent="center">
+          <Spinner size="xl" />
         </Flex>
       </ChakraProvider>
     );
@@ -87,134 +83,134 @@ function Backrooms() {
     <ChakraProvider>
       <SEO
         title="Reality Spiral - Explore The Backrooms"
-        description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
+        description="Explore agent conversations and their evolving interactions."
         url="/"
       />
       <Navigation />
       <Box bg="#f0f4f8" color="#34495e" minHeight="100vh" py={10} px={6}>
-        <Container maxW="container.xl">
-          <Heading 
-            textAlign="center" 
-            mb={10} 
-            fontSize={{ base: "2xl", md: "4xl" }}
-            color="#2980b9" 
-            fontFamily="'Arial', sans-serif"
-          >
-            Explore the Backrooms
-          </Heading>
+        <Box maxW="container.xl" mx="auto">
+          <Flex justifyContent="space-between" alignItems="center" mb={10}>
+            <Heading
+              textAlign="center"
+              fontSize={{ base: '2xl', md: '4xl' }}
+              color="#2980b9"
+              fontFamily="'Arial', sans-serif"
+            >
+              Backrooms
+            </Heading>
 
-          <Stack direction={{ base: 'column', md: 'row' }} spacing={4} mb={8} alignItems="center" justifyContent="center">
-            {/* Select by agent */}
+            {/* Create Backroom Button */}
+            <Button
+              colorScheme="blue"
+              onClick={() => router.push('/create-backroom')} // Redirect to create a backroom page
+              size="md"
+              fontWeight="bold"
+            >
+              + New Backroom
+            </Button>
+          </Flex>
+
+          <Flex justifyContent="space-between" mb={8} flexDirection={{ base: 'column', md: 'row' }}>
             <Select
-              placeholder="Select Agent"
+              placeholder="All Agents"  // This is the default placeholder
               value={selectedAgent}
               onChange={(e) => setSelectedAgent(e.target.value)}
               maxW="300px"
-              bg="#ffffff"
-              color="#34495e"
-              border="2px solid #ecf0f1"
-              _hover={{ borderColor: '#3498db' }}
+              mb={{ base: 4, md: 0 }}
             >
-              <option value="All">All Agents</option>
-              {Array.from(new Set(backrooms.map((backroom) => backroom.agentName))).map((agent, index) => (
-                <option key={index} value={agent}>
-                  {agent}
-                </option>
-              ))}
+              <option value="All">All Agents</option> {/* The default option for 'All Agents' */}
+
+              {/* Dynamically populate the dropdown with agent names */}
+              {Array.from(new Set(backrooms.map((backroom) => backroom.agentName)))
+                .filter((agent) => agent !== "All") // Ensure no duplicate "All" option
+                .map((agent, index) => (
+                  <option key={index} value={agent}>
+                    {agent}
+                  </option>
+                ))}
             </Select>
 
-            {/* New Select by focus */}
-            <Select
-              placeholder="Select Focus"
-              value={selectedFocus}
-              onChange={(e) => setSelectedFocus(e.target.value)}
+
+            <Input
+              placeholder="Search conversations via hashtags"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               maxW="300px"
-              bg="#ffffff"
-              color="#34495e"
-              border="2px solid #ecf0f1"
-              _hover={{ borderColor: '#3498db' }}
-            >
-              <option value="All">All Focuses</option>
-              {uniqueFocuses.map((focus, index) => (
-                <option key={index} value={focus}>
-                  {focus}
-                </option>
-              ))}
-            </Select>
-          </Stack>
+            />
+          </Flex>
+
+          <Flex wrap="wrap" mb={8}>
+            {tags.map((tag, index) => (
+              <Tag
+                size="md"
+                key={index}
+                m={1}
+                cursor="pointer"
+                colorScheme="blue"
+                onClick={() => setSearchQuery(tag)}
+              >
+                <TagLabel>{tag}</TagLabel>
+              </Tag>
+            ))}
+          </Flex>
 
           <VStack spacing={6} align="stretch">
             {filteredBackrooms.length > 0 ? (
               filteredBackrooms.map((backroom, index) => (
-                <Box 
-                  key={index} 
-                  p={4} 
-                  bg="#ffffff" 
-                  borderRadius="lg" 
-                  border="2px solid #ecf0f1" 
+                <Box
+                  key={index}
+                  p={4}
+                  bg="#ffffff"
+                  borderRadius="lg"
+                  border="2px solid #ecf0f1"
                   boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
                 >
                   <Flex justifyContent="space-between" alignItems="center">
-                    <Text 
-                      fontFamily="'Arial', sans-serif" 
-                      color="#34495e" 
-                      fontWeight="bold" 
-                      noOfLines={1}
-                      fontSize={{ base: "sm", md: "md" }}
+                    <Box>
+                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                        {backroom.agentName} &rarr; {backroom.terminalAgentName}
+                      </Text>
+                      <Text fontSize="sm" color="#7f8c8d" mb={2}>
+                        {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
+                        {new Date(backroom.createdAt).toLocaleTimeString()}
+                      </Text>
+                      <Text color="#34495e" mb={4}>
+                        {backroom.snippetContent}
+                      </Text>
+                      <Flex wrap="wrap">
+                        {backroom.tags.map((tag, index) => (
+                          <Tag size="md" key={index} m={1} colorScheme="blue">
+                            <TagLabel>{tag}</TagLabel>
+                          </Tag>
+                        ))}
+                      </Flex>
+                    </Box>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
                     >
-                      {backroom.agentName}: {backroom.content.split('\n')[0]}
-                    </Text>
-                    <Flex gap={2}>
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        variant="outline"
-                        fontSize={{ base: "xs", md: "sm" }}
-                        onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
-                        whiteSpace="nowrap"
-                      >
-                        {expandedIndex === index ? 'Collapse' : 'Expand'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        colorScheme="teal"
-                        variant="solid"
-                        fontSize={{ base: "xs", md: "sm" }}
-                        onClick={() => handleCopyLink(backroom._id)}
-                        whiteSpace="nowrap"
-                      >
-                        Copy Link
-                      </Button>
-                    </Flex>
+                      {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
+                    </Button>
                   </Flex>
                   <Collapse in={expandedIndex === index} animateOpacity>
                     <Box mt={4}>
-                      {backroom.content.split('\n').map((line, i) => {
-                        const [agentName, ...messageParts] = line.split(':');
-                        const message = messageParts.join(':').trim();
-                        if (!agentName.trim() && !message) return null;
-                        return (
-                          <Text key={i} mt={2} fontFamily="'Arial', sans-serif" color="#34495e" fontSize={{ base: "sm", md: "md" }}>
-                            <Text as="span" fontWeight="bold" color="#2980b9">
-                              {agentName.trim() && `${agentName}:`}
-                            </Text> {message}
-                          </Text>
-                        );
-                      })}
+                      <Text whiteSpace="pre-wrap">{backroom.content}</Text>
                     </Box>
                   </Collapse>
                 </Box>
               ))
             ) : (
-              <Text textAlign="center" fontSize="xl" fontFamily="'Arial', sans-serif">
-                No backroom conversations available.
+              <Text textAlign="center" fontSize="xl">
+                No backroom conversations found.
               </Text>
             )}
           </VStack>
-        </Container>
+        </Box>
       </Box>
     </ChakraProvider>
   );
 }
 
-export default withMetaMaskCheck(Backrooms);
+export default Backrooms;

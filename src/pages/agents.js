@@ -48,29 +48,34 @@ import {
       return traits ? traits.trim() : "Traits not available.";
     };
   
-    // Display evolutions in a structured layout
+    // Display evolutions in descending order with correct numbering
     const displayEvolutions = (evolutions) => {
       if (!evolutions || evolutions.length === 0) {
         return <Text>No evolutions recorded.</Text>;
       }
   
-      return evolutions.map((evolution, index) => (
-        <Box
-          key={index}
-          bg="#f7f9fb"
-          p={4}
-          borderRadius="md"
-          boxShadow="0 0 10px rgba(0, 0, 0, 0.05)"
-          mb={4}
-        >
-          <Text fontWeight="bold" color="#2980b9" mb={2}>
-            Evolution {index + 1}
-          </Text>
-          <Text fontFamily="'Arial', sans-serif" color="#34495e">
-            {evolution}
-          </Text>
-        </Box>
-      ));
+      const evolutionsCount = evolutions.length;
+  
+      return evolutions
+        .slice()
+        .reverse() // Reverse the array to show the latest first
+        .map((evolution, index) => (
+          <Box
+            key={index}
+            bg="#f7f9fb"
+            p={4}
+            borderRadius="md"
+            boxShadow="0 0 10px rgba(0, 0, 0, 0.05)"
+            mb={4}
+          >
+            <Text fontWeight="bold" color="#2980b9" mb={2}>
+              Evolution {evolutionsCount - index} {/* Display numbers starting from the highest */}
+            </Text>
+            <Text fontFamily="'Arial', sans-serif" color="#34495e">
+              {evolution}
+            </Text>
+          </Box>
+        ));
     };
   
     return (

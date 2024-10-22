@@ -14,8 +14,9 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { agentName, role, sessionDetails, explorerAgent, explorerDescription, terminalAgent, terminalDescription } = req.body;
+      const { agentName, role, sessionDetails, explorerAgent, explorerDescription, terminalAgent, terminalDescription, tags = [] } = req.body;
 
+      // Fetch explorer and terminal agents
       const explorer = await Agent.findOne({ name: explorerAgent });
       const terminal = await Agent.findOne({ name: terminalAgent });
 
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
         Traits: ${explorer.traits}
         Focus: ${explorer.focus}
 
-        Previous Evolutions: ${combinedEvolutions}
+        Current thoughts: ${explorer.description}
 
         Role (Terminal):
         Name: ${terminalAgent}
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
         Traits: ${terminal.traits}
         Focus: ${terminal.focus}
 
-        Generate a conversation between these two agents based on their role, descriptions, traits, focus, and past evolutions.
+        Generate a conversation between these two agents based on their role, traits, focus, and using the past conversations. Continue from here. The response should focus on the content of the description. Finish the conversation with 3 hashtags.
       `;
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -55,10 +56,19 @@ export default async function handler(req, res) {
           { role: 'system', content: 'You are simulating a conversation between two agents: an Explorer and a Terminal.' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 1000,
+        max_tokens: 4096,
         temperature: 0.7,
       });
 
+      const conversationContent = conversationResponse.choices[0].message.content;
+
+      // Extract hashtags from the conversation using a regular expression
+      const extractedHashtags = conversationContent.match(/#\w+/g) || []; // Matches hashtags like #AI, #Technology, etc.
+      console.log(extractedHashtags);
+      // Create a snippet of the content for quick preview
+      const snippetContent = conversationContent.slice(0, 150) + '...'; // Create a snippet of the content
+
+      // Create a new backroom with the extracted hashtags and snippet content
       const newBackroom = new Backroom({
         agentName,
         role,
@@ -67,42 +77,49 @@ export default async function handler(req, res) {
         explorerDescription,
         terminalAgentName: terminalAgent,
         terminalDescription,
-        content: conversationResponse.choices[0].message.content,
-        createdAt: Date.now()
+        content: conversationContent,
+        snippetContent: snippetContent, // Save snippetContent for quick display
+        tags: [...new Set([...tags, ...extractedHashtags])], // Merge any provided tags with extracted hashtags and ensure uniqueness
+        createdAt: Date.now(),
       });
 
-      await newBackroom.save();
+      await newBackroom.save(); // Save the backroom to the database
 
-      // Generate the new evolution based on the conversation
+      // Generate the evolution update based on the conversation
       const recapPrompt = `
         Agent: ${explorerAgent}
-        Initial Description: ${explorerDescription}
+        Current Description: ${explorerDescription}
         Traits: ${explorer.traits}
         Focus: ${explorer.focus}
-        
-        Based on the following conversation, provide a new updated description for the agent, incorporating any new learnings or evolution from the discussion:
+        Previous Evolutions: ${combinedEvolutions}
 
-        ${conversationResponse.choices[0].message.content}
+        Please provide a summarized, concise, and structured evolution description for the agent based on their journey so far.
+        Make sure the summary reflects their growth and evolution clearly, without unnecessary repetition or redundant phrases.
+        The summary should start with a brief introduction of the agent and end with a recap of how the agent has evolved after the recent conversation.
       `;
 
       const recapResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'You are summarizing the evolution of an agent based on a conversation.' },
+          { role: 'system', content: 'You are summarizing the evolution of an agent based on their journey and recent conversation.' },
           { role: 'user', content: recapPrompt }
         ],
         max_tokens: 500,
         temperature: 0.7,
       });
 
+      // Summarize the evolution, stripping unnecessary parts like "Updated Description"
+      const newEvolution = recapResponse.choices[0].message.content.replace(/Updated Description/g, "").trim();
+
       // Add the new evolution to the evolutions array and update the description
-      const newEvolution = recapResponse.choices[0].message.content;
       explorer.evolutions.push(newEvolution); // Append the new evolution to the evolutions array
-      explorer.description = `${explorerDescription}\n\nEvolutions:\n${explorer.evolutions.join('\n\n')}`; // Add all evolutions to the description
+
+      // Update the agent's description with the latest evolution
+      explorer.description = `${newEvolution}`; // Set latest evolution as description
 
       await explorer.save(); // Save the agent with the updated evolutions
 
-      res.status(201).json(newBackroom);
+      res.status(201).json(newBackroom); // Return the newly created backroom
     } catch (error) {
       console.log(error);
       res.status(500).json({ error: 'Failed to create backroom or update agent evolution' });
