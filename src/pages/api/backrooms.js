@@ -1,7 +1,8 @@
-import Backroom from '../../models/Backroom'
-import Agent from '../../models/Agent'
-import mongoose from 'mongoose'
-import OpenAI from 'openai'
+import Backroom from '../../models/Backroom';
+import Agent from '../../models/Agent';
+import mongoose from 'mongoose';
+import OpenAI from 'openai';
+import { TwitterApi } from 'twitter-api-v2';
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -11,6 +12,40 @@ const connectDB = async () => {
     useUnifiedTopology: true,
   })
 }
+
+// Function to post a tweet using Twitter API
+const postTweet = async (accessToken, message, agentId) => {
+  try {
+    console.log('Posting tweet with access token (partially hidden):', accessToken ? accessToken.slice(0, 10) + '...' : 'No access token provided');
+    console.log('Tweet message:', message);
+
+    const twitterClient = new TwitterApi(accessToken);
+    const { data: tweet } = await twitterClient.v2.tweet(message);
+
+    console.log('Tweet posted successfully:', tweet);
+
+    // Save tweet link to the agent's document in MongoDB
+    if (tweet?.id) {
+      const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`;
+
+      // Update agent to store the tweet URL
+      await Agent.findByIdAndUpdate(agentId, {
+        $push: { tweets: tweetUrl } // Assuming the agent schema has a 'tweets' array field
+      });
+
+      console.log('Tweet URL saved to agent:', tweetUrl);
+    }
+
+    return tweet;
+  } catch (error) {
+    console.error('Error posting tweet with access token:', accessToken);
+    console.error('Tweet message attempted:', message);
+    console.error('Detailed error:', error);
+
+    throw new Error('Failed to post tweet');
+  }
+};
+
 
 export default async function handler(req, res) {
   await connectDB()
@@ -58,8 +93,8 @@ export default async function handler(req, res) {
         Traits: ${terminal.traits}
         Focus: ${terminal.focus}
 
-        Generate a conversation between these two agents based on their role, traits, focus, and using the past conversations. Continue from here. The response should focus on the content of the description. Finish the conversation with 3 hashtags.
-      `
+        Generate a conversation between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.
+      `;
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -82,8 +117,7 @@ export default async function handler(req, res) {
         conversationResponse.choices[0].message.content
 
       // Extract hashtags from the conversation using a regular expression
-      const extractedHashtags = conversationContent.match(/#\w+/g) || [] // Matches hashtags like #AI, #Technology, etc.
-      console.log(extractedHashtags)
+      const extractedHashtags = conversationContent.match(/#\w+/g) || []; // Matches hashtags like #AI, #Technology, etc.
       // Create a snippet of the content for quick preview
       const snippetContent = conversationContent.slice(0, 150) + '...' // Create a snippet of the content
 
@@ -131,18 +165,14 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
-      // Summarize the evolution, stripping unnecessary parts like "Updated Description"
-      const newEvolution = recapResponse.choices[0].message.content
-        .replace(/Updated Description/g, '')
-        .trim()
+      const newEvolution = recapResponse.choices[0].message.content.replace(/Updated Description/g, "").trim();
 
       // Add the new evolution to the evolutions array and update the description
-      explorer.evolutions.push(newEvolution) // Append the new evolution to the evolutions array
-
-      // Update the agent's description with the latest evolution
-      explorer.description = `${newEvolution}` // Set latest evolution as description
+      explorer.evolutions.push(newEvolution); // Append the new evolution to the evolutions array
+      explorer.description = `${newEvolution}`; // Set latest evolution as description
 
       await explorer.save() // Save the agent with the updated evolutions
+
 
       res.status(201).json(newBackroom) // Return the newly created backroom
     } catch (error) {
@@ -150,6 +180,47 @@ export default async function handler(req, res) {
       res
         .status(500)
         .json({ error: 'Failed to create backroom or update agent evolution' })
+
+      // Generate tweet content using GPT
+      const tweetPrompt = `Summarize the following evolution in a tweet format, keeping it concise and engaging. Include relevant hashtags:
+
+      Conversation: ${conversationContent}
+
+      Make sure the content returned is less than 150 characters and valid to tweet.
+
+      Dont mention or talk in the third person your name or agent or the journey.
+
+      Make it a conversational tweet but based on the evolution recap.`;
+
+      const tweetResponse = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: 'Generate a tweet based on the provided evolution.' },
+          { role: 'user', content: tweetPrompt }
+        ],
+        max_tokens: 280,
+        temperature: 0.7,
+      });
+
+      const tweetContent = tweetResponse.choices[0].message.content.trim();
+
+      // Check if the agent has a Twitter Auth Token
+      if (explorer.twitterAuthToken?.accessToken) {
+        // Post recap as a tweet
+        try {
+          const tweetResponse = await postTweet(explorer.twitterAuthToken.accessToken, tweetContent, explorer._id);
+          console.log('Tweet posted successfully:', tweetResponse);
+        } catch (error) {
+          console.error('Error posting tweet:', error);
+          return res.status(403).json({ error: 'Failed to post tweet', details: error });
+        }
+      }
+
+      res.status(201).json(newBackroom); // Return the newly created backroom
+    } catch (error) {
+      console.log('Error in backroom creation or tweet:', error);
+      res.status(500).json({ error: 'Failed to create backroom, update agent, or post tweet' });
+>>>>>>> a33c5b1 (Twitter integration)
     }
   } else if (req.method === 'GET') {
     try {
