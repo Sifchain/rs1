@@ -5,7 +5,6 @@ import withMetaMaskCheck from '../components/withMetaMaskCheck';
 import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 
-// Helper function to extract agent focus directly from agent object
 const getAgentFocus = (agents, agentName) => {
   const agent = agents.find(agent => agent.name === agentName);
   return agent ? agent.focus : 'Unknown';
@@ -13,7 +12,7 @@ const getAgentFocus = (agents, agentName) => {
 
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([]);
-  const [agents, setAgents] = useState([]); // Store agents here
+  const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState('All');
   const [selectedFocus, setSelectedFocus] = useState('All');
@@ -24,7 +23,6 @@ function Backrooms() {
   useEffect(() => {
     const fetchBackroomsAndAgents = async () => {
       try {
-        // Fetch agents first
         const agentsResponse = await fetch('/api/agents');
         if (!agentsResponse.ok) {
           throw new Error('Failed to fetch agents');
@@ -32,7 +30,6 @@ function Backrooms() {
         const agentsData = await agentsResponse.json();
         setAgents(agentsData);
 
-        // Fetch backrooms
         const backroomsResponse = await fetch('/api/backrooms');
         if (!backroomsResponse.ok) {
           throw new Error('Failed to fetch backrooms');
@@ -69,9 +66,13 @@ function Backrooms() {
     return true;
   });
 
-  // Collect all unique focuses from agents
   const uniqueFocuses = Array.from(new Set(agents.map((agent) => agent.focus)));
 
+  const handleCopyLink = (backroomId) => {
+    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`;
+    navigator.clipboard.writeText(link);
+  };
+  
   if (loading) {
     return (
       <ChakraProvider>
@@ -85,10 +86,10 @@ function Backrooms() {
   return (
     <ChakraProvider>
       <SEO
-          title="Reality Spiral - Explore The Backrooms"
-          description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
-          url="/"
-        />
+        title="Reality Spiral - Explore The Backrooms"
+        description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
+        url="/"
+      />
       <Navigation />
       <Box bg="#f0f4f8" color="#34495e" minHeight="100vh" py={10} px={6}>
         <Container maxW="container.xl">
@@ -163,16 +164,28 @@ function Backrooms() {
                     >
                       {backroom.agentName}: {backroom.content.split('\n')[0]}
                     </Text>
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      variant="outline"
-                      fontSize={{ base: "xs", md: "sm" }}
-                      onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
-                      whiteSpace="nowrap"
-                    >
-                      {expandedIndex === index ? 'Collapse' : 'Expand'}
-                    </Button>
+                    <Flex gap={2}>
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        variant="outline"
+                        fontSize={{ base: "xs", md: "sm" }}
+                        onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
+                        whiteSpace="nowrap"
+                      >
+                        {expandedIndex === index ? 'Collapse' : 'Expand'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        colorScheme="teal"
+                        variant="solid"
+                        fontSize={{ base: "xs", md: "sm" }}
+                        onClick={() => handleCopyLink(backroom._id)}
+                        whiteSpace="nowrap"
+                      >
+                        Copy Link
+                      </Button>
+                    </Flex>
                   </Flex>
                   <Collapse in={expandedIndex === index} animateOpacity>
                     <Box mt={4}>
