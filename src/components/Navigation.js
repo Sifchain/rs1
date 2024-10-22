@@ -66,6 +66,13 @@ function Navigation() {
         {/* Desktop Links */}
         <HStack spacing={8} display={{ base: "none", md: "flex" }}>
           <Link
+            onClick={() => router.push("/about")}
+            fontFamily="Arial, sans-serif"
+            _hover={{ color: "#3498db" }}
+          >
+            About
+          </Link>
+          <Link
             onClick={() => router.push("/backrooms")}
             fontFamily="Arial, sans-serif"
             _hover={{ color: "#3498db" }}
