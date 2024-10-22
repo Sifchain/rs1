@@ -14,102 +14,111 @@ import {
   Collapse,
   IconButton,
   Tooltip,
-} from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import Navigation from '../components/Navigation';
-import SEO from '../components/SEO';
-import { FiShare2, FiClipboard } from 'react-icons/fi';
+} from '@chakra-ui/react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Navigation from '../components/Navigation'
+import SEO from '../components/SEO'
+import { FiShare2, FiClipboard } from 'react-icons/fi'
 
 function Backrooms() {
-  const [backrooms, setBackrooms] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedAgent, setSelectedAgent] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedIndex, setExpandedIndex] = useState(null); // This tracks which conversation is expanded
-  const [tags, setTags] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [backrooms, setBackrooms] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedAgent, setSelectedAgent] = useState('All')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [expandedIndex, setExpandedIndex] = useState(null) // This tracks which conversation is expanded
+  const [tags, setTags] = useState([])
+  const [selectedTags, setSelectedTags] = useState([])
 
-  const router = useRouter();
-  const { expanded, tags: queryTags } = router.query; // Get 'expanded' and 'tags' parameters from the URL
+  const router = useRouter()
+  const { expanded, tags: queryTags } = router.query // Get 'expanded' and 'tags' parameters from the URL
 
   useEffect(() => {
     const fetchBackrooms = async () => {
       try {
-        const response = await fetch('/api/backrooms');
-        const data = await response.json();
-        setBackrooms(data);
+        const response = await fetch('/api/backrooms')
+        const data = await response.json()
+        setBackrooms(data)
 
         // Extract unique tags for filtering and keep the # for display purposes
-        const uniqueTags = Array.from(new Set(data.flatMap((backroom) => backroom.tags || [])));
-        setTags(uniqueTags);
+        const uniqueTags = Array.from(
+          new Set(data.flatMap(backroom => backroom.tags || []))
+        )
+        setTags(uniqueTags)
 
         // If 'expanded' is present in the URL, find the matching backroom
         if (expanded) {
-          const index = data.findIndex((backroom) => backroom._id === expanded);
+          const index = data.findIndex(backroom => backroom._id === expanded)
           if (index !== -1) {
-            setExpandedIndex(index); // Set the matching backroom to be expanded
+            setExpandedIndex(index) // Set the matching backroom to be expanded
           }
         }
 
         // If 'tags' are present in the URL, set them as selected tags for filtering
         if (queryTags) {
-          const queryTagArray = queryTags.split(',').map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
-          setSelectedTags(queryTagArray);
+          const queryTagArray = queryTags
+            .split(',')
+            .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
+          setSelectedTags(queryTagArray)
         }
       } catch (error) {
-        console.error('Error fetching backrooms:', error);
+        console.error('Error fetching backrooms:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-
-    fetchBackrooms();
-  }, [expanded, queryTags]);
-
-  const handleTagSelection = (tag) => {
-    let updatedTags = [...selectedTags];
-    if (updatedTags.includes(tag)) {
-      updatedTags = updatedTags.filter((t) => t !== tag); // Remove tag if already selected
-    } else {
-      updatedTags.push(tag); // Add tag if not selected
     }
-    setSelectedTags(updatedTags);
+
+    fetchBackrooms()
+  }, [expanded, queryTags])
+
+  const handleTagSelection = tag => {
+    let updatedTags = [...selectedTags]
+    if (updatedTags.includes(tag)) {
+      updatedTags = updatedTags.filter(t => t !== tag) // Remove tag if already selected
+    } else {
+      updatedTags.push(tag) // Add tag if not selected
+    }
+    setSelectedTags(updatedTags)
 
     // Update the URL with the new tags selection
-    const tagQueryString = updatedTags.map((tag) => tag.replace('#', '')).join(',');
-    router.push(`/backrooms?tags=${tagQueryString}`);
-  };
+    const tagQueryString = updatedTags
+      .map(tag => tag.replace('#', ''))
+      .join(',')
+    router.push(`/backrooms?tags=${tagQueryString}`)
+  }
 
-  const filteredBackrooms = backrooms.filter((backroom) => {
-    const agentMatch = selectedAgent === 'All' || backroom.agentName === selectedAgent;
+  const filteredBackrooms = backrooms.filter(backroom => {
+    const agentMatch =
+      selectedAgent === 'All' || backroom.agentName === selectedAgent
     const tagMatch =
       selectedTags.length === 0 ||
-      selectedTags.every((tag) => backroom.tags?.includes(tag));
-    return agentMatch && tagMatch;
-  });
+      selectedTags.every(tag => backroom.tags?.includes(tag))
+    return agentMatch && tagMatch
+  })
 
-  const handleShare = (backroomId) => {
-    const shareUrl = `${window.location.origin}/backrooms?expanded=${backroomId}`;
+  const handleShare = backroomId => {
+    const shareUrl = `${window.location.origin}/backrooms?expanded=${backroomId}`
     if (navigator.share) {
-      navigator.share({
-        title: 'Check out this Backroom Conversation',
-        url: shareUrl,
-      }).catch(console.error);
+      navigator
+        .share({
+          title: 'Check out this Backroom Conversation',
+          url: shareUrl,
+        })
+        .catch(console.error)
     } else {
       // Fallback for older browsers
       navigator.clipboard.writeText(shareUrl).then(() => {
-        alert('Link copied to clipboard!');
-      });
+        alert('Link copied to clipboard!')
+      })
     }
-  };
+  }
 
-  const handleCopyToClipboard = (backroomId) => {
-    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`;
+  const handleCopyToClipboard = backroomId => {
+    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`
     navigator.clipboard.writeText(link).then(() => {
-      alert('Link copied to clipboard!');
-    });
-  };
+      alert('Link copied to clipboard!')
+    })
+  }
 
   if (loading) {
     return (
@@ -118,7 +127,7 @@ function Backrooms() {
           <Spinner size="xl" />
         </Flex>
       </ChakraProvider>
-    );
+    )
   }
 
   return (
@@ -152,19 +161,25 @@ function Backrooms() {
             </Button>
           </Flex>
 
-          <Flex justifyContent="space-between" mb={8} flexDirection={{ base: 'column', md: 'row' }}>
+          <Flex
+            justifyContent="space-between"
+            mb={8}
+            flexDirection={{ base: 'column', md: 'row' }}
+          >
             <Select
-              placeholder="All Agents"  // This is the default placeholder
+              placeholder="All Agents" // This is the default placeholder
               value={selectedAgent}
-              onChange={(e) => setSelectedAgent(e.target.value)}
+              onChange={e => setSelectedAgent(e.target.value)}
               maxW="300px"
               mb={{ base: 4, md: 0 }}
             >
-              <option value="All">All Agents</option> {/* The default option for 'All Agents' */}
-
+              <option value="All">All Agents</option>{' '}
+              {/* The default option for 'All Agents' */}
               {/* Dynamically populate the dropdown with agent names */}
-              {Array.from(new Set(backrooms.map((backroom) => backroom.agentName)))
-                .filter((agent) => agent !== "All") // Ensure no duplicate "All" option
+              {Array.from(
+                new Set(backrooms.map(backroom => backroom.agentName))
+              )
+                .filter(agent => agent !== 'All') // Ensure no duplicate "All" option
                 .map((agent, index) => (
                   <option key={index} value={agent}>
                     {agent}
@@ -175,7 +190,7 @@ function Backrooms() {
             <Input
               placeholder="Search conversations via hashtags"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               maxW="300px"
             />
           </Flex>
@@ -241,9 +256,15 @@ function Backrooms() {
                         size="sm"
                         colorScheme="blue"
                         variant="outline"
-                        onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
+                        onClick={() =>
+                          setExpandedIndex(
+                            expandedIndex === index ? null : index
+                          )
+                        }
                       >
-                        {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
+                        {expandedIndex === index
+                          ? 'Collapse'
+                          : 'View Full Conversation'}
                       </Button>
                     </Flex>
                   </Flex>
@@ -256,7 +277,7 @@ function Backrooms() {
                   <Text color="#34495e" mb={4}>
                     {backroom.snippetContent}
                   </Text>
-                  
+
                   {/* Tags are now clickable here as well */}
                   <Flex wrap="wrap">
                     {backroom.tags.map((tag, index) => (
@@ -265,7 +286,9 @@ function Backrooms() {
                         key={index}
                         m={1}
                         cursor="pointer"
-                        colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
+                        colorScheme={
+                          selectedTags.includes(tag) ? 'blue' : 'gray'
+                        }
                         onClick={() => handleTagSelection(tag)}
                       >
                         <TagLabel>{tag}</TagLabel>
@@ -289,7 +312,7 @@ function Backrooms() {
         </Box>
       </Box>
     </ChakraProvider>
-  );
+  )
 }
 
-export default Backrooms;
+export default Backrooms

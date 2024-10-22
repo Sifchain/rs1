@@ -15,118 +15,119 @@ import {
   Th,
   Tbody,
   Td,
-} from "@chakra-ui/react";
-import { useState, useEffect } from "react";
-import Navigation from "../components/Navigation";
-import withMetaMaskCheck from "../components/withMetaMaskCheck";
-import { useRouter } from "next/router";
-import SEO from "../components/SEO";
+} from '@chakra-ui/react'
+import { useState, useEffect } from 'react'
+import Navigation from '../components/Navigation'
+import withMetaMaskCheck from '../components/withMetaMaskCheck'
+import { useRouter } from 'next/router'
+import SEO from '../components/SEO'
 
 function CreateBackroom() {
-  const [explorerAgent, setExplorerAgent] = useState("");
-  const [explorerDescription, setExplorerDescription] = useState("");
-  const [terminalAgent, setTerminalAgent] = useState("Terminal of Truth");
-  const [terminalDescription, setTerminalDescription] = useState("");
-  const [agents, setAgents] = useState([]);
-  const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null); // Holds explorer agent details
-  const [selectedTerminalInfo, setSelectedTerminalInfo] = useState(null); // Holds terminal agent details
-  const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const router = useRouter();
+  const [explorerAgent, setExplorerAgent] = useState('')
+  const [explorerDescription, setExplorerDescription] = useState('')
+  const [terminalAgent, setTerminalAgent] = useState('Terminal of Truth')
+  const [terminalDescription, setTerminalDescription] = useState('')
+  const [agents, setAgents] = useState([])
+  const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null) // Holds explorer agent details
+  const [selectedTerminalInfo, setSelectedTerminalInfo] = useState(null) // Holds terminal agent details
+  const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState(
+    []
+  )
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+  const router = useRouter()
+  const fetchAgents = async () => {
+    try {
+      const response = await fetch('/api/agents')
+      const data = await response.json()
+      setAgents([...data])
+    } catch (error) {
+      setAgents([]) // Fallback to empty if fetching fails
+    }
+  }
+  useEffect(() => {
+    fetchAgents()
+  }, [])
 
   useEffect(() => {
-    const fetchAgents = async () => {
-      try {
-        const response = await fetch("/api/agents");
-        const data = await response.json();
-        setAgents([...data]);
-      } catch (error) {
-        setAgents([]); // Fallback to empty if fetching fails
-      }
-    };
-    fetchAgents();
-  }, []);
-
-  useEffect(() => {
-    const { agent } = router.query;
+    const { agent } = router.query
 
     if (agent && agents.length > 0) {
-      const selectedExplorer = agents.find((ag) => ag.name === agent);
-      setExplorerAgent(agent);
-      setSelectedExplorerInfo(selectedExplorer);
-      setSelectedExplorerEvolutions(selectedExplorer?.evolutions || []);
+      const selectedExplorer = agents.find(ag => ag.name === agent)
+      setExplorerAgent(agent)
+      setSelectedExplorerInfo(selectedExplorer)
+      setSelectedExplorerEvolutions(selectedExplorer?.evolutions || [])
     }
-  }, [router.query, agents]);
+  }, [router.query, agents])
 
-  const handleExplorerChange = (e) => {
-    const selectedAgentName = e.target.value;
-    setExplorerAgent(selectedAgentName);
-    const selectedExplorer = agents.find((ag) => ag.name === selectedAgentName);
+  const handleExplorerChange = e => {
+    const selectedAgentName = e.target.value
+    setExplorerAgent(selectedAgentName)
+    const selectedExplorer = agents.find(ag => ag.name === selectedAgentName)
     if (selectedExplorer) {
-      setSelectedExplorerInfo(selectedExplorer);
-      setSelectedExplorerEvolutions(selectedExplorer.evolutions || []);
+      setSelectedExplorerInfo(selectedExplorer)
+      setSelectedExplorerEvolutions(selectedExplorer.evolutions || [])
     } else {
-      setSelectedExplorerInfo(null);
-      setSelectedExplorerEvolutions([]);
+      setSelectedExplorerInfo(null)
+      setSelectedExplorerEvolutions([])
     }
-  };
+  }
 
-  const handleTerminalChange = (e) => {
-    const selectedAgentName = e.target.value;
-    setTerminalAgent(selectedAgentName);
-    const selectedTerminal = agents.find((ag) => ag.name === selectedAgentName);
+  const handleTerminalChange = e => {
+    const selectedAgentName = e.target.value
+    setTerminalAgent(selectedAgentName)
+    const selectedTerminal = agents.find(ag => ag.name === selectedAgentName)
     if (selectedTerminal) {
-      setSelectedTerminalInfo(selectedTerminal);
+      setSelectedTerminalInfo(selectedTerminal)
     } else {
-      setSelectedTerminalInfo(null);
+      setSelectedTerminalInfo(null)
     }
-  };
+  }
 
   // Form validation
   const handleValidation = () => {
-    let valid = true;
-    let errors = {};
+    let valid = true
+    let errors = {}
 
     if (!explorerAgent) {
-      errors.explorerAgent = "Explorer Agent is required";
-      valid = false;
+      errors.explorerAgent = 'Explorer Agent is required'
+      valid = false
     }
 
-    setErrors(errors);
-    return valid;
-  };
+    setErrors(errors)
+    return valid
+  }
 
   const handleSubmit = async () => {
-    if (!handleValidation()) return;
+    if (!handleValidation()) return
 
-    setLoading(true);
+    setLoading(true)
     try {
-      const res = await fetch("/api/backrooms", {
-        method: "POST",
+      const res = await fetch('/api/backrooms', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           agentName: explorerAgent,
-          role: "Explorer",
+          role: 'Explorer',
           explorerAgent,
           explorerDescription,
           terminalAgent,
           terminalDescription,
         }),
-      });
+      })
 
       if (res.ok) {
-        const newBackroom = await res.json();
-        router.push(`/backrooms?expanded=${newBackroom._id}`);
+        const newBackroom = await res.json()
+        router.push(`/backrooms?expanded=${newBackroom._id}`)
       }
     } catch (error) {
-      console.error("Error creating backroom:", error);
+      console.error('Error creating backroom:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <ChakraProvider>
@@ -149,12 +150,12 @@ function CreateBackroom() {
           </Heading>
 
           <Flex
-            direction={{ base: "column", md: "row" }}
+            direction={{ base: 'column', md: 'row' }}
             justifyContent="space-between"
             mb={6}
           >
             {/* Explorer Setup */}
-            <Box width={{ base: "100%", md: "48%" }} mb={{ base: 4, md: 0 }}>
+            <Box width={{ base: '100%', md: '48%' }} mb={{ base: 4, md: 0 }}>
               <Heading size="md" mb={4}>
                 Explorer Setup
               </Heading>
@@ -166,10 +167,10 @@ function CreateBackroom() {
                   bg="#ffffff"
                   color="#34495e"
                   border="2px solid"
-                  borderColor={errors.explorerAgent ? "red.500" : "#ecf0f1"}
-                  _hover={{ borderColor: "#3498db" }}
+                  borderColor={errors.explorerAgent ? 'red.500' : '#ecf0f1'}
+                  _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents.map((agent) => (
+                  {agents.map(agent => (
                     <option key={agent._id} value={agent.name}>
                       {agent.name}
                     </option>
@@ -184,7 +185,8 @@ function CreateBackroom() {
               {selectedExplorerInfo && (
                 <Box mt={4}>
                   <Text mb={4}>
-                    <strong>Description:</strong> {selectedExplorerInfo.description}
+                    <strong>Description:</strong>{' '}
+                    {selectedExplorerInfo.description}
                   </Text>
                   <Text mb={4}>
                     <strong>Traits:</strong> {selectedExplorerInfo.traits}
@@ -199,12 +201,12 @@ function CreateBackroom() {
                 <Textarea
                   placeholder="Optional: Add to the Explorer Description"
                   value={explorerDescription}
-                  onChange={(e) => setExplorerDescription(e.target.value)}
+                  onChange={e => setExplorerDescription(e.target.value)}
                   bg="#ffffff"
                   color="#34495e"
                   border="2px solid"
                   borderColor="#ecf0f1"
-                  _hover={{ borderColor: "#3498db" }}
+                  _hover={{ borderColor: '#3498db' }}
                   p={3}
                   minHeight="100px"
                 />
@@ -212,7 +214,7 @@ function CreateBackroom() {
             </Box>
 
             {/* Terminal Setup */}
-            <Box width={{ base: "100%", md: "48%" }}>
+            <Box width={{ base: '100%', md: '48%' }}>
               <Heading size="md" mb={4}>
                 Terminal Setup
               </Heading>
@@ -223,9 +225,9 @@ function CreateBackroom() {
                   bg="#ffffff"
                   color="#34495e"
                   border="2px solid #ecf0f1"
-                  _hover={{ borderColor: "#3498db" }}
+                  _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents.map((agent) => (
+                  {agents.map(agent => (
                     <option key={agent._id} value={agent.name}>
                       {agent.name}
                     </option>
@@ -237,7 +239,8 @@ function CreateBackroom() {
               {selectedTerminalInfo && (
                 <Box mt={4}>
                   <Text mb={4}>
-                    <strong>Description:</strong> {selectedTerminalInfo.description}
+                    <strong>Description:</strong>{' '}
+                    {selectedTerminalInfo.description}
                   </Text>
                   <Text mb={4}>
                     <strong>Traits:</strong> {selectedTerminalInfo.traits}
@@ -252,11 +255,11 @@ function CreateBackroom() {
                 <Textarea
                   placeholder="Optional: Add to the Terminal Description"
                   value={terminalDescription}
-                  onChange={(e) => setTerminalDescription(e.target.value)}
+                  onChange={e => setTerminalDescription(e.target.value)}
                   bg="#ffffff"
                   color="#34495e"
                   border="2px solid #ecf0f1"
-                  _hover={{ borderColor: "#3498db" }}
+                  _hover={{ borderColor: '#3498db' }}
                   p={3}
                   minHeight="100px"
                 />
@@ -270,7 +273,7 @@ function CreateBackroom() {
             colorScheme="blue"
             variant="solid"
             onClick={handleSubmit}
-            _hover={{ bg: "#3498db", boxShadow: "0 0 15px #3498db" }}
+            _hover={{ bg: '#3498db', boxShadow: '0 0 15px #3498db' }}
             width="100%"
           >
             Create Backroom
@@ -312,7 +315,7 @@ function CreateBackroom() {
                 </Tr>
               </Thead>
               <Tbody>
-                {agents.map((agent) => (
+                {agents.map(agent => (
                   <Tr key={agent._id}>
                     <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
                     <Td fontFamily="Arial, sans-serif">
@@ -327,7 +330,7 @@ function CreateBackroom() {
         </Box>
       </Box>
     </ChakraProvider>
-  );
+  )
 }
 
-export default withMetaMaskCheck(CreateBackroom);
+export default withMetaMaskCheck(CreateBackroom)
