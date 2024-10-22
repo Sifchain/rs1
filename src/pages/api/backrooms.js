@@ -23,6 +23,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid explorer or terminal agent name' });
       }
 
+      // Combine all evolutions into a single prompt
+      const combinedEvolutions = explorer.evolutions.length
+        ? explorer.evolutions.join('\n\n')
+        : explorerDescription;
+
       const prompt = `
         Role (Explorer):
         Name: ${explorerAgent}
@@ -30,13 +35,15 @@ export default async function handler(req, res) {
         Traits: ${explorer.traits}
         Focus: ${explorer.focus}
 
+        Previous Evolutions: ${combinedEvolutions}
+
         Role (Terminal):
         Name: ${terminalAgent}
         Description: You are a computer that only responds like a terminal would. ${terminalDescription}
         Traits: ${terminal.traits}
         Focus: ${terminal.focus}
 
-        Generate a conversation between these two agents based on their role, descriptions, traits, and focus.
+        Generate a conversation between these two agents based on their role, descriptions, traits, focus, and past evolutions.
       `;
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -66,57 +73,39 @@ export default async function handler(req, res) {
 
       await newBackroom.save();
 
+      // Generate the new evolution based on the conversation
       const recapPrompt = `
         Agent: ${explorerAgent}
         Initial Description: ${explorerDescription}
         Traits: ${explorer.traits}
         Focus: ${explorer.focus}
         
-        Based on the following conversation, provide a new updated description for the agent.
-        
-        Please include:
-        1. Evolution: Describe how the agent has evolved from the conversation.
-        2. Traits: Summarize any changes or new traits for the agent.
+        Based on the following conversation, provide a new updated description for the agent, incorporating any new learnings or evolution from the discussion:
 
-        Conversation:
         ${conversationResponse.choices[0].message.content}
       `;
 
       const recapResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'You are summarizing the evolution and traits of an agent based on a conversation.' },
+          { role: 'system', content: 'You are summarizing the evolution of an agent based on a conversation.' },
           { role: 'user', content: recapPrompt }
         ],
         max_tokens: 500,
         temperature: 0.7,
       });
 
-      const recapContent = recapResponse.choices[0].message.content;
+      // Add the new evolution to the evolutions array and update the description
+      const newEvolution = recapResponse.choices[0].message.content;
+      explorer.evolutions.push(newEvolution); // Append the new evolution to the evolutions array
+      explorer.description = `${explorerDescription}\n\nEvolutions:\n${explorer.evolutions.join('\n\n')}`; // Add all evolutions to the description
 
-      // Extract Evolution and Traits from the recap response using regex
-      const evolutionRegex = /Evolution:\s*([\s\S]*?)(Traits:|$)/i;
-      const traitsRegex = /Traits:\s*([\s\S]*)$/i;
-
-      const evolutionMatch = recapContent.match(evolutionRegex);
-      const traitsMatch = recapContent.match(traitsRegex);
-
-      const evolution = evolutionMatch ? evolutionMatch[1].trim() : 'No evolution found.';
-      const traits = traitsMatch ? traitsMatch[1].trim() : 'No traits found.';
-
-      // Update Agent with Description, Evolution, and Traits
-      explorer.traits = `
-        Description: ${explorerDescription.trim()}\n\n
-        Evolution: ${evolution}\n\n
-        Traits: ${traits}
-      `.trim();
-      
-      await explorer.save();
+      await explorer.save(); // Save the agent with the updated evolutions
 
       res.status(201).json(newBackroom);
     } catch (error) {
       console.log(error);
-      res.status(500).json({ error: 'Failed to create backroom or update agent description' });
+      res.status(500).json({ error: 'Failed to create backroom or update agent evolution' });
     }
   } else if (req.method === 'GET') {
     try {

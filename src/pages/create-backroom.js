@@ -28,6 +28,9 @@ function CreateBackroom() {
   const [terminalAgent, setTerminalAgent] = useState("Terminal of Truth");
   const [terminalDescription, setTerminalDescription] = useState("");
   const [agents, setAgents] = useState([]);
+  const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null); // Holds explorer agent details
+  const [selectedTerminalInfo, setSelectedTerminalInfo] = useState(null); // Holds terminal agent details
+  const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const router = useRouter();
@@ -39,7 +42,7 @@ function CreateBackroom() {
         const data = await response.json();
         setAgents([...data]);
       } catch (error) {
-        setAgents([]); // Fallback to default agents in case of error
+        setAgents([]); // Fallback to empty if fetching fails
       }
     };
     fetchAgents();
@@ -49,8 +52,34 @@ function CreateBackroom() {
     const { agent } = router.query;
     if (agent) {
       setExplorerAgent(agent);
+      const selectedExplorer = agents.find((ag) => ag.name === agent);
+      setSelectedExplorerInfo(selectedExplorer); // Update agent info for the selected explorer
     }
-  }, [router.query]);
+  }, [router.query, agents]);
+
+  const handleExplorerChange = (e) => {
+    const selectedAgentName = e.target.value;
+    setExplorerAgent(selectedAgentName);
+    const selectedExplorer = agents.find((ag) => ag.name === selectedAgentName);
+    if (selectedExplorer) {
+      setSelectedExplorerInfo(selectedExplorer);
+      setSelectedExplorerEvolutions(selectedExplorer.evolutions || []);
+    } else {
+      setSelectedExplorerInfo(null);
+      setSelectedExplorerEvolutions([]);
+    }
+  };
+
+  const handleTerminalChange = (e) => {
+    const selectedAgentName = e.target.value;
+    setTerminalAgent(selectedAgentName);
+    const selectedTerminal = agents.find((ag) => ag.name === selectedAgentName);
+    if (selectedTerminal) {
+      setSelectedTerminalInfo(selectedTerminal);
+    } else {
+      setSelectedTerminalInfo(null);
+    }
+  };
 
   // Form validation
   const handleValidation = () => {
@@ -59,10 +88,6 @@ function CreateBackroom() {
 
     if (!explorerAgent) {
       errors.explorerAgent = "Explorer Agent is required";
-      valid = false;
-    }
-    if (!explorerDescription) {
-      errors.explorerDescription = "Explorer Description is required";
       valid = false;
     }
 
@@ -82,7 +107,7 @@ function CreateBackroom() {
         },
         body: JSON.stringify({
           agentName: explorerAgent,
-          role: "Explorer", // change based on selection or remove
+          role: "Explorer",
           explorerAgent,
           explorerDescription,
           terminalAgent,
@@ -126,6 +151,7 @@ function CreateBackroom() {
             justifyContent="space-between"
             mb={6}
           >
+            {/* Explorer Setup */}
             <Box width={{ base: "100%", md: "48%" }} mb={{ base: 4, md: 0 }}>
               <Heading size="md" mb={4}>
                 Explorer Setup
@@ -134,7 +160,7 @@ function CreateBackroom() {
                 <Select
                   placeholder="Select Explorer Agent"
                   value={explorerAgent}
-                  onChange={(e) => setExplorerAgent(e.target.value)}
+                  onChange={handleExplorerChange}
                   bg="#ffffff"
                   color="#34495e"
                   border="2px solid"
@@ -152,29 +178,38 @@ function CreateBackroom() {
                 )}
               </FormControl>
 
-              <FormControl isInvalid={errors.explorerDescription} mt={4}>
+              {/* Show current explorer agent info if selected */}
+              {selectedExplorerInfo && (
+                <Box mt={4}>
+                  <Text mb={4}>
+                    <strong>Description:</strong> {selectedExplorerInfo.description}
+                  </Text>
+                  <Text mb={4}>
+                    <strong>Traits:</strong> {selectedExplorerInfo.traits}
+                  </Text>
+                  <Text mb={4}>
+                    <strong>Focus:</strong> {selectedExplorerInfo.focus}
+                  </Text>
+                </Box>
+              )}
+
+              <FormControl mt={4}>
                 <Textarea
-                  placeholder="Explorer Description"
+                  placeholder="Optional: Add to the Explorer Description"
                   value={explorerDescription}
                   onChange={(e) => setExplorerDescription(e.target.value)}
                   bg="#ffffff"
                   color="#34495e"
                   border="2px solid"
-                  borderColor={
-                    errors.explorerDescription ? "red.500" : "#ecf0f1"
-                  }
+                  borderColor="#ecf0f1"
                   _hover={{ borderColor: "#3498db" }}
                   p={3}
                   minHeight="100px"
                 />
-                {errors.explorerDescription && (
-                  <FormErrorMessage>
-                    {errors.explorerDescription}
-                  </FormErrorMessage>
-                )}
               </FormControl>
             </Box>
 
+            {/* Terminal Setup */}
             <Box width={{ base: "100%", md: "48%" }}>
               <Heading size="md" mb={4}>
                 Terminal Setup
@@ -182,7 +217,7 @@ function CreateBackroom() {
               <FormControl>
                 <Select
                   value={terminalAgent}
-                  onChange={(e) => setTerminalAgent(e.target.value)}
+                  onChange={handleTerminalChange}
                   bg="#ffffff"
                   color="#34495e"
                   border="2px solid #ecf0f1"
@@ -196,9 +231,24 @@ function CreateBackroom() {
                 </Select>
               </FormControl>
 
+              {/* Show current terminal agent info if selected */}
+              {selectedTerminalInfo && (
+                <Box mt={4}>
+                  <Text mb={4}>
+                    <strong>Description:</strong> {selectedTerminalInfo.description}
+                  </Text>
+                  <Text mb={4}>
+                    <strong>Traits:</strong> {selectedTerminalInfo.traits}
+                  </Text>
+                  <Text mb={4}>
+                    <strong>Focus:</strong> {selectedTerminalInfo.focus}
+                  </Text>
+                </Box>
+              )}
+
               <FormControl mt={4}>
                 <Textarea
-                  placeholder="Optional: Add a description for the Terminal"
+                  placeholder="Optional: Add to the Terminal Description"
                   value={terminalDescription}
                   onChange={(e) => setTerminalDescription(e.target.value)}
                   bg="#ffffff"
@@ -223,6 +273,31 @@ function CreateBackroom() {
           >
             Create Backroom
           </Button>
+
+          {/* Display agent's evolutions */}
+          {selectedExplorerEvolutions.length > 0 && (
+            <Box mt={8}>
+              <Heading size="lg" mb={4}>
+                Evolution History for {explorerAgent}
+              </Heading>
+              <Table variant="simple" size="lg" colorScheme="blue">
+                <Thead>
+                  <Tr>
+                    <Th>Evolution</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {selectedExplorerEvolutions.map((evolution, index) => (
+                    <Tr key={index}>
+                      <Td fontFamily="Arial, sans-serif">{evolution}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </Box>
+          )}
+
+          {/* Agents table displaying name, traits, and focus */}
           <Box mt={8}>
             <Heading size="lg" mb={4}>
               Agents
