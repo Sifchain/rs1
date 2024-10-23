@@ -1,6 +1,5 @@
 import Agent from '../../models/Agent'
 import User from '../../models/User'
-import { verifyToken } from '../../utils/auth'
 import { checkAgentOwnership } from '../../utils/permissions'
 import mongoose from 'mongoose'
 
@@ -15,15 +14,6 @@ const connectDB = async () => {
 
 export default async function handler(req, res) {
   await connectDB()
-
-  // // Authenticate user via JWT
-  // let userId
-  // try {
-  //   const decoded = verifyToken(req)
-  //   userId = decoded.userId
-  // } catch (err) {
-  //   return res.status(401).json({ error: 'Unauthorized' })
-  // }
 
   if (req.method === 'POST') {
     try {

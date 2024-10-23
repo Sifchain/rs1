@@ -41,16 +41,8 @@ function Agents() {
 
   // Fetch agents
   const fetchAgents = async () => {
-    // const token = localStorage.getItem('token') // Retrieve JWT token from localStorage
     try {
-      const response = await fetch(
-        '/api/agents'
-        // {
-        //   headers: {
-        //     Authorization: `Bearer ${token}`, // Include token in Authorization header
-        //   },
-        // }
-      )
+      const response = await fetch('/api/agents')
       const data = await response.json()
       setAgents(data) // Agents fetched for the logged-in user
     } catch (error) {
@@ -126,13 +118,11 @@ function Agents() {
 
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
-    // const token = localStorage.getItem('token')
     try {
       const user = JSON.parse(localStorage.getItem('user'))
       const response = await fetch(`/api/agents`, {
         method: 'PUT',
         headers: {
-          // Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

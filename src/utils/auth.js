@@ -17,6 +17,9 @@ export const verifyToken = req => {
 }
 
 export const generateToken = user => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is missing')
+  }
   // Create a token with the userId as payload and sign it with the secret
   const token = jwt.sign(
     { userId: user._id },

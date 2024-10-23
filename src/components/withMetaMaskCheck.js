@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useAccount } from '../hooks/useMetaMask' // Custom MetaMask hook
 import { useRouter } from 'next/router'
-import { generateToken } from '../utils/auth' // Token generation function
 const withMetaMaskCheck = WrappedComponent => {
   return props => {
     const { isConnected, hasEthereum, loading, address } = useAccount() // Get wallet address
@@ -19,7 +18,6 @@ const withMetaMaskCheck = WrappedComponent => {
         })
         const data = await response.json()
         if (response.ok) {
-          // generateToken(data._id)
           // Optionally, store user data in local state or context
           localStorage.setItem('user', JSON.stringify(data)) // Optionally store the entire user object
         } else {
