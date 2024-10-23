@@ -26,7 +26,9 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'GET') {
     try {
-      const agents = await Agent.find();
+      // Fetch agents and include only the specified fields
+      const agents = await Agent.find({}, '_id name traits focus description evolutions tweets createdAt updatedAt');
+
       res.status(200).json(agents);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch agents' });

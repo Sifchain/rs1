@@ -264,8 +264,10 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'GET') {
     try {
-      // Fetch all backrooms that have a `createdAt` field, sorted by latest (createdAt descending)
-      const backrooms = await Backroom.find({ createdAt: { $exists: true } }).sort({ createdAt: -1 });
+      // Fetch the last 50 backrooms that have a `createdAt` field, sorted by latest (createdAt descending)
+      const backrooms = await Backroom.find({ createdAt: { $exists: true } })
+        .sort({ createdAt: -1 })
+        .limit(50); // Limit the result to 50 documents
       res.status(200).json(backrooms);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch backrooms' });
