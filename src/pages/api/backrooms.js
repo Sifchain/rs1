@@ -13,17 +13,19 @@ const connectDB = async () => {
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Function to post a tweet using Twitter API
-const postTweet = async (accessToken, message, agentId) => {
+const postTweet = async (accessToken, refreshToken, message, agentId) => {
   let attempt = 0;
   const maxRetries = 3;
   let tweet;
+  let newAccessToken = accessToken;
+  let newRefreshToken = refreshToken;
 
   while (attempt < maxRetries) {
     try {
-      console.log('Posting tweet with access token (partially hidden):', accessToken ? accessToken.slice(0, 10) + '...' : 'No access token provided');
+      console.log('Posting tweet with access token (partially hidden):', newAccessToken ? newAccessToken.slice(0, 10) + '...' : 'No access token provided');
       console.log('Tweet message:', message);
 
-      const twitterClient = new TwitterApi(accessToken);
+      const twitterClient = new TwitterApi(newAccessToken);
       const response = await twitterClient.v2.tweet(message);
       tweet = response.data;
 
@@ -46,12 +48,40 @@ const postTweet = async (accessToken, message, agentId) => {
       attempt++;
       console.error(`Attempt ${attempt}: Error posting tweet with access token. Error:`, error);
 
-      if (error.code === 403) {
-        console.error('Received 403 error, retrying...');
+      if (error.code === 403 || error.code === 401 ) {
+        console.error('Received 403 error, attempting to refresh token...');
+
+        // Attempt to refresh the token
+        try {
+          const twitterClient = new TwitterApi({
+            clientId: process.env.TWITTER_API_KEY,
+            clientSecret: process.env.TWITTER_API_SECRET_KEY
+          });
+
+          const { client, accessToken: refreshedAccessToken, refreshToken: refreshedRefreshToken } = await twitterClient.refreshOAuth2Token(newRefreshToken);
+
+          // Update new access and refresh tokens
+          newAccessToken = refreshedAccessToken;
+          newRefreshToken = refreshedRefreshToken;
+
+          console.log('Access token refreshed successfully:', newAccessToken);
+
+          // Save the new tokens to the agent's document
+          await Agent.findByIdAndUpdate(agentId, {
+            'twitterAuthToken.accessToken': newAccessToken,
+            'twitterAuthToken.refreshToken': newRefreshToken
+          });
+
+          console.log('New access and refresh tokens saved to agent.');
+          continue; // Retry the tweet posting with the refreshed token
+        } catch (refreshError) {
+          console.error('Failed to refresh access token:', refreshError);
+          throw new Error('Failed to refresh access token');
+        }
       }
 
       // Stop retrying if the error is not 403 or we've reached the max retries
-      if (error.code !== 403 || attempt >= maxRetries) {
+      if (error.code !== 403 || error.code !== 401 || attempt >= maxRetries) {
         console.error('Max retries reached or non-retryable error encountered.');
         throw new Error('Failed to post tweet after multiple attempts');
       }
@@ -219,7 +249,7 @@ export default async function handler(req, res) {
       if (explorer.twitterAuthToken?.accessToken) {
         // Post recap as a tweet
         try {
-          const tweetResponse = await postTweet(explorer.twitterAuthToken.accessToken, tweetContent, explorer._id);
+          const tweetResponse = await postTweet(explorer.twitterAuthToken.accessToken, explorer.twitterAuthToken.refreshToken, tweetContent, explorer._id);
           console.log('Tweet posted successfully:', tweetResponse);
         } catch (error) {
           console.error('Error posting tweet:', error);
