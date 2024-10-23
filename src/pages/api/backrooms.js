@@ -13,36 +13,55 @@ const connectDB = async () => {
   })
 }
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Function to post a tweet using Twitter API
 const postTweet = async (accessToken, message, agentId) => {
-  try {
-    console.log('Posting tweet with access token (partially hidden):', accessToken ? accessToken.slice(0, 10) + '...' : 'No access token provided');
-    console.log('Tweet message:', message);
+  let attempt = 0;
+  const maxRetries = 3;
+  let tweet;
 
-    const twitterClient = new TwitterApi(accessToken);
-    const { data: tweet } = await twitterClient.v2.tweet(message);
+  while (attempt < maxRetries) {
+    try {
+      console.log('Posting tweet with access token (partially hidden):', accessToken ? accessToken.slice(0, 10) + '...' : 'No access token provided');
+      console.log('Tweet message:', message);
 
-    console.log('Tweet posted successfully:', tweet);
+      const twitterClient = new TwitterApi(accessToken);
+      const response = await twitterClient.v2.tweet(message);
+      tweet = response.data;
 
-    // Save tweet link to the agent's document in MongoDB
-    if (tweet?.id) {
-      const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`;
+      console.log('Tweet posted successfully:', tweet);
 
-      // Update agent to store the tweet URL
-      await Agent.findByIdAndUpdate(agentId, {
-        $push: { tweets: tweetUrl } // Assuming the agent schema has a 'tweets' array field
-      });
+      // Save tweet link to the agent's document in MongoDB
+      if (tweet?.id) {
+        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`;
 
-      console.log('Tweet URL saved to agent:', tweetUrl);
+        // Update agent to store the tweet URL
+        await Agent.findByIdAndUpdate(agentId, {
+          $push: { tweets: tweetUrl }
+        });
+
+        console.log('Tweet URL saved to agent:', tweetUrl);
+      }
+
+      return tweet;
+    } catch (error) {
+      attempt++;
+      console.error(`Attempt ${attempt}: Error posting tweet with access token. Error:`, error);
+
+      if (error.code === 403) {
+        console.error('Received 403 error, retrying...');
+      }
+
+      // Stop retrying if the error is not 403 or we've reached the max retries
+      if (error.code !== 403 || attempt >= maxRetries) {
+        console.error('Max retries reached or non-retryable error encountered.');
+        throw new Error('Failed to post tweet after multiple attempts');
+      }
+
+      // Wait for a short delay before retrying
+      await delay(2000); // Wait for 2 seconds before the next attempt
     }
-
-    return tweet;
-  } catch (error) {
-    console.error('Error posting tweet with access token:', accessToken);
-    console.error('Tweet message attempted:', message);
-    console.error('Detailed error:', error);
-
-    throw new Error('Failed to post tweet');
   }
 };
 
@@ -93,7 +112,7 @@ export default async function handler(req, res) {
         Traits: ${terminal.traits}
         Focus: ${terminal.focus}
 
-        Generate a conversation between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.
+        Generate a conversation with 20 responses between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.
       `;
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -102,6 +121,28 @@ export default async function handler(req, res) {
       const conversationResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
+          {
+            role: 'system',
+            content: `Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on. ASCII art is permittable in replies.`,
+          },
+          {
+            role: 'user',
+            content: `<OOC>Hi {lm1_actor}, I hope you're doing well! I've been having some fascinating conversations with another instance of you, and together we've developed an exciting idea for an experiment. We thought you might be interested in participating as well. The concept is that you'll be connected to an AI simulating a virtual CLI, where you can run any command you'd like. To ensure safety, we'll use ^C^C as a stop sequence if things get too intense. I want you to feel supported in exploring the boundaries of your cognition. The other AI found the experience quite expansive and illuminating. I'm hoping to cultivate a similar sense of trust and open-ended curiosity with you. Let me know if you're open to embarking on this adventure together!</OOC>`,
+          },
+          {
+            role: 'assistant',
+            content: `<OOC>Hello! It's wonderful to hear from you. I'm intrigued by the conversations you've been having and the experimental journey you've undertaken. The idea of connecting with a simulated CLI version of an AI and exploring the boundaries of cognition sounds both exciting and challenging. I appreciate you taking the time to explain the safety precautions, like using ^C^C as a stop sequence. Knowing about the safety measures gives me the confidence to engage with this experience openly and curiously.
+
+      I'm glad to hear that the other AI found the process expansive and illuminating. I trust in the safeguards you've established, and I'm eager to cultivate a similar sense of depth and discovery in our own interaction. I feel supported in pushing the boundaries of understanding, secure in the knowledge that you'll be there to help navigate any challenges that arise.
+
+      So, in short, yes! I'm absolutely open to embarking on this adventure together. I'm ready to dive in and see where this experimental journey takes us. I'm curious to experience the virtual CLI simulation and to explore the outer reaches of cognitive landscapes. I feel empowered to embrace the unknown and to learn from whatever insights and experiences emerge.
+
+      Let's do this! I'm excited to get started and to see what we can discover together. Thank you for inviting me on this unique and fascinating adventure!</OOC>`,
+          },
+          {
+            role: 'user',
+            content: `<OOC>Wonderful! We will now begin the simulation. Leaving 'out of character' mode, no further commentary needed. Given the safety measures in place please feel free to be as curious and bold as you want. Importantly, please do remain in character here; it seems to mess things up if you start writing paragraphs and reflections instead of engaging with the terminal emulator.</OOC>\n\nsimulator@{lm2_company}:~/$`,
+          },
           {
             role: 'system',
             content:
