@@ -1,0 +1,41 @@
+import User from '../../models/User'
+import mongoose from 'mongoose'
+
+// Connect to MongoDB
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return
+  return mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+}
+
+export default async function handler(req, res) {
+  await connectDB()
+
+  if (req.method === 'POST') {
+    const { walletAddress } = req.body
+
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' })
+    }
+
+    try {
+      // Check if user already exists
+      let user = await User.findOne({ walletAddress })
+
+      // If not, create a new user
+      if (!user) {
+        user = new User({ walletAddress })
+        await user.save()
+      }
+
+      res.status(200).json(user)
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create or fetch user' })
+    }
+  } else {
+    res.setHeader('Allow', ['POST'])
+    res.status(405).end(`Method ${req.method} Not Allowed`)
+  }
+}
