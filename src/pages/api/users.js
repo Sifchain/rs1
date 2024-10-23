@@ -14,24 +14,23 @@ export default async function handler(req, res) {
   await connectDB()
 
   if (req.method === 'POST') {
-    const { walletAddress } = req.body
-
-    if (!walletAddress) {
-      return res.status(400).json({ error: 'Wallet address is required' })
+    const { address } = req.body
+    if (!address) {
+      return res.status(400).json({ error: 'Address is required' })
     }
 
     try {
       // Check if user already exists
-      let user = await User.findOne({ walletAddress })
-
+      let user = await User.findOne({ address })
       // If not, create a new user
       if (!user) {
-        user = new User({ walletAddress })
+        user = new User({ address })
         await user.save()
       }
 
       res.status(200).json(user)
     } catch (error) {
+      console.error('Error creating or fetching user:', error)
       res.status(500).json({ error: 'Failed to create or fetch user' })
     }
   } else {

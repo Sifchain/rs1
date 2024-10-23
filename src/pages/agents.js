@@ -41,10 +41,18 @@ function Agents() {
 
   // Fetch agents
   const fetchAgents = async () => {
+    // const token = localStorage.getItem('token') // Retrieve JWT token from localStorage
     try {
-      const response = await fetch('/api/agents')
+      const response = await fetch(
+        '/api/agents'
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${token}`, // Include token in Authorization header
+        //   },
+        // }
+      )
       const data = await response.json()
-      setAgents(data)
+      setAgents(data) // Agents fetched for the logged-in user
     } catch (error) {
       console.error('Error fetching agents:', error)
     } finally {
@@ -118,18 +126,21 @@ function Agents() {
 
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
-
+    // const token = localStorage.getItem('token')
     try {
+      const user = JSON.parse(localStorage.getItem('user'))
       const response = await fetch(`/api/agents`, {
         method: 'PUT',
         headers: {
+          // Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: agentName,
           traits,
           focus,
-          id: selectedAgent._id,
+          agentId: selectedAgent._id,
+          userId: user._id,
         }),
       })
 
@@ -140,7 +151,6 @@ function Agents() {
       // Manually update selectedAgent with updated values
       const updatedAgent = { ...selectedAgent, name: agentName, traits, focus }
       setSelectedAgent(updatedAgent) // Update selectedAgent with the new values
-
       setEditMode(false) // Exit edit mode
     } catch (error) {
       console.error('Error updating agent:', error)
@@ -195,7 +205,6 @@ function Agents() {
     const tagWithoutHash = tag.replace('#', '')
     router.push(`/backrooms?tags=${encodeURIComponent(tagWithoutHash)}`)
   }
-
   return (
     <ChakraProvider>
       <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">

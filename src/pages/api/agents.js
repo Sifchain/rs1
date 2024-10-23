@@ -1,4 +1,7 @@
 import Agent from '../../models/Agent'
+import User from '../../models/User'
+import { verifyToken } from '../../utils/auth'
+import { checkAgentOwnership } from '../../utils/permissions'
 import mongoose from 'mongoose'
 
 // Connect to MongoDB
@@ -13,9 +16,18 @@ const connectDB = async () => {
 export default async function handler(req, res) {
   await connectDB()
 
+  // // Authenticate user via JWT
+  // let userId
+  // try {
+  //   const decoded = verifyToken(req)
+  //   userId = decoded.userId
+  // } catch (err) {
+  //   return res.status(401).json({ error: 'Unauthorized' })
+  // }
+
   if (req.method === 'POST') {
     try {
-      const { name, traits, focus } = req.body
+      const { name, traits, focus, userId } = req.body
 
       if (!name || !traits || !focus) {
         return res
@@ -23,7 +35,8 @@ export default async function handler(req, res) {
           .json({ error: 'All fields are required: name, traits, focus' })
       }
 
-      const newAgent = new Agent({ name, traits, focus })
+      // Create a new agent associated with the current user
+      const newAgent = new Agent({ name, traits, focus, user: userId })
       await newAgent.save()
       res.status(201).json(newAgent)
     } catch (error) {
@@ -31,38 +44,33 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'GET') {
     try {
+      // Fetch agents created by the authenticated user
       const agents = await Agent.find()
+      // const agents = await Agent.find({ user: userId })
       res.status(200).json(agents)
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch agents' })
     }
   } else if (req.method === 'PUT') {
-    // Handle agent update logic
     try {
-      const { name, traits, focus, id } = req.body
-
-      // Check if all required fields are provided
-      if (!id || !name || !traits || !focus) {
+      const { name, traits, focus, agentId, userId } = req.body
+      if (!agentId || !name || !traits || !focus) {
         return res
           .status(400)
           .json({ error: 'All fields are required: id, name, traits, focus' })
       }
-
-      // Find the agent by ID and update it
+      // Ensure the user has permission to modify this agent
+      await checkAgentOwnership(agentId, userId)
+      // Update the agent
       const updatedAgent = await Agent.findByIdAndUpdate(
-        id,
+        agentId,
         { name, traits, focus },
-        { new: true } // This returns the updated document
+        { new: true } // Return the updated agent
       )
-
-      // If agent not found, return an error
-      if (!updatedAgent) {
-        return res.status(404).json({ error: 'Agent not found' })
-      }
-
       res.status(200).json(updatedAgent)
     } catch (error) {
-      res.status(500).json({ error: 'Failed to update agent' })
+      console.log('error', error)
+      res.status(500).json({ error: error.message || 'Failed to update agent' })
     }
   } else {
     res.setHeader('Allow', ['POST', 'GET', 'PUT'])

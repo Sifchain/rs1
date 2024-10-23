@@ -64,7 +64,12 @@ function CreateAgent() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name: agentName, traits, focus }),
+            body: JSON.stringify({
+              name: agentName,
+              traits,
+              focus,
+              userId: localStorage.getItem('user')._id,
+            }),
           })
 
           if (!response.ok) {
