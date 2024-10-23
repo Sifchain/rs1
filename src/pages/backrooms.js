@@ -52,11 +52,20 @@ function Backrooms() {
         const data = await response.json()
         setBackrooms(data)
 
-        // Extract unique tags for filtering and keep the # for display purposes
-        const uniqueTags = Array.from(
-          new Set(data.flatMap(backroom => backroom.tags || []))
-        )
-        setTags(uniqueTags)
+        // Extract unique tags for filtering and count occurrences
+        const tagCounts = data
+          .flatMap(backroom => backroom.tags || [])
+          .reduce((counts, tag) => {
+            counts[tag] = (counts[tag] || 0) + 1
+            return counts
+          }, {})
+
+        // Sort tags by frequency and limit to top 10
+        const sortedTags = Object.keys(tagCounts)
+          .sort((a, b) => tagCounts[b] - tagCounts[a])
+          .slice(0, 10)
+
+        setTags(sortedTags)
 
         // If 'expanded' is present in the URL, find the matching backroom
         if (expanded) {
@@ -213,6 +222,7 @@ function Backrooms() {
             />
           </Flex>
 
+          {/* Display the top 10 tags */}
           <Flex wrap="wrap" mb={8}>
             {tags.map((tag, index) => (
               <Tag
