@@ -48,8 +48,8 @@ const postTweet = async (accessToken, refreshToken, message, agentId) => {
       attempt++;
       console.error(`Attempt ${attempt}: Error posting tweet with access token. Error:`, error);
 
-      if (error.code === 403 || error.code === 401 ) {
-        console.error('Received 403 error, attempting to refresh token...');
+      if (error.code === 403 || error.code === 402 || error.code === 401 || error.code === 400 ) {
+        console.error('Received 400-403 error, attempting to refresh token...');
 
         // Attempt to refresh the token
         try {
@@ -81,7 +81,7 @@ const postTweet = async (accessToken, refreshToken, message, agentId) => {
       }
 
       // Stop retrying if the error is not 403 or we've reached the max retries
-      if (error.code !== 403 || error.code !== 401 || attempt >= maxRetries) {
+      if (error.code !== 403 || error.code !== 402 || error.code !== 401 || error.code !== 400 || attempt >= maxRetries) {
         console.error('Max retries reached or non-retryable error encountered.');
         throw new Error('Failed to post tweet after multiple attempts');
       }
