@@ -15,12 +15,15 @@ import {
   Textarea,
   FormControl,
   FormErrorMessage,
+  Tooltip,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
 import { FiCalendar } from 'react-icons/fi'
+import { genIsBalanceEnough } from '../utils/balance'
+import { MINIMUM_TOKENS_TO_CREATE_AGENT } from '../constants/constants'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -31,14 +34,29 @@ function Agents() {
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
   const [errors, setErrors] = useState({})
-
   const router = useRouter()
-
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
   const [traits, setTraits] = useState('')
   const [focus, setFocus] = useState('')
+  const [enoughFunds, setEnoughFunds] = useState(false)
 
+  useEffect(() => {
+    const fetchHasEnoughFunds = async () => {
+      return await genIsBalanceEnough(
+        '0xF14F2c49aa90BaFA223EE074C1C33b59891826bF',
+        '0x96c0a8B63C5E871ff6465f32d990e52bD36F3edc',
+        MINIMUM_TOKENS_TO_CREATE_AGENT
+      )
+    }
+    fetchHasEnoughFunds()
+      .then(hasEnoughFunds => {
+        setEnoughFunds(hasEnoughFunds)
+      })
+      .catch(error => {
+        console.error('Error checking balance:', error)
+      })
+  }, [])
   // Fetch agents
   const fetchAgents = async () => {
     try {
@@ -209,14 +227,22 @@ function Agents() {
             >
               Agents
             </Heading>
-            <Button
-              colorScheme="blue"
-              onClick={() => router.push('/create-agent')} // Redirect to create an agent page
-              size="md"
-              fontWeight="bold"
+            <Tooltip
+              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_AGENT} to create a new agent.`}
+              isDisabled={enoughFunds}
+              hasArrow
+              placement="top"
             >
-              + New Agent
-            </Button>
+              <Button
+                isDisabled={!enoughFunds} // Disable the button if the user doesn't have enough funds
+                colorScheme="blue"
+                onClick={() => router.push('/create-agent')} // Redirect to create an agent page
+                size="md"
+                fontWeight="bold"
+              >
+                + New Agent
+              </Button>
+            </Tooltip>
           </Flex>
           {/* Dropdown to select agent */}
           <Flex direction="column" mb={8} alignItems="start">

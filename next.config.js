@@ -5,6 +5,7 @@ const nextConfig = {
   env: {
     MONGODB_URI: process.env.MONGODB_URI,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    ALCHEMY_API_KEY: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
   },
   async redirects() {
     return [
