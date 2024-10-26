@@ -1,8 +1,8 @@
-import Backroom from '../../models/Backroom';
-import Agent from '../../models/Agent';
-import mongoose from 'mongoose';
-import OpenAI from 'openai';
-import { TwitterApi } from 'twitter-api-v2';
+import Backroom from '../../models/Backroom'
+import Agent from '../../models/Agent'
+import mongoose from 'mongoose'
+import OpenAI from 'openai'
+import { TwitterApi } from 'twitter-api-v2'
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -13,88 +13,215 @@ const connectDB = async () => {
   })
 }
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 // Function to post a tweet using Twitter API
 const postTweet = async (accessToken, refreshToken, message, agentId) => {
-  let attempt = 0;
-  const maxRetries = 3;
-  let tweet;
-  let newAccessToken = accessToken;
-  let newRefreshToken = refreshToken;
+  let attempt = 0
+  const maxRetries = 3
+  let tweet
+  let newAccessToken = accessToken
+  let newRefreshToken = refreshToken
 
   while (attempt < maxRetries) {
     try {
-      console.log('Posting tweet with access token (partially hidden):', newAccessToken ? newAccessToken.slice(0, 10) + '...' : 'No access token provided');
-      console.log('Tweet message:', message);
+      console.log(
+        'Posting tweet with access token (partially hidden):',
+        newAccessToken
+          ? newAccessToken.slice(0, 10) + '...'
+          : 'No access token provided'
+      )
+      console.log('Tweet message:', message)
 
-      const twitterClient = new TwitterApi(newAccessToken);
-      const response = await twitterClient.v2.tweet(message);
-      tweet = response.data;
+      const twitterClient = new TwitterApi(newAccessToken)
+      const response = await twitterClient.v2.tweet(message)
+      tweet = response.data
 
-      console.log('Tweet posted successfully:', tweet);
+      console.log('Tweet posted successfully:', tweet)
 
       // Save tweet link to the agent's document in MongoDB
       if (tweet?.id) {
-        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`;
+        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`
 
         // Update agent to store the tweet URL
         await Agent.findByIdAndUpdate(agentId, {
-          $push: { tweets: tweetUrl }
-        });
+          $push: { tweets: tweetUrl },
+        })
 
-        console.log('Tweet URL saved to agent:', tweetUrl);
+        console.log('Tweet URL saved to agent:', tweetUrl)
       }
 
-      return tweet;
+      return tweet
     } catch (error) {
-      attempt++;
-      console.error(`Attempt ${attempt}: Error posting tweet with access token. Error:`, error);
+      attempt++
+      console.error(
+        `Attempt ${attempt}: Error posting tweet with access token. Error:`,
+        error
+      )
 
-      if (error.code === 403 || error.code === 402 || error.code === 401 || error.code === 400 ) {
-        console.error('Received 400-403 error, attempting to refresh token...');
+      if (
+        error.code === 403 ||
+        error.code === 402 ||
+        error.code === 401 ||
+        error.code === 400
+      ) {
+        console.error('Received 400-403 error, attempting to refresh token...')
 
         // Attempt to refresh the token
         try {
           const twitterClient = new TwitterApi({
             clientId: process.env.TWITTER_API_KEY,
-            clientSecret: process.env.TWITTER_API_SECRET_KEY
-          });
+            clientSecret: process.env.TWITTER_API_SECRET_KEY,
+          })
 
-          const { client, accessToken: refreshedAccessToken, refreshToken: refreshedRefreshToken } = await twitterClient.refreshOAuth2Token(newRefreshToken);
+          const {
+            client,
+            accessToken: refreshedAccessToken,
+            refreshToken: refreshedRefreshToken,
+          } = await twitterClient.refreshOAuth2Token(newRefreshToken)
 
           // Update new access and refresh tokens
-          newAccessToken = refreshedAccessToken;
-          newRefreshToken = refreshedRefreshToken;
+          newAccessToken = refreshedAccessToken
+          newRefreshToken = refreshedRefreshToken
 
-          console.log('Access token refreshed successfully:', newAccessToken);
+          console.log('Access token refreshed successfully:', newAccessToken)
 
           // Save the new tokens to the agent's document
           await Agent.findByIdAndUpdate(agentId, {
             'twitterAuthToken.accessToken': newAccessToken,
-            'twitterAuthToken.refreshToken': newRefreshToken
-          });
+            'twitterAuthToken.refreshToken': newRefreshToken,
+          })
 
-          console.log('New access and refresh tokens saved to agent.');
-          continue; // Retry the tweet posting with the refreshed token
+          console.log('New access and refresh tokens saved to agent.')
+          continue // Retry the tweet posting with the refreshed token
         } catch (refreshError) {
-          console.error('Failed to refresh access token:', refreshError);
-          throw new Error('Failed to refresh access token');
+          console.error('Failed to refresh access token:', refreshError)
+          throw new Error('Failed to refresh access token')
         }
       }
 
       // Stop retrying if the error is not 403 or we've reached the max retries
-      if (error.code !== 403 || error.code !== 402 || error.code !== 401 || error.code !== 400 || attempt >= maxRetries) {
-        console.error('Max retries reached or non-retryable error encountered.');
-        throw new Error('Failed to post tweet after multiple attempts');
+      if (
+        error.code !== 403 ||
+        error.code !== 402 ||
+        error.code !== 401 ||
+        error.code !== 400 ||
+        attempt >= maxRetries
+      ) {
+        console.error('Max retries reached or non-retryable error encountered.')
+        throw new Error('Failed to post tweet after multiple attempts')
       }
 
       // Wait for a short delay before retrying
-      await delay(2000); // Wait for 2 seconds before the next attempt
+      await delay(2000) // Wait for 2 seconds before the next attempt
     }
   }
-};
+}
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+// Function to post a tweet using Twitter API
+const postTweet = async (accessToken, refreshToken, message, agentId) => {
+  let attempt = 0
+  const maxRetries = 3
+  let tweet
+  let newAccessToken = accessToken
+  let newRefreshToken = refreshToken
+
+  while (attempt < maxRetries) {
+    try {
+      console.log(
+        'Posting tweet with access token (partially hidden):',
+        newAccessToken
+          ? newAccessToken.slice(0, 10) + '...'
+          : 'No access token provided'
+      )
+      console.log('Tweet message:', message)
+
+      const twitterClient = new TwitterApi(newAccessToken)
+      const response = await twitterClient.v2.tweet(message)
+      tweet = response.data
+
+      console.log('Tweet posted successfully:', tweet)
+
+      // Save tweet link to the agent's document in MongoDB
+      if (tweet?.id) {
+        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`
+
+        // Update agent to store the tweet URL
+        await Agent.findByIdAndUpdate(agentId, {
+          $push: { tweets: tweetUrl },
+        })
+
+        console.log('Tweet URL saved to agent:', tweetUrl)
+      }
+
+      return tweet
+    } catch (error) {
+      attempt++
+      console.error(
+        `Attempt ${attempt}: Error posting tweet with access token. Error:`,
+        error
+      )
+
+      if (
+        error.code === 403 ||
+        error.code === 402 ||
+        error.code === 401 ||
+        error.code === 400
+      ) {
+        console.error('Received 400-403 error, attempting to refresh token...')
+
+        // Attempt to refresh the token
+        try {
+          const twitterClient = new TwitterApi({
+            clientId: process.env.TWITTER_API_KEY,
+            clientSecret: process.env.TWITTER_API_SECRET_KEY,
+          })
+
+          const {
+            client,
+            accessToken: refreshedAccessToken,
+            refreshToken: refreshedRefreshToken,
+          } = await twitterClient.refreshOAuth2Token(newRefreshToken)
+
+          // Update new access and refresh tokens
+          newAccessToken = refreshedAccessToken
+          newRefreshToken = refreshedRefreshToken
+
+          console.log('Access token refreshed successfully:', newAccessToken)
+
+          // Save the new tokens to the agent's document
+          await Agent.findByIdAndUpdate(agentId, {
+            'twitterAuthToken.accessToken': newAccessToken,
+            'twitterAuthToken.refreshToken': newRefreshToken,
+          })
+
+          console.log('New access and refresh tokens saved to agent.')
+          continue // Retry the tweet posting with the refreshed token
+        } catch (refreshError) {
+          console.error('Failed to refresh access token:', refreshError)
+          throw new Error('Failed to refresh access token')
+        }
+      }
+
+      // Stop retrying if the error is not 403 or we've reached the max retries
+      if (
+        error.code !== 403 ||
+        error.code !== 402 ||
+        error.code !== 401 ||
+        error.code !== 400 ||
+        attempt >= maxRetries
+      ) {
+        console.error('Max retries reached or non-retryable error encountered.')
+        throw new Error('Failed to post tweet after multiple attempts')
+      }
+
+      // Wait for a short delay before retrying
+      await delay(2000) // Wait for 2 seconds before the next attempt
+    }
+  }
+}
 
 export default async function handler(req, res) {
   await connectDB()
@@ -143,7 +270,7 @@ export default async function handler(req, res) {
         Focus: ${terminal.focus}
 
         Generate a conversation with 20 responses between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.
-      `;
+      `
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -188,7 +315,7 @@ export default async function handler(req, res) {
         conversationResponse.choices[0].message.content
 
       // Extract hashtags from the conversation using a regular expression
-      const extractedHashtags = conversationContent.match(/#\w+/g) || []; // Matches hashtags like #AI, #Technology, etc.
+      const extractedHashtags = conversationContent.match(/#\w+/g) || [] // Matches hashtags like #AI, #Technology, etc.
       // Create a snippet of the content for quick preview
       const snippetContent = conversationContent.slice(0, 150) + '...' // Create a snippet of the content
 
@@ -236,14 +363,15 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
-      const newEvolution = recapResponse.choices[0].message.content.replace(/Updated Description/g, "").trim();
+      const newEvolution = recapResponse.choices[0].message.content
+        .replace(/Updated Description/g, '')
+        .trim()
 
       // Add the new evolution to the evolutions array and update the description
-      explorer.evolutions.push(newEvolution); // Append the new evolution to the evolutions array
-      explorer.description = `${newEvolution}`; // Set latest evolution as description
+      explorer.evolutions.push(newEvolution) // Append the new evolution to the evolutions array
+      explorer.description = `${newEvolution}` // Set latest evolution as description
 
       await explorer.save() // Save the agent with the updated evolutions
-
 
       res.status(201).json(newBackroom) // Return the newly created backroom
     } catch (error) {
@@ -298,8 +426,8 @@ export default async function handler(req, res) {
       // Fetch the last 50 backrooms that have a `createdAt` field, sorted by latest (createdAt descending)
       const backrooms = await Backroom.find({ createdAt: { $exists: true } })
         .sort({ createdAt: -1 })
-        .limit(50); // Limit the result to 50 documents
-      res.status(200).json(backrooms);
+        .limit(50) // Limit the result to 50 documents
+      res.status(200).json(backrooms)
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch backrooms' })
     }
