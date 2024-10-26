@@ -408,22 +408,34 @@ function CreateAgent() {
 
           {loadingStep === 3 && (
             <Box textAlign="center" mt={6}>
-              <Alert status="success" mb={6}>
+              <Alert
+                status="success"
+                mb={6}
+                justifyContent="center"
+                textAlign="center"
+              >
                 <AlertIcon />
                 <Box>
-                  <AlertTitle>Agent Successfully Created!</AlertTitle>
-                  <AlertDescription>
+                  <AlertTitle textAlign="center">
+                    Agent Successfully Created!
+                  </AlertTitle>
+                  <AlertDescription textAlign="center">
                     Your agent has been created and is ready for further
                     actions.
                   </AlertDescription>
                 </Box>
               </Alert>
               {twitterLinked && (
-                <Alert status="info" mb={6}>
+                <Alert
+                  status="info"
+                  mb={6}
+                  justifyContent="center"
+                  textAlign="center"
+                >
                   <AlertIcon />
                   <Box>
-                    <AlertTitle>Twitter Linked!</AlertTitle>
-                    <AlertDescription>
+                    <AlertTitle textAlign="center">Twitter Linked!</AlertTitle>
+                    <AlertDescription textAlign="center">
                       Your Twitter account has been successfully linked.
                     </AlertDescription>
                   </Box>
