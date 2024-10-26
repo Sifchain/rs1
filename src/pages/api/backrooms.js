@@ -4,6 +4,8 @@ import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
 
+mongoose.set('strictQuery', false);
+
 // Connect to MongoDB
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) return
@@ -118,13 +120,18 @@ const postTweet = async (accessToken, refreshToken, message, agentId) => {
   }
 }
 
-// Allow requests only from https://www.realityspiral.com or local development
-const allowedOrigins = ['https://www.realityspiral.com', 'http://localhost:3000'];
+const allowedOrigins = [
+  /^https:\/\/(?:.*\.)?realityspiral\.com.*/
+];
 
 export default async function handler(req, res) {
 
-  const origin = req.headers.origin;
-  if (!allowedOrigins.includes(origin) && process.env.NODE_ENV !== 'development') {
+  const origin = req.headers.origin || req.headers.referer;
+
+  if (
+    !allowedOrigins.some(pattern => pattern.test(origin)) &&
+    process.env.NODE_ENV !== 'development'
+  ) {
     return res.status(403).json({ error: 'Request origin not allowed' });
   }
 
