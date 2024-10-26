@@ -187,11 +187,15 @@ function CreateBackroom() {
                   borderColor={errors.explorerAgent ? 'red.500' : '#ecf0f1'}
                   _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents.map(agent => (
-                    <option key={agent._id} value={agent.name}>
-                      {agent.name}
-                    </option>
-                  ))}
+                  {agents
+                    .filter(agent =>
+                      ['All', '', 'Explorer'].includes(agent.type)
+                    )
+                    .map(agent => (
+                      <option key={agent._id} value={agent.name}>
+                        {agent.name}
+                      </option>
+                    ))}
                 </Select>
                 {errors.explorerAgent && (
                   <FormErrorMessage>{errors.explorerAgent}</FormErrorMessage>
@@ -262,11 +266,15 @@ function CreateBackroom() {
                   border="2px solid #ecf0f1"
                   _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents.map(agent => (
-                    <option key={agent._id} value={agent.name}>
-                      {agent.name}
-                    </option>
-                  ))}
+                  {agents
+                    .filter(agent =>
+                      ['All', '', 'Terminal'].includes(agent.type)
+                    )
+                    .map(agent => (
+                      <option key={agent._id} value={agent.name}>
+                        {agent.name}
+                      </option>
+                    ))}
                 </Select>
               </FormControl>
 
@@ -354,6 +362,7 @@ function CreateBackroom() {
                   <Tr key={agent._id}>
                     <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
                     <Td fontFamily="Arial, sans-serif">
+                      <strong>Type:</strong> {agent.type ?? 'All'} <br />
                       <strong>Traits:</strong> {agent.traits} <br />
                       <strong>Focus:</strong> {agent.focus} <br />
                       <strong>Description:</strong> {agent.description} <br />

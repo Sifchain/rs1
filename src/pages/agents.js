@@ -36,6 +36,7 @@ function Agents() {
   const [backroomTags, setBackroomTags] = useState([])
   const [editMode, setEditMode] = useState(false)
   const [errors, setErrors] = useState({})
+  const [agentType, setAgentType] = useState('All')
   const router = useRouter()
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
@@ -63,6 +64,7 @@ function Agents() {
         console.error('Error checking balance:', error)
       })
   }, [])
+
   // Fetch agents
   const fetchAgents = async () => {
     try {
@@ -75,6 +77,7 @@ function Agents() {
       setLoading(false)
     }
   }
+
   useEffect(() => {
     fetchAgents()
   }, [])
@@ -91,6 +94,7 @@ function Agents() {
     setConversationPrompt(agent?.conversationPrompt || '')
     setRecapPrompt(agent?.recapPrompt || '')
     setTweetPrompt(agent?.tweetPrompt || '')
+    setAgentType(agent?.type || '') // Pre-fill the agentType field
     setEditMode(false) // Initially show agent details, not edit mode
 
     // Fetch recent backroom conversations related to this agent
@@ -119,11 +123,12 @@ function Agents() {
   const handleEditClick = () => {
     setEditMode(true)
   }
+
   const handleValidation = () => {
     let valid = true
     let errors = {}
     if (!agentName) {
-      errors.agentName = 'Agent Name is required'
+      errors.agentName = 'Name is required'
       valid = false
     }
     if (!traits) {
@@ -134,9 +139,14 @@ function Agents() {
       errors.focus = 'Focus is required'
       valid = false
     }
+    if (!agentType) {
+      errors.agentType = 'Type is required' // Ensure agent type is filled
+      valid = false
+    }
     setErrors(errors)
     return valid
   }
+
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
@@ -153,6 +163,7 @@ function Agents() {
           conversationPrompt,
           recapPrompt,
           tweetPrompt,
+          type: agentType, // Add agent type to the update payload
           agentId: selectedAgent._id,
           userId: JSON.parse(localStorage.getItem('user')),
         }),
@@ -170,6 +181,7 @@ function Agents() {
         conversationPrompt,
         recapPrompt,
         tweetPrompt,
+        type: agentType, // Update the agent type
       }
       setSelectedAgent(updatedAgent)
       setEditMode(false)
@@ -329,7 +341,20 @@ function Agents() {
                         {selectedAgent.role || 'Explorer Role'}
                       </TagLabel>
                     </Tag>
-
+                    {/* Display Type */}
+                    <Box mt={3}>
+                      <Text
+                        fontSize="lg"
+                        fontWeight="bold"
+                        color="#2980b9"
+                        mt={3}
+                      >
+                        Type:
+                      </Text>
+                      <Tag size="md" colorScheme="blue" mr={2}>
+                        {selectedAgent.type ?? 'All'}
+                      </Tag>
+                    </Box>
                     {/* Display Focus */}
                     <Box mt={3}>
                       <Text
@@ -558,7 +583,7 @@ function Agents() {
                 <Heading fontSize="2xl" color="#2980b9" mb={4}>
                   Edit Agent Details
                 </Heading>
-                {/* Agent Name */}
+                {/* Name */}
                 <FormControl isInvalid={errors.agentName}>
                   <Flex alignItems="center" mb={4}>
                     {/* Label */}
@@ -568,11 +593,11 @@ function Agents() {
                       minWidth="150px"
                       color="#2980b9"
                     >
-                      Agent Name:
+                      Name:
                     </Text>
                     {/* Input */}
                     <Input
-                      placeholder="Agent Name"
+                      placeholder="Name"
                       value={agentName}
                       onChange={e => setAgentName(e.target.value)}
                       bg="#ffffff"
@@ -586,6 +611,36 @@ function Agents() {
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
                   )}
                 </FormControl>
+
+                {/* Type Selector */}
+                <FormControl isInvalid={errors.agentType}>
+                  <Flex alignItems="center" mb={4}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Type:
+                    </Text>
+                    <Select
+                      value={agentType}
+                      onChange={e => setAgentType(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={errors.agentType ? 'red.500' : '#ecf0f1'}
+                    >
+                      <option value="All">All</option>
+                      <option value="Explorer">Explorer</option>
+                      <option value="Terminal">Terminal</option>
+                    </Select>
+                  </Flex>
+                  {errors.agentType && (
+                    <FormErrorMessage>{errors.agentType}</FormErrorMessage>
+                  )}
+                </FormControl>
+
                 {/* Traits */}
                 <FormControl isInvalid={errors.traits}>
                   <Flex alignItems="center" mb={4}>
@@ -645,6 +700,7 @@ function Agents() {
                     <FormErrorMessage>{errors.focus}</FormErrorMessage>
                   )}
                 </FormControl>
+
                 {/* Description */}
                 <FormControl isInvalid={errors.description}>
                   <Flex alignItems="center" mb={4}>

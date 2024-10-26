@@ -20,6 +20,7 @@ import {
   Spinner,
   useClipboard,
   useDisclosure,
+  Select,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -33,7 +34,7 @@ function CreateAgent() {
   const descriptionTemplate = `Agent description:
 
 - Core Identity:
-  - Name: {Agent Name}
+  - Name: {Name}
   - Origin: (Where did your agent originate? Is it a rogue program, awakened human, or something else entirely?)
   - Primary Goal: (What drives your agent? What is its ultimate purpose or ambition?)
   - Allegiances: (Which faction or group does your agent align with?)
@@ -78,6 +79,7 @@ function CreateAgent() {
   const [loadingStep, setLoadingStep] = useState(0)
   const [errors, setErrors] = useState({})
   const router = useRouter()
+  const [agentType, setAgentType] = useState('All')
 
   const { hasCopied, onCopy } = useClipboard(descriptionTemplate)
   const { hasCopied: convoCopied, onCopy: copyConversation } = useClipboard(
@@ -109,7 +111,7 @@ function CreateAgent() {
     let errors = {}
 
     if (!agentName) {
-      errors.agentName = 'Agent Name is required'
+      errors.agentName = 'Name is required'
       valid = false
     }
     if (!traits) {
@@ -118,6 +120,10 @@ function CreateAgent() {
     }
     if (!description) {
       errors.description = 'Description is required'
+      valid = false
+    }
+    if (!agentType) {
+      errors.agentType = 'Type is required'
       valid = false
     }
 
@@ -145,6 +151,7 @@ function CreateAgent() {
             traits,
             focus: description,
             user: userId,
+            type: agentType,
             conversationPrompt,
             recapPrompt,
             tweetPrompt,
@@ -217,7 +224,7 @@ function CreateAgent() {
               <VStack spacing={4} align="stretch">
                 <FormControl isInvalid={errors.agentName}>
                   <Text fontWeight="bold" color="#2980b9">
-                    Agent Name
+                    Name
                   </Text>
                   <Input
                     placeholder="Enter agent name"
@@ -251,7 +258,27 @@ function CreateAgent() {
                     <FormErrorMessage>{errors.traits}</FormErrorMessage>
                   )}
                 </FormControl>
-
+                {/* Type Selector */}
+                <FormControl isInvalid={errors.agentType}>
+                  <Text fontWeight="bold" color="#2980b9">
+                    Type
+                  </Text>
+                  <Select
+                    value={agentType}
+                    onChange={e => setAgentType(e.target.value)}
+                    bg="#ffffff"
+                    color="#34495e"
+                    border="2px solid"
+                    borderColor={errors.agentType ? 'red.500' : '#ecf0f1'}
+                  >
+                    <option value="All">All</option>
+                    <option value="Explorer">Explorer</option>
+                    <option value="Terminal">Terminal</option>
+                  </Select>
+                  {errors.agentType && (
+                    <FormErrorMessage>{errors.agentType}</FormErrorMessage>
+                  )}
+                </FormControl>
                 {/* Description Section */}
                 <Flex justify="space-between" align="center">
                   <Text fontWeight="bold" color="#2980b9">
