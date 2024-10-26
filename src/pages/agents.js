@@ -18,6 +18,7 @@ import {
   Button,
   Tooltip,
 } from '@chakra-ui/react'
+import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
@@ -40,6 +41,10 @@ function Agents() {
   const [agentName, setAgentName] = useState('')
   const [traits, setTraits] = useState('')
   const [focus, setFocus] = useState('')
+  const [description, setDescription] = useState('')
+  const [conversationPrompt, setConversationPrompt] = useState('')
+  const [recapPrompt, setRecapPrompt] = useState('')
+  const [tweetPrompt, setTweetPrompt] = useState('')
   const [enoughFunds, setEnoughFunds] = useState(false)
 
   useEffect(() => {
@@ -76,24 +81,28 @@ function Agents() {
 
   const handleAgentSelection = async event => {
     const agentId = event.target.value
-    const agent = agents.find(agent => agent._id === agentId)
+    const agent = agents.find(agent => agent?._id === agentId)
     setSelectedAgent(agent)
     // Pre-fill the edit form
-    setAgentName(agent.name)
-    setTraits(agent.traits)
-    setFocus(agent.focus)
+    setAgentName(agent?.name)
+    setTraits(agent?.traits)
+    setFocus(agent?.focus)
+    setDescription(agent?.description || '') // Optional fields
+    setConversationPrompt(agent?.conversationPrompt || '')
+    setRecapPrompt(agent?.recapPrompt || '')
+    setTweetPrompt(agent?.tweetPrompt || '')
     setEditMode(false) // Initially show agent details, not edit mode
 
     // Fetch recent backroom conversations related to this agent
     try {
-      const response = await fetch(`/api/backrooms?agentName=${agent.name}`)
+      const response = await fetch(`/api/backrooms?agentName=${agent?.name}`)
       const data = await response.json()
 
       // Filter backrooms where the agent is involved as explorer or terminal
       const filteredConversations = data.filter(
         backroom =>
-          backroom.explorerAgentName === agent.name ||
-          backroom.terminalAgentName === agent.name
+          backroom.explorerAgentName === agent?.name ||
+          backroom.terminalAgentName === agent?.name
       )
       setRecentBackroomConversations(filteredConversations)
 
@@ -101,7 +110,7 @@ function Agents() {
       const tagsFromConversations = filteredConversations.flatMap(
         backroom => backroom.tags || []
       )
-      setBackroomTags(Array.from(new Set(tagsFromConversations))) 
+      setBackroomTags(Array.from(new Set(tagsFromConversations)))
     } catch (error) {
       console.error('Error fetching recent backroom conversations:', error)
     }
@@ -140,16 +149,29 @@ function Agents() {
           name: agentName,
           traits,
           focus,
+          description,
+          conversationPrompt,
+          recapPrompt,
+          tweetPrompt,
           agentId: selectedAgent._id,
-          userId: JSON.parse(localStorage.getItem('user'))
+          userId: JSON.parse(localStorage.getItem('user')),
         }),
       })
       if (!response.ok) {
         throw new Error('Failed to update agent')
       }
       const agents = await response.json()
-      const updatedAgent = { ...selectedAgent, name: agentName, traits, focus }
-      setSelectedAgent(updatedAgent) 
+      const updatedAgent = {
+        ...selectedAgent,
+        name: agentName,
+        traits,
+        focus,
+        description,
+        conversationPrompt,
+        recapPrompt,
+        tweetPrompt,
+      }
+      setSelectedAgent(updatedAgent)
       setEditMode(false)
       setAgents(agents)
     } catch (error) {
@@ -173,11 +195,11 @@ function Agents() {
       </Box>
     ))
   }
-  
+
   const hasEditPermission = () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    return user && selectedAgent && user._id === selectedAgent.user;
-  };
+    const user = JSON.parse(localStorage.getItem('user'))
+    return user && selectedAgent && user._id === selectedAgent.user
+  }
 
   const displayRecentBackrooms = () => {
     if (recentBackroomConversations.length === 0) {
@@ -227,7 +249,7 @@ function Agents() {
               Agents
             </Heading>
             <Tooltip
-              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_AGENT} to create a new agent.`}
+              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_AGENT} to create a new agent?.`}
               // isDisabled={!enoughFunds}
               hasArrow
               placement="top"
@@ -245,7 +267,13 @@ function Agents() {
           </Flex>
           {/* Dropdown to select agent */}
           {/* Dropdown to select agent and Create Agent button */}
-          <Flex direction="row" mb={8} alignItems="center" justifyContent="center" gap={4}>
+          <Flex
+            direction="row"
+            mb={8}
+            alignItems="center"
+            justifyContent="center"
+            gap={4}
+          >
             <Select
               placeholder="Select Agent"
               onChange={handleAgentSelection}
@@ -257,8 +285,8 @@ function Agents() {
             >
               {Array.isArray(agents) && agents.length > 0 ? (
                 agents.map(agent => (
-                  <option key={agent._id} value={agent._id}>
-                    {agent.name}
+                  <option key={agent?._id} value={agent?._id}>
+                    {agent?.name}
                   </option>
                 ))
               ) : (
@@ -266,7 +294,6 @@ function Agents() {
               )}
             </Select>
           </Flex>
-
 
           {/* Display agent details */}
           {selectedAgent && !editMode && (
@@ -330,7 +357,48 @@ function Agents() {
                           ))}
                       </Box>
                     </Box>
+                    {/* Display Description */}
+                    <Box mt={3}>
+                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                        Description:
+                      </Text>
+                      <Text mt={2} color="#34495e">
+                        {selectedAgent.description || 'No description provided'}
+                      </Text>
+                    </Box>
 
+                    {/* Display Conversation Prompt */}
+                    <Box mt={3}>
+                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                        Conversation Prompt:
+                      </Text>
+                      <Text mt={2} color="#34495e">
+                        {selectedAgent.conversationPrompt ||
+                          'No conversation prompt provided'}
+                      </Text>
+                    </Box>
+
+                    {/* Display Recap Prompt */}
+                    <Box mt={3}>
+                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                        Recap Prompt:
+                      </Text>
+                      <Text mt={2} color="#34495e">
+                        {selectedAgent.recapPrompt ||
+                          'No recap prompt provided'}
+                      </Text>
+                    </Box>
+
+                    {/* Display Tweet Prompt */}
+                    <Box mt={3}>
+                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                        Tweet Prompt:
+                      </Text>
+                      <Text mt={2} color="#34495e">
+                        {selectedAgent.tweetPrompt ||
+                          'No tweet prompt provided'}
+                      </Text>
+                    </Box>
                     {/* Display All Tags */}
                     <Box mt={3}>
                       <Text
@@ -363,7 +431,12 @@ function Agents() {
                   </Box>
                   <Box minWidth="120px" textAlign="right">
                     {/* Edit button */}
-                    <Button disabled={!hasEditPermission()} colorScheme="blue" onClick={handleEditClick} mb={4}>
+                    <Button
+                      disabled={!hasEditPermission()}
+                      colorScheme="blue"
+                      onClick={handleEditClick}
+                      mb={4}
+                    >
                       Edit
                     </Button>
                     <Flex alignItems="center" justifyContent="flex-end">
@@ -385,10 +458,9 @@ function Agents() {
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
               >
                 <Text fontSize="lg" fontWeight="bold" color="#2980b9">
-                  Agent Description & Journey
+                  Agent Journey
                 </Text>
                 <Divider mb={4} />
-                <Text color="#34495e">{selectedAgent.description}</Text>
                 <Box mt={4}>{displayJourney(selectedAgent.evolutions)}</Box>
               </Box>
 
@@ -408,10 +480,16 @@ function Agents() {
               </Box>
 
               {/* Display Tweets */}
-              <Box mt={10}>
-                <Heading size="lg" mb={4}>
+              <Box
+                p={4}
+                bg="#ffffff"
+                borderRadius="lg"
+                border="2px solid #ecf0f1"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+              >
+                <Text fontSize="lg" fontWeight="bold" color="#2980b9">
                   Tweets
-                </Heading>
+                </Text>
                 {selectedAgent.tweets && selectedAgent.tweets.length > 0 ? (
                   selectedAgent.tweets.map((tweetUrl, index) => (
                     <Box key={index} mb={3}>
@@ -429,6 +507,15 @@ function Agents() {
           {/* Edit Agent Form */}
           {selectedAgent && editMode && (
             <VStack spacing={6} align="stretch">
+              {/* Back Button */}
+              <Button
+                leftIcon={<ArrowBackIcon />}
+                colorScheme="blue"
+                onClick={() => setEditMode(false)}
+                alignSelf="flex-start"
+              >
+                Back
+              </Button>
               <Box
                 p={4}
                 bg="#ffffff"
@@ -496,6 +583,7 @@ function Agents() {
                     <FormErrorMessage>{errors.traits}</FormErrorMessage>
                   )}
                 </FormControl>
+
                 {/* Focus */}
                 <FormControl isInvalid={errors.focus}>
                   <Flex alignItems="center" mb={4}>
@@ -524,16 +612,127 @@ function Agents() {
                   {errors.focus && (
                     <FormErrorMessage>{errors.focus}</FormErrorMessage>
                   )}
-                  <Flex justifyContent="flex-end" mt={4}>
-                    <Button
-                      colorScheme="blue"
-                      onClick={handleUpdateAgent}
-                      mt={4}
-                    >
-                      Update Agent
-                    </Button>
-                  </Flex>
                 </FormControl>
+                {/* Description */}
+                <FormControl isInvalid={errors.description}>
+                  <Flex alignItems="center" mb={4}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Description:
+                    </Text>
+                    <Textarea
+                      placeholder="Description"
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={errors.description ? 'red.500' : '#ecf0f1'}
+                      _hover={{ borderColor: '#3498db' }}
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.description && (
+                    <FormErrorMessage>{errors.description}</FormErrorMessage>
+                  )}
+                </FormControl>
+
+                {/* Conversation Prompt */}
+                <FormControl isInvalid={errors.conversationPrompt}>
+                  <Flex alignItems="center" mb={4}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Conversation Prompt:
+                    </Text>
+                    <Textarea
+                      placeholder="Conversation Prompt"
+                      value={conversationPrompt}
+                      onChange={e => setConversationPrompt(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={
+                        errors.conversationPrompt ? 'red.500' : '#ecf0f1'
+                      }
+                      _hover={{ borderColor: '#3498db' }}
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.conversationPrompt && (
+                    <FormErrorMessage>
+                      {errors.conversationPrompt}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
+
+                {/* Recap Prompt */}
+                <FormControl isInvalid={errors.recapPrompt}>
+                  <Flex alignItems="center" mb={4}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Recap Prompt:
+                    </Text>
+                    <Textarea
+                      placeholder="Recap Prompt"
+                      value={recapPrompt}
+                      onChange={e => setRecapPrompt(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={errors.recapPrompt ? 'red.500' : '#ecf0f1'}
+                      _hover={{ borderColor: '#3498db' }}
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.recapPrompt && (
+                    <FormErrorMessage>{errors.recapPrompt}</FormErrorMessage>
+                  )}
+                </FormControl>
+
+                {/* Tweet Prompt */}
+                <FormControl isInvalid={errors.tweetPrompt}>
+                  <Flex alignItems="center" mb={4}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#2980b9"
+                    >
+                      Tweet Prompt:
+                    </Text>
+                    <Textarea
+                      placeholder="Tweet Prompt"
+                      value={tweetPrompt}
+                      onChange={e => setTweetPrompt(e.target.value)}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor={errors.tweetPrompt ? 'red.500' : '#ecf0f1'}
+                      _hover={{ borderColor: '#3498db' }}
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.tweetPrompt && (
+                    <FormErrorMessage>{errors.tweetPrompt}</FormErrorMessage>
+                  )}
+                </FormControl>
+                <Flex justifyContent="flex-end" mt={4}>
+                  <Button colorScheme="blue" onClick={handleUpdateAgent} mt={4}>
+                    Update Agent
+                  </Button>
+                </Flex>
               </Box>
             </VStack>
           )}

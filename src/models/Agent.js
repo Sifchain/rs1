@@ -4,13 +4,11 @@ const AgentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   traits: { type: String, required: true },
   focus: { type: String, required: true },
-  description: { type: String, default: '' },
   evolutions: { type: [String], default: [] },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: false,
-    default: null,
+    required: true,
   },
   twitterAuthToken: {
     accessToken: { type: String, default: '' },
@@ -20,11 +18,11 @@ const AgentSchema = new mongoose.Schema({
     codeVerifier: String,
     state: String,
   },
-  twitterTokenExpiry: { type: Date, default: null }, 
+  twitterTokenExpiry: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   tweets: { type: [String], default: [] },
-
+  description: { type: String, default: '' },
   conversationPrompt: { type: String, default: '' },
   recapPrompt: { type: String, default: '' },
   tweetPrompt: { type: String, default: '' },

@@ -13,9 +13,35 @@ const connectDB = async () => {
 }
 
 // Helper function to sanitize agent data
-const sanitizeAgent = (agent) => {
-  const { _id, name, traits, focus, description, evolutions, tweets, createdAt, updatedAt, conversationPrompt, recapPrompt, tweetPrompt } = agent
-  return { _id, name, traits, focus, description, evolutions, tweets, createdAt, updatedAt, conversationPrompt, recapPrompt, tweetPrompt }
+const sanitizeAgent = agent => {
+  const {
+    _id,
+    name,
+    traits,
+    focus,
+    description,
+    evolutions,
+    tweets,
+    createdAt,
+    updatedAt,
+    conversationPrompt,
+    recapPrompt,
+    tweetPrompt,
+  } = agent
+  return {
+    _id,
+    name,
+    traits,
+    focus,
+    description,
+    evolutions,
+    tweets,
+    createdAt,
+    updatedAt,
+    conversationPrompt,
+    recapPrompt,
+    tweetPrompt,
+  }
 }
 
 export default async function handler(req, res) {
@@ -23,7 +49,16 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { name, traits, focus, user, conversationPrompt, recapPrompt, tweetPrompt } = req.body
+      const {
+        name,
+        traits,
+        focus,
+        user,
+        conversationPrompt,
+        recapPrompt,
+        description,
+        tweetPrompt,
+      } = req.body
 
       if (!name || !traits || !focus) {
         return res
@@ -32,17 +67,18 @@ export default async function handler(req, res) {
       }
 
       // Create a new agent with optional prompts
-      const newAgent = new Agent({ 
-        name, 
-        traits, 
-        focus, 
+      const newAgent = new Agent({
+        name,
+        traits,
+        focus,
         user,
-        conversationPrompt, 
-        recapPrompt, 
-        tweetPrompt 
+        conversationPrompt,
+        recapPrompt,
+        description,
+        tweetPrompt,
       })
       await newAgent.save()
-      
+
       // Sanitize and send the agent data
       res.status(201).json(sanitizeAgent(newAgent))
     } catch (error) {
@@ -61,7 +97,17 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'PUT') {
     try {
-      const { name, traits, focus, agentId, userId, conversationPrompt = '', recapPrompt = '', tweetPrompt = '' } = req.body
+      const {
+        name,
+        traits,
+        focus,
+        agentId,
+        userId,
+        description = '',
+        conversationPrompt = '',
+        recapPrompt = '',
+        tweetPrompt = '',
+      } = req.body
       if (!agentId || !name || !traits || !focus) {
         return res
           .status(400)
@@ -69,11 +115,19 @@ export default async function handler(req, res) {
       }
       // Ensure the user has permission to modify this agent
       await checkAgentOwnership(agentId, userId)
-      
+
       // Update the agent with optional prompts
       const updatedAgent = await Agent.findByIdAndUpdate(
         agentId,
-        { name, traits, focus, conversationPrompt, recapPrompt, tweetPrompt },
+        {
+          name,
+          traits,
+          focus,
+          conversationPrompt,
+          recapPrompt,
+          tweetPrompt,
+          description,
+        },
         { new: true } // Return the updated agent
       )
 
