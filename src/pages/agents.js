@@ -219,7 +219,15 @@ function Agents() {
         cursor="pointer"
         onClick={() => router.push(`/backrooms?expanded=${backroom._id}`)}
       >
-        <Text>Conversation with {backroom.terminalAgentName || 'Unknown'}</Text>
+        <Text
+          as="a"
+          color="blue.500"
+          textDecoration="underline"
+          _hover={{ color: 'blue.700' }}
+          cursor="pointer"
+        >
+          {backroom.agentName} &rarr; {backroom.terminalAgentName}
+        </Text>
         <Text fontSize="sm" color="#7f8c8d">
           {new Date(backroom.createdAt).toLocaleDateString()}
         </Text>
