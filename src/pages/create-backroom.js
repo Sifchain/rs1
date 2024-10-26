@@ -147,24 +147,30 @@ function CreateBackroom() {
       <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
         <Navigation />
         <Box py={10} px={6} maxW="1000px" mx="auto">
-          {/* Back Button */}
-          <Button
-            leftIcon={<ArrowBackIcon />}
-            colorScheme="blue"
-            onClick={() => router.back()}
-            alignSelf="flex-start"
-          >
-            Back
-          </Button>
-          <Heading
-            textAlign="center"
-            mb={10}
-            fontSize="4xl"
-            color="#2980b9"
-            fontFamily="'Arial', sans-serif"
-          >
-            Create a Backroom
-          </Heading>
+          <Flex justifyContent="space-between" alignItems="center" mb={5}>
+            {/* Back Button */}
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              colorScheme="blue"
+              onClick={() => router.back()}
+            >
+              Back
+            </Button>
+
+            {/* Center-aligned heading */}
+            <Heading
+              textAlign="center"
+              fontSize="4xl"
+              color="#2980b9"
+              fontFamily="'Arial', sans-serif"
+              flex="1"
+            >
+              Create a Backroom
+            </Heading>
+
+            {/* Spacer to keep the heading centered */}
+            <Box width="60px" />
+          </Flex>
 
           <Flex
             direction={{ base: 'column', md: 'row' }}

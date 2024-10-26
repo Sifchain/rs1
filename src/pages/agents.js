@@ -171,7 +171,7 @@ function Agents() {
       if (!response.ok) {
         throw new Error('Failed to update agent')
       }
-      const agents = await response.json()
+      const agent = await response.json()
       const updatedAgent = {
         ...selectedAgent,
         name: agentName,
@@ -184,8 +184,12 @@ function Agents() {
         type: agentType, // Update the agent type
       }
       setSelectedAgent(updatedAgent)
+      setAgents(
+        agents.map(agent =>
+          agent._id === selectedAgent._id ? updatedAgent : agent
+        )
+      )
       setEditMode(false)
-      setAgents(agents)
     } catch (error) {
       console.error('Error updating agent:', error)
     }
@@ -564,15 +568,6 @@ function Agents() {
           {/* Edit Agent Form */}
           {selectedAgent && editMode && (
             <VStack spacing={6} align="stretch">
-              {/* Back Button */}
-              <Button
-                leftIcon={<ArrowBackIcon />}
-                colorScheme="blue"
-                onClick={() => setEditMode(false)}
-                alignSelf="flex-start"
-              >
-                Back
-              </Button>
               <Box
                 p={4}
                 bg="#ffffff"
@@ -580,9 +575,30 @@ function Agents() {
                 border="2px solid #ecf0f1"
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
               >
-                <Heading fontSize="2xl" color="#2980b9" mb={4}>
-                  Edit Agent Details
-                </Heading>
+                <Flex justifyContent="space-between" alignItems="center" mb={5}>
+                  {/* Back Button */}
+                  <Button
+                    leftIcon={<ArrowBackIcon />}
+                    colorScheme="blue"
+                    onClick={() => router.back()}
+                  >
+                    Back
+                  </Button>
+
+                  {/* Center-aligned heading */}
+                  <Heading
+                    textAlign="center"
+                    fontSize="4xl"
+                    color="#2980b9"
+                    fontFamily="'Arial', sans-serif"
+                    flex="1"
+                  >
+                    Edit Agent Details
+                  </Heading>
+
+                  {/* Spacer to keep the heading centered */}
+                  <Box width="60px" />
+                </Flex>
                 {/* Name */}
                 <FormControl isInvalid={errors.agentName}>
                   <Flex alignItems="center" mb={4}>
