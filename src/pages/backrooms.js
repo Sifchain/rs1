@@ -172,12 +172,12 @@ function Backrooms() {
             </Heading>
             <Tooltip
               label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} to create a new agent.`}
-              isDisabled={enoughFunds}
+              // isDisabled={!enoughFunds}
               hasArrow
               placement="top"
             >
               <Button
-                disabled={!enoughFunds}
+                // disabled={!enoughFunds}
                 colorScheme="blue"
                 onClick={() => router.push('/create-backroom')} // Redirect to create a backroom page
                 size="md"

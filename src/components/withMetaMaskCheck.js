@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useAccount } from '../hooks/useMetaMask' // Custom MetaMask hook
 import { useRouter } from 'next/router'
+
 const withMetaMaskCheck = WrappedComponent => {
   return props => {
     const { isConnected, hasEthereum, loading, address } = useAccount() // Get wallet address
@@ -29,7 +30,7 @@ const withMetaMaskCheck = WrappedComponent => {
     }
     useEffect(() => {
       createUser(address)
-    })
+    }, [address])
     useEffect(() => {
       if (!loading && hasEthereum && isConnected && address) {
         // Once MetaMask is connected, create or fetch the user
