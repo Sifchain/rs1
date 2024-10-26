@@ -21,6 +21,7 @@ import {
   useClipboard,
   useDisclosure,
 } from '@chakra-ui/react'
+import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import { useRouter } from 'next/router'
@@ -198,6 +199,15 @@ function CreateAgent() {
       <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
         <Navigation />
         <Box py={10} px={6} maxW="800px" mx="auto">
+          {/* Back Button */}
+          <Button
+            leftIcon={<ArrowBackIcon />}
+            colorScheme="blue"
+            onClick={() => router.back()}
+            alignSelf="flex-start"
+          >
+            Back
+          </Button>
           <Heading textAlign="center" mb={10} fontSize="4xl" color="#2980b9">
             Create an Agent
           </Heading>
