@@ -29,9 +29,6 @@ const withMetaMaskCheck = WrappedComponent => {
       }
     }
     useEffect(() => {
-      createUser(address)
-    }, [address])
-    useEffect(() => {
       if (!loading && hasEthereum && isConnected && address) {
         // Once MetaMask is connected, create or fetch the user
         console.log('MetaMask is connected:', address)

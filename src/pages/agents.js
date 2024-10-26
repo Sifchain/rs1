@@ -249,7 +249,7 @@ function Agents() {
               Agents
             </Heading>
             <Tooltip
-              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_AGENT} to create a new agent?.`}
+              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`}
               // isDisabled={!enoughFunds}
               hasArrow
               placement="top"
