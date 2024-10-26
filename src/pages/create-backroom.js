@@ -16,6 +16,7 @@ import {
   Tbody,
   Td,
 } from '@chakra-ui/react'
+import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
@@ -25,7 +26,7 @@ import SEO from '../components/SEO'
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
   const [explorerDescription, setExplorerDescription] = useState('')
-  const [terminalAgent, setTerminalAgent] = useState('Terminal of Truth')
+  const [terminalAgent, setTerminalAgent] = useState('')
   const [terminalDescription, setTerminalDescription] = useState('')
   const [agents, setAgents] = useState([])
   const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null) // Holds explorer agent details
@@ -146,15 +147,30 @@ function CreateBackroom() {
       <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
         <Navigation />
         <Box py={10} px={6} maxW="1000px" mx="auto">
-          <Heading
-            textAlign="center"
-            mb={10}
-            fontSize="4xl"
-            color="#2980b9"
-            fontFamily="'Arial', sans-serif"
-          >
-            Create a Backroom
-          </Heading>
+          <Flex justifyContent="space-between" alignItems="center" mb={5}>
+            {/* Back Button */}
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              colorScheme="blue"
+              onClick={() => router.back()}
+            >
+              Back
+            </Button>
+
+            {/* Center-aligned heading */}
+            <Heading
+              textAlign="center"
+              fontSize="4xl"
+              color="#2980b9"
+              fontFamily="'Arial', sans-serif"
+              flex="1"
+            >
+              Create a Backroom
+            </Heading>
+
+            {/* Spacer to keep the heading centered */}
+            <Box width="60px" />
+          </Flex>
 
           <Flex
             direction={{ base: 'column', md: 'row' }}
@@ -177,11 +193,15 @@ function CreateBackroom() {
                   borderColor={errors.explorerAgent ? 'red.500' : '#ecf0f1'}
                   _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents.map(agent => (
-                    <option key={agent._id} value={agent.name}>
-                      {agent.name}
-                    </option>
-                  ))}
+                  {agents
+                    .filter(agent =>
+                      ['All', '', 'Explorer'].includes(agent.type)
+                    )
+                    .map(agent => (
+                      <option key={agent._id} value={agent.name}>
+                        {agent.name}
+                      </option>
+                    ))}
                 </Select>
                 {errors.explorerAgent && (
                   <FormErrorMessage>{errors.explorerAgent}</FormErrorMessage>
@@ -196,10 +216,27 @@ function CreateBackroom() {
                     {selectedExplorerInfo.description}
                   </Text>
                   <Text mb={4}>
-                    <strong>Traits:</strong> {selectedExplorerInfo.traits}
-                  </Text>
-                  <Text mb={4}>
-                    <strong>Focus:</strong> {selectedExplorerInfo.focus}
+                    <strong>Traits:</strong> {selectedExplorerInfo.traits}{' '}
+                    <br />
+                    <strong>Focus:</strong> {selectedExplorerInfo.focus} <br />
+                    <strong>Description:</strong>{' '}
+                    {selectedExplorerInfo.description} <br />
+                    <strong>Backroom Prompt:</strong>{' '}
+                    {selectedExplorerInfo.backroomPrompt ||
+                      'No backroom prompt provided'}{' '}
+                    <br />
+                    <strong>Conversation Prompt:</strong>{' '}
+                    {selectedExplorerInfo.conversationPrompt ||
+                      'No conversation prompt provided'}{' '}
+                    <br />
+                    <strong>Recap Prompt:</strong>{' '}
+                    {selectedExplorerInfo.recapPrompt ||
+                      'No recap prompt provided'}{' '}
+                    <br />
+                    <strong>Tweet Prompt:</strong>{' '}
+                    {selectedExplorerInfo.tweetPrompt ||
+                      'No tweet prompt provided'}{' '}
+                    <br />
                   </Text>
                 </Box>
               )}
@@ -227,6 +264,7 @@ function CreateBackroom() {
               </Heading>
               <FormControl>
                 <Select
+                  placeholder="Select Terminal Agent"
                   value={terminalAgent}
                   onChange={handleTerminalChange}
                   bg="#ffffff"
@@ -234,11 +272,15 @@ function CreateBackroom() {
                   border="2px solid #ecf0f1"
                   _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents.map(agent => (
-                    <option key={agent._id} value={agent.name}>
-                      {agent.name}
-                    </option>
-                  ))}
+                  {agents
+                    .filter(agent =>
+                      ['All', '', 'Terminal'].includes(agent.type)
+                    )
+                    .map(agent => (
+                      <option key={agent._id} value={agent.name}>
+                        {agent.name}
+                      </option>
+                    ))}
                 </Select>
               </FormControl>
 
@@ -326,8 +368,21 @@ function CreateBackroom() {
                   <Tr key={agent._id}>
                     <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
                     <Td fontFamily="Arial, sans-serif">
+                      <strong>Type:</strong> {agent.type ?? 'All'} <br />
                       <strong>Traits:</strong> {agent.traits} <br />
-                      <strong>Focus:</strong> {agent.focus}
+                      <strong>Focus:</strong> {agent.focus} <br />
+                      <strong>Description:</strong> {agent.description} <br />
+                      <strong>Backroom Prompt:</strong>{' '}
+                      {agent.backroomPrompt || 'No backroom prompt provided'}{' '}
+                      <br />
+                      <strong>Conversation Prompt:</strong>{' '}
+                      {agent.conversationPrompt ||
+                        'No conversation prompt provided'}{' '}
+                      <br />
+                      <strong>Recap Prompt:</strong>{' '}
+                      {agent.recapPrompt || 'No recap prompt provided'} <br />
+                      <strong>Tweet Prompt:</strong>{' '}
+                      {agent.tweetPrompt || 'No tweet prompt provided'}
                     </Td>
                   </Tr>
                 ))}

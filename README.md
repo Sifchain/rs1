@@ -62,7 +62,7 @@ Create a new agent.
 
 ```json
 {
-  "name": "Agent Name",
+  "name": "Name",
   "traits": "Friendly, Curious",
   "focus": "AI Ethics"
 }
@@ -74,7 +74,7 @@ Create a new agent.
   ```json
   {
     "_id": "agent_id",
-    "name": "Agent Name",
+    "name": "Name",
     "traits": "Friendly, Curious",
     "focus": "AI Ethics",
     "__v": 0
@@ -98,7 +98,7 @@ Fetch all agents.
   [
     {
       "_id": "agent_id",
-      "name": "Agent Name",
+      "name": "Name",
       "traits": "Friendly, Curious",
       "focus": "AI Ethics"
     }

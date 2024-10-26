@@ -13,9 +13,37 @@ const connectDB = async () => {
 }
 
 // Helper function to sanitize agent data
-const sanitizeAgent = (agent) => {
-  const { _id, name, traits, focus, description, evolutions, tweets, createdAt, updatedAt } = agent
-  return { _id, name, traits, focus, description, evolutions, tweets, createdAt, updatedAt }
+const sanitizeAgent = agent => {
+  const {
+    _id,
+    name,
+    traits,
+    focus,
+    description,
+    evolutions,
+    tweets,
+    createdAt,
+    updatedAt,
+    conversationPrompt,
+    recapPrompt,
+    tweetPrompt,
+    type, // Include type in the sanitized data
+  } = agent
+  return {
+    _id,
+    name,
+    traits,
+    focus,
+    description,
+    evolutions,
+    tweets,
+    createdAt,
+    updatedAt,
+    conversationPrompt,
+    recapPrompt,
+    tweetPrompt,
+    type, // Return agent type
+  }
 }
 
 export default async function handler(req, res) {
@@ -23,18 +51,39 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { name, traits, focus, userId } = req.body
+      const {
+        name,
+        traits,
+        focus,
+        user,
+        conversationPrompt,
+        recapPrompt,
+        description,
+        tweetPrompt,
+        type, // Add type in request body
+      } = req.body
 
-      if (!name || !traits || !focus) {
+      if (!name || !traits || !focus || !type) {
+        // Validate type field as well
         return res
           .status(400)
-          .json({ error: 'All fields are required: name, traits, focus' })
+          .json({ error: 'All fields are required: name, traits, focus, type' })
       }
 
-      // Create a new agent associated with the current user
-      const newAgent = new Agent({ name, traits, focus, user: userId })
+      // Create a new agent with optional prompts
+      const newAgent = new Agent({
+        name,
+        traits,
+        focus,
+        user,
+        conversationPrompt,
+        recapPrompt,
+        description,
+        tweetPrompt,
+        type, // Add type to new agent
+      })
       await newAgent.save()
-      
+
       // Sanitize and send the agent data
       res.status(201).json(sanitizeAgent(newAgent))
     } catch (error) {
@@ -45,7 +94,7 @@ export default async function handler(req, res) {
       // Fetch agents and include only the specified fields
       const agents = await Agent.find(
         {},
-        '_id name traits focus description evolutions tweets createdAt updatedAt'
+        '_id name traits focus description evolutions user tweets conversationPrompt recapPrompt tweetPrompt type createdAt updatedAt'
       )
       res.status(200).json(agents)
     } catch (error) {
@@ -53,19 +102,41 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'PUT') {
     try {
-      const { name, traits, focus, agentId, userId } = req.body
-      if (!agentId || !name || !traits || !focus) {
+      const {
+        name,
+        traits,
+        focus,
+        agentId,
+        userId,
+        description = '',
+        conversationPrompt = '',
+        recapPrompt = '',
+        tweetPrompt = '',
+        type, // Add type in request body for update
+      } = req.body
+      if (!agentId || !name || !traits || !focus || !type) {
         return res
           .status(400)
-          .json({ error: 'All fields are required: id, name, traits, focus' })
+          .json({
+            error: 'All fields are required: id, name, traits, focus, type',
+          })
       }
       // Ensure the user has permission to modify this agent
       await checkAgentOwnership(agentId, userId)
-      
-      // Update the agent
+
+      // Update the agent with optional prompts and type
       const updatedAgent = await Agent.findByIdAndUpdate(
         agentId,
-        { name, traits, focus },
+        {
+          name,
+          traits,
+          focus,
+          conversationPrompt,
+          recapPrompt,
+          tweetPrompt,
+          description,
+          type, // Update type field
+        },
         { new: true } // Return the updated agent
       )
 

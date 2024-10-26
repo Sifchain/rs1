@@ -4,26 +4,29 @@ const AgentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   traits: { type: String, required: true },
   focus: { type: String, required: true },
-  description: { type: String, default: '' },
   evolutions: { type: [String], default: [] },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: false,
-    default: null,
+    required: true,
   },
   twitterAuthToken: {
-    accessToken: { type: String, default: '' }, // Twitter access token
-    refreshToken: { type: String, default: '' }, // Twitter refresh token
+    accessToken: { type: String, default: '' },
+    refreshToken: { type: String, default: '' },
   },
   twitterAuthState: {
     codeVerifier: String,
     state: String,
   },
-  twitterTokenExpiry: { type: Date, default: null }, // Optional: token expiry date
-  createdAt: { type: Date, default: Date.now }, // Field to store agent creation date
-  updatedAt: { type: Date, default: Date.now }, // Field to store last update date
+  twitterTokenExpiry: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
   tweets: { type: [String], default: [] },
+  description: { type: String, default: '' },
+  conversationPrompt: { type: String, default: '' },
+  recapPrompt: { type: String, default: '' },
+  tweetPrompt: { type: String, default: '' },
+  type: { type: String, default: 'All' },
 })
 
 // Middleware to auto-update the `updatedAt` field on each save

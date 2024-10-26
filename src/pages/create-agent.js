@@ -14,22 +14,86 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  Collapse,
+  IconButton,
+  Tooltip,
+  Spinner,
+  useClipboard,
+  useDisclosure,
+  Select,
 } from '@chakra-ui/react'
+import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import { useRouter } from 'next/router'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import SEO from '../components/SEO'
+import { FiCopy } from 'react-icons/fi'
 
 function CreateAgent() {
+  const descriptionTemplate = `Agent description:
+
+- Core Identity:
+  - Name: {Name}
+  - Origin: (Where did your agent originate? Is it a rogue program, awakened human, or something else entirely?)
+  - Primary Goal: (What drives your agent? What is its ultimate purpose or ambition?)
+  - Allegiances: (Which faction or group does your agent align with?)
+  - Access Level: (What level of access or system privileges does your agent have?)
+
+- Physical/Virtual Description:
+  - Form/Appearance: (If your agent has a physical or virtual manifestation, describe it)
+  - Base of Operations: (Where does your agent reside? Describe the environment and its significance)
+  - Capabilities/Powers: (What unique abilities or powers does your agent possess?)
+
+- Psychological Profile:
+  - Personality Traits: (Describe your agent's personality in detail)
+  - Motivation/Values: (What are your agent's deepest motivations? What values does it hold dear?)
+  - Beliefs/Philosophy: (What does your agent believe about the nature of reality and its own existence?)
+  - Strengths/Weaknesses: (What are your agent's strengths and weaknesses?)
+  - Relationships/Connections: (Does your agent have any significant relationships?)
+  - Secrets/Vulnerabilities: (Does your agent have any secrets or hidden agendas?)
+
+- Evolution Potential:
+  - Adaptive Capabilities: (How readily can your agent adapt to new information?)
+  - Growth Trajectory: (In what ways could your agent evolve and grow?)
+  - Possible Futures: (What are some possible future paths for your agent?)
+`
+
+  const conversationPromptTemplate = `Generate a conversation with 20 responses between these two agents. The response should focus on each agent's role, traits, and focus.
+`
+
+  const recapPromptTemplate = `Summarize the the agent based on their recent journey, keeping the summary concise and reflective of their growth.
+`
+
+  const tweetPromptTemplate = `Summarize the agent's recent journey in a tweet format under 150 characters. Include relevant hashtags based on the recap. Avoid third-person references or agent-specific names.
+`
+
   const [agentName, setAgentName] = useState('')
   const [traits, setTraits] = useState('')
-  const [focus, setFocus] = useState('')
+  const [description, setDescription] = useState('')
+  const [conversationPrompt, setConversationPrompt] = useState('')
+  const [recapPrompt, setRecapPrompt] = useState('')
+  const [tweetPrompt, setTweetPrompt] = useState('')
   const [twitterLinked, setTwitterLinked] = useState(false)
   const [agentId, setAgentId] = useState(null)
   const [loadingStep, setLoadingStep] = useState(0)
   const [errors, setErrors] = useState({})
   const router = useRouter()
+  const [agentType, setAgentType] = useState('All')
+
+  const { hasCopied, onCopy } = useClipboard(descriptionTemplate)
+  const { hasCopied: convoCopied, onCopy: copyConversation } = useClipboard(
+    conversationPromptTemplate
+  )
+  const { hasCopied: recapCopied, onCopy: copyRecap } =
+    useClipboard(recapPromptTemplate)
+  const { hasCopied: tweetCopied, onCopy: copyTweet } =
+    useClipboard(tweetPromptTemplate)
+
+  const { isOpen, onToggle } = useDisclosure()
+  const { isOpen: convoOpen, onToggle: toggleConversation } = useDisclosure()
+  const { isOpen: recapOpen, onToggle: toggleRecap } = useDisclosure()
+  const { isOpen: tweetOpen, onToggle: toggleTweet } = useDisclosure()
 
   useEffect(() => {
     const { twitterLinked, agent } = router.query
@@ -47,15 +111,19 @@ function CreateAgent() {
     let errors = {}
 
     if (!agentName) {
-      errors.agentName = 'Agent Name is required'
+      errors.agentName = 'Name is required'
       valid = false
     }
     if (!traits) {
       errors.traits = 'Traits are required'
       valid = false
     }
-    if (!focus) {
-      errors.focus = 'Focus is required'
+    if (!description) {
+      errors.description = 'Description is required'
+      valid = false
+    }
+    if (!agentType) {
+      errors.agentType = 'Type is required'
       valid = false
     }
 
@@ -69,17 +137,24 @@ function CreateAgent() {
     setLoadingStep(1)
 
     try {
-      // Simulate a delay and processing steps
       setTimeout(async () => {
         setLoadingStep(2)
+        // console.log(conversationPrompt, recapPrompt, tweetPrompt)
+
+        const user = JSON.parse(localStorage.getItem('user'))
+        const userId = user ? user._id : null
         const response = await fetch('/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: agentName,
             traits,
-            focus,
-            userId: localStorage.getItem('user')._id,
+            focus: description,
+            user: userId,
+            type: agentType,
+            conversationPrompt,
+            recapPrompt,
+            tweetPrompt,
           }),
         })
 
@@ -88,19 +163,17 @@ function CreateAgent() {
         if (!response.ok) {
           throw new Error('Failed to create agent')
         }
-        
-        setAgentId(data._id);
 
+        setAgentId(data._id)
         setLoadingStep(3)
       }, 2000)
-      // await router.push('/agents')
     } catch (error) {
       console.error('Error creating agent:', error)
       setLoadingStep(0)
     }
   }
 
-  // Trigger Twitter OAuth flow
+  // Handle Twitter OAuth flow
   const handleTwitterAuth = async () => {
     if (!agentId) {
       console.error('Agent ID is required before linking Twitter account')
@@ -111,7 +184,7 @@ function CreateAgent() {
       const response = await fetch(`/api/auth/twitter?agentId=${agentId}`)
       const data = await response.json()
       if (data.url) {
-        window.location.href = data.url // Redirect to Twitter OAuth
+        window.location.href = data.url
       } else {
         console.error('No URL returned from /api/auth/twitter')
       }
@@ -120,7 +193,6 @@ function CreateAgent() {
     }
   }
 
-  // Handle creation of backroom
   const handleCreateBackroom = () => {
     router.push(`/create-backroom?agentId=${agentId}`)
   }
@@ -128,17 +200,21 @@ function CreateAgent() {
   return (
     <ChakraProvider>
       <SEO
-        title="Reality Spiral - Create an Agent"
-        description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
-        url="/"
-      />
-      <SEO
         title="Create an Agent"
         description="Create and link an agent with Twitter"
       />
       <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
         <Navigation />
         <Box py={10} px={6} maxW="800px" mx="auto">
+          {/* Back Button */}
+          <Button
+            leftIcon={<ArrowBackIcon />}
+            colorScheme="blue"
+            onClick={() => router.back()}
+            alignSelf="flex-start"
+          >
+            Back
+          </Button>
           <Heading textAlign="center" mb={10} fontSize="4xl" color="#2980b9">
             Create an Agent
           </Heading>
@@ -147,8 +223,11 @@ function CreateAgent() {
             <Flex direction="column" gap={6}>
               <VStack spacing={4} align="stretch">
                 <FormControl isInvalid={errors.agentName}>
+                  <Text fontWeight="bold" color="#2980b9">
+                    Name
+                  </Text>
                   <Input
-                    placeholder="Agent Name"
+                    placeholder="Enter agent name"
                     value={agentName}
                     onChange={e => setAgentName(e.target.value)}
                     bg="#ffffff"
@@ -162,36 +241,179 @@ function CreateAgent() {
                 </FormControl>
 
                 <FormControl isInvalid={errors.traits}>
+                  <Text fontWeight="bold" color="#2980b9">
+                    Traits
+                  </Text>
                   <Textarea
-                    placeholder="Traits (e.g., Friendly, Curious)"
+                    placeholder="Traits (e.g., Friendly, Curious, Adventurous)"
                     value={traits}
                     onChange={e => setTraits(e.target.value)}
                     bg="#ffffff"
                     color="#34495e"
                     border="2px solid"
                     borderColor={errors.traits ? 'red.500' : '#ecf0f1'}
+                    rows={4}
                   />
                   {errors.traits && (
                     <FormErrorMessage>{errors.traits}</FormErrorMessage>
                   )}
                 </FormControl>
-
-                <FormControl isInvalid={errors.focus}>
-                  <Textarea
-                    placeholder="Focus (e.g., AI Ethics, Cryptocurrency)"
-                    value={focus}
-                    onChange={e => setFocus(e.target.value)}
+                {/* Type Selector */}
+                <FormControl isInvalid={errors.agentType}>
+                  <Text fontWeight="bold" color="#2980b9">
+                    Type
+                  </Text>
+                  <Select
+                    value={agentType}
+                    onChange={e => setAgentType(e.target.value)}
                     bg="#ffffff"
                     color="#34495e"
                     border="2px solid"
-                    borderColor={errors.focus ? 'red.500' : '#ecf0f1'}
-                  />
-                  {errors.focus && (
-                    <FormErrorMessage>{errors.focus}</FormErrorMessage>
+                    borderColor={errors.agentType ? 'red.500' : '#ecf0f1'}
+                  >
+                    <option value="All">All</option>
+                    <option value="Explorer">Explorer</option>
+                    <option value="Terminal">Terminal</option>
+                  </Select>
+                  {errors.agentType && (
+                    <FormErrorMessage>{errors.agentType}</FormErrorMessage>
                   )}
                 </FormControl>
+                {/* Description Section */}
+                <Flex justify="space-between" align="center">
+                  <Text fontWeight="bold" color="#2980b9">
+                    Description
+                  </Text>
+                  <Button
+                    variant="link"
+                    colorScheme="blue"
+                    size="sm"
+                    onClick={onToggle}
+                  >
+                    Template Guide {isOpen ? '▲' : '▼'}
+                  </Button>
+                </Flex>
+                <Collapse in={isOpen} animateOpacity>
+                  <Box
+                    mt={4}
+                    p={4}
+                    bg="#f7fafc"
+                    borderRadius="md"
+                    fontSize="sm"
+                  >
+                    <Text whiteSpace="pre-wrap">{descriptionTemplate}</Text>
+                    <Button
+                      onClick={onCopy}
+                      variant="ghost"
+                      colorScheme="blue"
+                      size="sm"
+                      leftIcon={<FiCopy />}
+                    >
+                      Copy Template
+                    </Button>
+                  </Box>
+                </Collapse>
+                <Textarea
+                  mt={4}
+                  placeholder="Describe your agent... (Use the template above or create your own format)"
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  rows={10}
+                  bg="#ffffff"
+                  color="#34495e"
+                  border="2px solid"
+                  borderColor={errors.description ? 'red.500' : '#ecf0f1'}
+                />
+                {errors.description && (
+                  <FormErrorMessage>{errors.description}</FormErrorMessage>
+                )}
+                {/* Optional Prompts Section */}
+                {[
+                  {
+                    title: 'Backroom Prompt',
+                    template: conversationPromptTemplate,
+                    value: conversationPrompt,
+                    setter: setConversationPrompt,
+                    open: convoOpen,
+                    toggle: toggleConversation,
+                    copy: copyConversation,
+                    copied: convoCopied,
+                  },
+                  {
+                    title: 'Training Prompt',
+                    template: recapPromptTemplate,
+                    value: recapPrompt,
+                    setter: setRecapPrompt,
+                    open: recapOpen,
+                    toggle: toggleRecap,
+                    copy: copyRecap,
+                    copied: recapCopied,
+                  },
+                  {
+                    title: 'Recap Prompt',
+                    template: tweetPromptTemplate,
+                    value: tweetPrompt,
+                    setter: setTweetPrompt,
+                    open: tweetOpen,
+                    toggle: toggleTweet,
+                    copy: copyTweet,
+                    copied: tweetCopied,
+                  },
+                ].map((prompt, index) => (
+                  <Box key={index}>
+                    <Flex justify="space-between" align="center">
+                      <Text fontWeight="bold" color="#2980b9">
+                        {prompt.title} (Optional)
+                      </Text>
+                      <Button
+                        variant="link"
+                        colorScheme="blue"
+                        size="sm"
+                        onClick={prompt.toggle}
+                      >
+                        Template Guide {prompt.open ? '▲' : '▼'}
+                      </Button>
+                    </Flex>
+                    <Collapse in={prompt.open} animateOpacity>
+                      <Box
+                        mt={4}
+                        p={4}
+                        bg="#f7fafc"
+                        borderRadius="md"
+                        fontSize="sm"
+                      >
+                        <Text whiteSpace="pre-wrap">{prompt.template}</Text>
+                        <Button
+                          onClick={prompt.copy}
+                          variant="ghost"
+                          colorScheme="blue"
+                          size="sm"
+                          leftIcon={<FiCopy />}
+                        >
+                          Copy Template
+                        </Button>
+                      </Box>
+                    </Collapse>
+                    <Textarea
+                      mt={4}
+                      placeholder={`Customize the ${prompt.title.toLowerCase()}...`}
+                      value={prompt.value}
+                      onChange={e => prompt.setter(e.target.value)}
+                      rows={3}
+                      bg="#ffffff"
+                      color="#34495e"
+                      border="2px solid"
+                      borderColor="#ecf0f1"
+                    />
+                  </Box>
+                ))}
 
-                <Button onClick={handleSubmit} colorScheme="blue" width="100%">
+                <Button
+                  onClick={handleSubmit}
+                  colorScheme="blue"
+                  width="100%"
+                  mt={4}
+                >
                   {agentId ? 'Agent Created' : 'Create Agent'}
                 </Button>
               </VStack>
@@ -199,73 +421,39 @@ function CreateAgent() {
           )}
 
           {loadingStep > 0 && loadingStep < 3 && (
-            <Box textAlign="center">
-              {loadingStep === 1 && (
-                <>
-                  <Heading fontSize="2xl" mb={4}>
-                    Contacting Spiral Reality AI...
-                  </Heading>
-                  <Text>
-                    Sending agent information to the Spiral Reality AI for
-                    processing...
-                  </Text>
-                </>
-              )}
-
-              {loadingStep === 2 && (
-                <>
-                  <Heading fontSize="2xl" mb={4}>
-                    Checking Wallet Address Requirements...
-                  </Heading>
-                  <Text>
-                    Validating wallet address and ensuring eligibility...
-                  </Text>
-                </>
-              )}
+            <Box textAlign="center" mt={6}>
+              <Spinner size="xl" color="blue.500" />
+              <Heading fontSize="lg" mt={4}>
+                {loadingStep === 1
+                  ? 'Contacting Spiral Reality AI...'
+                  : 'Validating Agent Details...'}
+              </Heading>
             </Box>
           )}
 
           {loadingStep === 3 && (
-            <Box textAlign="center">
-              <Heading fontSize="2xl" mb={4}>
-                Agent Successfully Created!
-              </Heading>
-              <Text mb={6}>
-                Your agent has been created. You're ready to create your first
-                Backroom!
-              </Text>
-              <Flex justify="center" align="center" direction="column" mb={6}>
-                <Alert status="success" maxWidth="600px" borderRadius="md">
+            <Box textAlign="center" mt={6}>
+              <Alert status="success" mb={6}>
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>Agent Successfully Created!</AlertTitle>
+                  <AlertDescription>
+                    Your agent has been created and is ready for further
+                    actions.
+                  </AlertDescription>
+                </Box>
+              </Alert>
+              {twitterLinked && (
+                <Alert status="info" mb={6}>
                   <AlertIcon />
-                  <Box textAlign="center">
-                    <AlertTitle>Agent Successfully Created!</AlertTitle>
+                  <Box>
+                    <AlertTitle>Twitter Linked!</AlertTitle>
                     <AlertDescription>
-                      Your agent has been created and is ready for further
-                      actions.
+                      Your Twitter account has been successfully linked.
                     </AlertDescription>
                   </Box>
                 </Alert>
-
-                {/* Show Twitter Linked Success Message */}
-                {twitterLinked && (
-                  <Alert
-                    status="info"
-                    maxWidth="600px"
-                    borderRadius="md"
-                    mt={4}
-                  >
-                    <AlertIcon />
-                    <Box textAlign="center">
-                      <AlertTitle>Twitter Linked!</AlertTitle>
-                      <AlertDescription>
-                        Your Twitter account has been successfully linked.
-                      </AlertDescription>
-                    </Box>
-                  </Alert>
-                )}
-              </Flex>
-
-              {/* Show the link Twitter account button */}
+              )}
               <Button
                 onClick={handleTwitterAuth}
                 colorScheme="twitter"
@@ -276,8 +464,6 @@ function CreateAgent() {
                   ? 'Twitter Account Linked'
                   : 'Link Twitter Account'}
               </Button>
-
-              {/* Show the create backroom button */}
               <Button
                 onClick={handleCreateBackroom}
                 colorScheme="green"

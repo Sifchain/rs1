@@ -30,8 +30,13 @@ export default async function handler(req, res) {
 
       res.status(200).json(user)
     } catch (error) {
-      console.error('Error creating or fetching user:', error)
-      res.status(500).json({ error: 'Failed to create or fetch user' })
+      if (error.code === 11000) {
+        // Handle duplicate key error
+        res.status(409).json({ error: 'User with this address already exists' })
+      } else {
+        console.error('Error creating or fetching user:', error)
+        res.status(500).json({ error: 'Failed to create or fetch user' })
+      }
     }
   } else {
     res.setHeader('Allow', ['POST'])
