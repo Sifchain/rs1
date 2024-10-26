@@ -17,8 +17,6 @@ const sanitizeAgent = agent => {
   const {
     _id,
     name,
-    traits,
-    focus,
     description,
     evolutions,
     tweets,
@@ -32,8 +30,6 @@ const sanitizeAgent = agent => {
   return {
     _id,
     name,
-    traits,
-    focus,
     description,
     evolutions,
     tweets,
@@ -53,8 +49,6 @@ export default async function handler(req, res) {
     try {
       const {
         name,
-        traits,
-        focus,
         user,
         conversationPrompt,
         recapPrompt,
@@ -63,18 +57,16 @@ export default async function handler(req, res) {
         type, // Add type in request body
       } = req.body
 
-      if (!name || !traits || !focus || !type) {
+      if (!name || !description || !type) {
         // Validate type field as well
         return res
           .status(400)
-          .json({ error: 'All fields are required: name, traits, focus, type' })
+          .json({ error: 'All fields are required: name, description' })
       }
 
       // Create a new agent with optional prompts
       const newAgent = new Agent({
         name,
-        traits,
-        focus,
         user,
         conversationPrompt,
         recapPrompt,
@@ -94,7 +86,7 @@ export default async function handler(req, res) {
       // Fetch agents and include only the specified fields
       const agents = await Agent.find(
         {},
-        '_id name traits focus description evolutions user tweets conversationPrompt recapPrompt tweetPrompt type createdAt updatedAt'
+        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt type createdAt updatedAt'
       )
       res.status(200).json(agents)
     } catch (error) {
@@ -104,8 +96,6 @@ export default async function handler(req, res) {
     try {
       const {
         name,
-        traits,
-        focus,
         agentId,
         userId,
         description = '',
@@ -114,12 +104,10 @@ export default async function handler(req, res) {
         tweetPrompt = '',
         type, // Add type in request body for update
       } = req.body
-      if (!agentId || !name || !traits || !focus || !type) {
-        return res
-          .status(400)
-          .json({
-            error: 'All fields are required: id, name, traits, focus, type',
-          })
+      if (!agentId || !name || !description || !type) {
+        return res.status(400).json({
+          error: 'All fields are required: id, name, type',
+        })
       }
       // Ensure the user has permission to modify this agent
       await checkAgentOwnership(agentId, userId)
@@ -129,8 +117,6 @@ export default async function handler(req, res) {
         agentId,
         {
           name,
-          traits,
-          focus,
           conversationPrompt,
           recapPrompt,
           tweetPrompt,

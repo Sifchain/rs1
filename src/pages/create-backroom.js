@@ -216,11 +216,6 @@ function CreateBackroom() {
                     {selectedExplorerInfo.description}
                   </Text>
                   <Text mb={4}>
-                    <strong>Traits:</strong> {selectedExplorerInfo.traits}{' '}
-                    <br />
-                    <strong>Focus:</strong> {selectedExplorerInfo.focus} <br />
-                    <strong>Description:</strong>{' '}
-                    {selectedExplorerInfo.description} <br />
                     <strong>Backroom Prompt:</strong>{' '}
                     {selectedExplorerInfo.backroomPrompt ||
                       'No backroom prompt provided'}{' '}
@@ -291,12 +286,6 @@ function CreateBackroom() {
                     <strong>Description:</strong>{' '}
                     {selectedTerminalInfo.description}
                   </Text>
-                  <Text mb={4}>
-                    <strong>Traits:</strong> {selectedTerminalInfo.traits}
-                  </Text>
-                  <Text mb={4}>
-                    <strong>Focus:</strong> {selectedTerminalInfo.focus}
-                  </Text>
                 </Box>
               )}
 
@@ -351,7 +340,6 @@ function CreateBackroom() {
             </Box>
           )}
 
-          {/* Agents table displaying name, traits, and focus */}
           <Box mt={8}>
             <Heading size="lg" mb={4}>
               Agents
@@ -369,8 +357,6 @@ function CreateBackroom() {
                     <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
                     <Td fontFamily="Arial, sans-serif">
                       <strong>Type:</strong> {agent.type ?? 'All'} <br />
-                      <strong>Traits:</strong> {agent.traits} <br />
-                      <strong>Focus:</strong> {agent.focus} <br />
                       <strong>Description:</strong> {agent.description} <br />
                       <strong>Backroom Prompt:</strong>{' '}
                       {agent.backroomPrompt || 'No backroom prompt provided'}{' '}

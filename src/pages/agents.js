@@ -44,8 +44,6 @@ function Agents() {
   const router = useRouter()
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
-  const [traits, setTraits] = useState('')
-  const [focus, setFocus] = useState('')
   const [description, setDescription] = useState('')
   const [conversationPrompt, setConversationPrompt] = useState('')
   const [recapPrompt, setRecapPrompt] = useState('')
@@ -96,8 +94,6 @@ function Agents() {
     setSelectedAgent(agent)
     // Pre-fill the edit form
     setAgentName(agent?.name)
-    setTraits(agent?.traits)
-    setFocus(agent?.focus)
     setDescription(agent?.description || '') // Optional fields
     setConversationPrompt(agent?.conversationPrompt || '')
     setRecapPrompt(agent?.recapPrompt || '')
@@ -139,14 +135,6 @@ function Agents() {
       errors.agentName = 'Name is required'
       valid = false
     }
-    if (!traits) {
-      errors.traits = 'Traits are required'
-      valid = false
-    }
-    if (!focus) {
-      errors.focus = 'Focus is required'
-      valid = false
-    }
     if (!agentType) {
       errors.agentType = 'Type is required' // Ensure agent type is filled
       valid = false
@@ -165,8 +153,6 @@ function Agents() {
         },
         body: JSON.stringify({
           name: agentName,
-          traits,
-          focus,
           description,
           conversationPrompt,
           recapPrompt,
@@ -183,8 +169,6 @@ function Agents() {
       const updatedAgent = {
         ...selectedAgent,
         name: agentName,
-        traits,
-        focus,
         description,
         conversationPrompt,
         recapPrompt,
@@ -366,46 +350,6 @@ function Agents() {
                       <Tag size="md" colorScheme="blue" mr={2}>
                         {selectedAgent.type ?? 'All'}
                       </Tag>
-                    </Box>
-                    {/* Display Focus */}
-                    <Box mt={3}>
-                      <Text
-                        fontSize="lg"
-                        fontWeight="bold"
-                        color="#2980b9"
-                        mt={3}
-                      >
-                        Focus:
-                      </Text>
-                      <Tag size="md" colorScheme="blue" mr={2}>
-                        {selectedAgent.focus}
-                      </Tag>
-                    </Box>
-
-                    {/* Display Traits */}
-                    <Box mt={3}>
-                      <Text
-                        fontSize="lg"
-                        fontWeight="bold"
-                        color="#2980b9"
-                        mt={3}
-                      >
-                        Traits:
-                      </Text>
-                      <Box mt={2}>
-                        {selectedAgent.traits
-                          .split(', ')
-                          .map((trait, index) => (
-                            <Tag
-                              size="md"
-                              colorScheme="gray"
-                              key={index}
-                              mr={2}
-                            >
-                              {trait}
-                            </Tag>
-                          ))}
-                      </Box>
                     </Box>
                     {/* Display Description */}
                     <Box mt={3}>
@@ -664,67 +608,6 @@ function Agents() {
                     <FormErrorMessage>{errors.agentType}</FormErrorMessage>
                   )}
                 </FormControl>
-
-                {/* Traits */}
-                <FormControl isInvalid={errors.traits}>
-                  <Flex alignItems="center" mb={4}>
-                    {/* Label */}
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#2980b9"
-                    >
-                      Traits:
-                    </Text>
-                    {/* Textarea */}
-                    <Textarea
-                      placeholder="Traits (e.g., Friendly, Curious, Adventurous)"
-                      value={traits}
-                      onChange={e => setTraits(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
-                      border="2px solid"
-                      borderColor={errors.traits ? 'red.500' : '#ecf0f1'}
-                      _hover={{ borderColor: '#3498db' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.traits && (
-                    <FormErrorMessage>{errors.traits}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Focus */}
-                <FormControl isInvalid={errors.focus}>
-                  <Flex alignItems="center" mb={4}>
-                    {/* Label */}
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#2980b9"
-                    >
-                      Focus:
-                    </Text>
-                    {/* Textarea */}
-                    <Textarea
-                      placeholder="Focus (e.g., AI Ethics, Cryptocurrency, Exploration)"
-                      value={focus}
-                      onChange={e => setFocus(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
-                      border="2px solid"
-                      borderColor={errors.focus ? 'red.500' : '#ecf0f1'}
-                      _hover={{ borderColor: '#3498db' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.focus && (
-                    <FormErrorMessage>{errors.focus}</FormErrorMessage>
-                  )}
-                </FormControl>
-
                 {/* Description */}
                 <FormControl isInvalid={errors.description}>
                   <Flex alignItems="center" mb={4}>
