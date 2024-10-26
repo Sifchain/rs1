@@ -26,7 +26,7 @@ import SEO from '../components/SEO'
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
   const [explorerDescription, setExplorerDescription] = useState('')
-  const [terminalAgent, setTerminalAgent] = useState('Reality Spiral')
+  const [terminalAgent, setTerminalAgent] = useState('')
   const [terminalDescription, setTerminalDescription] = useState('')
   const [agents, setAgents] = useState([])
   const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null) // Holds explorer agent details
@@ -254,6 +254,7 @@ function CreateBackroom() {
               </Heading>
               <FormControl>
                 <Select
+                  placeholder="Select Terminal Agent"
                   value={terminalAgent}
                   onChange={handleTerminalChange}
                   bg="#ffffff"
