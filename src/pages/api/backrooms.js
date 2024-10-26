@@ -419,7 +419,6 @@ export default async function handler(req, res) {
     } catch (error) {
       console.log('Error in backroom creation or tweet:', error);
       res.status(500).json({ error: 'Failed to create backroom, update agent, or post tweet' });
->>>>>>> a33c5b1 (Twitter integration)
     }
   } else if (req.method === 'GET') {
     try {
