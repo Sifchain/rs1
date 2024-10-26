@@ -194,7 +194,6 @@ function Backrooms() {
             flexDirection={{ base: 'column', md: 'row' }}
           >
             <Select
-              placeholder="All Agents" // This is the default placeholder
               value={selectedAgent}
               onChange={e => setSelectedAgent(e.target.value)}
               maxW="300px"
