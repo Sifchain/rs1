@@ -238,7 +238,7 @@ function Agents() {
       <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
         <Navigation />
         <Box py={10} px={6} maxW="1000px" mx="auto">
-          <Flex justifyContent="space-between" alignItems="center" mb={10}>
+          <Flex justifyContent="space-between" alignItems="center" mb={1}>
             <Heading
               textAlign="center"
               mb={10}
@@ -248,57 +248,56 @@ function Agents() {
             >
               Agents
             </Heading>
-            <Tooltip
-              label={
-                enoughFunds
-                  ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`
-                  : ''
-              }
-              hasArrow
-              placement="top"
+            {/* Dropdown to select agent */}
+            <Flex
+              direction="row"
+              mb={8}
+              alignItems="center"
+              justifyContent="center"
             >
-              <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
-                <Button
-                  onClick={() => router.push('/create-agent')} // Disable click functionality
-                  colorScheme="blue"
-                  size="md"
-                  fontWeight="bold"
-                  // isDisabled={!enoughFunds} // Button looks disabled
-                  // pointerEvents={enoughFunds ? 'auto' : 'none'} // Disable pointer events if not enough funds
-                >
-                  + New Agent
-                </Button>
-              </Box>
-            </Tooltip>
-          </Flex>
-          {/* Dropdown to select agent */}
-          {/* Dropdown to select agent and Create Agent button */}
-          <Flex
-            direction="row"
-            mb={8}
-            alignItems="center"
-            justifyContent="center"
-            gap={4}
-          >
-            <Select
-              placeholder="Select Agent"
-              onChange={handleAgentSelection}
-              maxW="400px"
-              bg="#ffffff"
-              color="#34495e"
-              border="2px solid #ecf0f1"
-              _hover={{ borderColor: '#3498db' }}
-            >
-              {Array.isArray(agents) && agents.length > 0 ? (
-                agents.map(agent => (
-                  <option key={agent?._id} value={agent?._id}>
-                    {agent?.name}
-                  </option>
-                ))
-              ) : (
-                <option disabled>No agents available</option>
-              )}
-            </Select>
+              <Select
+                placeholder="Select Agent"
+                onChange={handleAgentSelection}
+                maxW="400px"
+                bg="#ffffff"
+                color="#34495e"
+                border="2px solid #ecf0f1"
+                _hover={{ borderColor: '#3498db' }}
+              >
+                {Array.isArray(agents) && agents.length > 0 ? (
+                  agents.map(agent => (
+                    <option key={agent?._id} value={agent?._id}>
+                      {agent?.name}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>No agents available</option>
+                )}
+              </Select>
+              <Tooltip
+                label={
+                  enoughFunds
+                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`
+                    : ''
+                }
+                hasArrow
+                placement="top"
+              >
+                <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
+                  <Button
+                    onClick={() => router.push('/create-agent')} // Disable click functionality
+                    colorScheme="blue"
+                    ms={10}
+                    size="md"
+                    fontWeight="bold"
+                    // isDisabled={!enoughFunds} // Button looks disabled
+                    // pointerEvents={enoughFunds ? 'auto' : 'none'} // Disable pointer events if not enough funds
+                  >
+                    + New Agent
+                  </Button>
+                </Box>
+              </Tooltip>
+            </Flex>
           </Flex>
 
           {/* Display agent details */}
