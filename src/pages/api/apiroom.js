@@ -179,7 +179,6 @@ ${combinedEvolutions}
 - Description: ${explorerDescription}
 - Traits: ${explorer.traits}
 - Focus: ${explorer.focus}
-- Current Thoughts: ${explorer.currentThoughts}
 
 #### Role (Terminal):
 
@@ -325,11 +324,9 @@ Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentH
         .replace(/Updated Description/g, '')
         .trim();
 
-      // Add the new evolution to the evolutions array and update the description
-      explorer.evolutions.push(newEvolution); // Append the new evolution to the evolutions array
-      explorer.description = `${newEvolution}`; // Set latest evolution as description
 
-      await explorer.save(); // Save the agent with the updated evolutions
+      explorer.evolutions.push(newEvolution);
+      await explorer.save();
 
       // Generate tweet content using GPT
       const tweetPrompt = `Based on the evolution summary below, write a short, witty tweet **from the agent's first-person perspective**, expressing their current thoughts or feelings at this moment in time. The tweet should be **less than 150 characters**, engaging, and include relevant hashtags, including one for the current time block (e.g., #Day${explorer.currentDay}Hour${explorer.currentHour}).
