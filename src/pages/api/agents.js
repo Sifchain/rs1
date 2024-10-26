@@ -12,6 +12,12 @@ const connectDB = async () => {
   })
 }
 
+// Helper function to sanitize agent data
+const sanitizeAgent = (agent) => {
+  const { _id, name, traits, focus, description, evolutions, tweets, createdAt, updatedAt } = agent
+  return { _id, name, traits, focus, description, evolutions, tweets, createdAt, updatedAt }
+}
+
 export default async function handler(req, res) {
   await connectDB()
 
@@ -28,7 +34,9 @@ export default async function handler(req, res) {
       // Create a new agent associated with the current user
       const newAgent = new Agent({ name, traits, focus, user: userId })
       await newAgent.save()
-      res.status(201).json(newAgent)
+      
+      // Sanitize and send the agent data
+      res.status(201).json(sanitizeAgent(newAgent))
     } catch (error) {
       res.status(500).json({ error })
     }
@@ -53,13 +61,15 @@ export default async function handler(req, res) {
       }
       // Ensure the user has permission to modify this agent
       await checkAgentOwnership(agentId, userId)
+      
       // Update the agent
       const updatedAgent = await Agent.findByIdAndUpdate(
         agentId,
         { name, traits, focus },
         { new: true } // Return the updated agent
       )
-      res.status(200).json(updatedAgent)
+
+      res.status(200).json(sanitizeAgent(updatedAgent))
     } catch (error) {
       console.log('error', error)
       res.status(500).json({ error: error.message || 'Failed to update agent' })

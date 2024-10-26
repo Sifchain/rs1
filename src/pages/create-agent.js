@@ -88,10 +88,12 @@ function CreateAgent() {
         if (!response.ok) {
           throw new Error('Failed to create agent')
         }
+        
+        setAgentId(data._id);
 
         setLoadingStep(3)
       }, 2000)
-      await router.push('/agents')
+      // await router.push('/agents')
     } catch (error) {
       console.error('Error creating agent:', error)
       setLoadingStep(0)
