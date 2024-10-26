@@ -21,7 +21,11 @@ import Navigation from '../components/Navigation'
 import SEO from '../components/SEO'
 import { FiShare2, FiClipboard } from 'react-icons/fi'
 import { genIsBalanceEnough } from '../utils/balance'
-import { MINIMUM_TOKENS_TO_CREATE_BACKROOM } from '../constants/constants'
+import {
+  MINIMUM_TOKENS_TO_CREATE_BACKROOM,
+  TOKEN_CONTRACT_ADDRESS,
+} from '../constants/constants'
+import { useAccount } from '../hooks/useMetaMask'
 
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([])
@@ -32,18 +36,29 @@ function Backrooms() {
   const [tags, setTags] = useState([])
   const [selectedTags, setSelectedTags] = useState([])
   const [enoughFunds, setEnoughFunds] = useState(false)
-
   const router = useRouter()
   const { expanded, tags: queryTags } = router.query // Get 'expanded' and 'tags' parameters from the URL
+  const { address } = useAccount()
+
   useEffect(() => {
-    const fetchHasEnoughFunds = async () =>
-      await genIsBalanceEnough(
-        '0xF14F2c49aa90BaFA223EE074C1C33b59891826bF',
-        '0x96c0a8B63C5E871ff6465f32d990e52bD36F3edc',
-        MINIMUM_TOKENS_TO_CREATE_BACKROOM
-      )
-    setEnoughFunds(fetchHasEnoughFunds())
-  }, [])
+    if (address) {
+      const fetchHasEnoughFunds = async () => {
+        if (!address)
+          return await genIsBalanceEnough(
+            address,
+            TOKEN_CONTRACT_ADDRESS,
+            MINIMUM_TOKENS_TO_CREATE_AGENT
+          )
+      }
+      fetchHasEnoughFunds()
+        .then(hasEnoughFunds => {
+          setEnoughFunds(hasEnoughFunds)
+        })
+        .catch(error => {
+          console.error('Error checking balance:', error)
+        })
+    }
+  }, [address])
 
   useEffect(() => {
     const fetchBackrooms = async () => {

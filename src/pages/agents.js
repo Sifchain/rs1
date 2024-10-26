@@ -25,7 +25,11 @@ import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
 import { FiCalendar } from 'react-icons/fi'
 import { genIsBalanceEnough } from '../utils/balance'
-import { MINIMUM_TOKENS_TO_CREATE_AGENT } from '../constants/constants'
+import {
+  MINIMUM_TOKENS_TO_CREATE_AGENT,
+  TOKEN_CONTRACT_ADDRESS,
+} from '../constants/constants'
+import { useAccount } from '../hooks/useMetaMask'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -47,23 +51,27 @@ function Agents() {
   const [recapPrompt, setRecapPrompt] = useState('')
   const [tweetPrompt, setTweetPrompt] = useState('')
   const [enoughFunds, setEnoughFunds] = useState(false)
+  const { address } = useAccount()
 
   useEffect(() => {
-    const fetchHasEnoughFunds = async () => {
-      return await genIsBalanceEnough(
-        '0xF14F2c49aa90BaFA223EE074C1C33b59891826bF',
-        '0x96c0a8B63C5E871ff6465f32d990e52bD36F3edc',
-        MINIMUM_TOKENS_TO_CREATE_AGENT
-      )
+    if (address) {
+      const fetchHasEnoughFunds = async () => {
+        if (!address)
+          return await genIsBalanceEnough(
+            address,
+            TOKEN_CONTRACT_ADDRESS,
+            MINIMUM_TOKENS_TO_CREATE_AGENT
+          )
+      }
+      fetchHasEnoughFunds()
+        .then(hasEnoughFunds => {
+          setEnoughFunds(hasEnoughFunds)
+        })
+        .catch(error => {
+          console.error('Error checking balance:', error)
+        })
     }
-    fetchHasEnoughFunds()
-      .then(hasEnoughFunds => {
-        setEnoughFunds(hasEnoughFunds)
-      })
-      .catch(error => {
-        console.error('Error checking balance:', error)
-      })
-  }, [])
+  }, [address])
 
   // Fetch agents
   const fetchAgents = async () => {
