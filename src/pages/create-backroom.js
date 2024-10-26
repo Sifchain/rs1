@@ -206,10 +206,27 @@ function CreateBackroom() {
                     {selectedExplorerInfo.description}
                   </Text>
                   <Text mb={4}>
-                    <strong>Traits:</strong> {selectedExplorerInfo.traits}
-                  </Text>
-                  <Text mb={4}>
-                    <strong>Focus:</strong> {selectedExplorerInfo.focus}
+                    <strong>Traits:</strong> {selectedExplorerInfo.traits}{' '}
+                    <br />
+                    <strong>Focus:</strong> {selectedExplorerInfo.focus} <br />
+                    <strong>Description:</strong>{' '}
+                    {selectedExplorerInfo.description} <br />
+                    <strong>Backroom Prompt:</strong>{' '}
+                    {selectedExplorerInfo.backroomPrompt ||
+                      'No backroom prompt provided'}{' '}
+                    <br />
+                    <strong>Conversation Prompt:</strong>{' '}
+                    {selectedExplorerInfo.conversationPrompt ||
+                      'No conversation prompt provided'}{' '}
+                    <br />
+                    <strong>Recap Prompt:</strong>{' '}
+                    {selectedExplorerInfo.recapPrompt ||
+                      'No recap prompt provided'}{' '}
+                    <br />
+                    <strong>Tweet Prompt:</strong>{' '}
+                    {selectedExplorerInfo.tweetPrompt ||
+                      'No tweet prompt provided'}{' '}
+                    <br />
                   </Text>
                 </Box>
               )}
@@ -349,7 +366,7 @@ function CreateBackroom() {
                       <strong>Recap Prompt:</strong>{' '}
                       {agent.recapPrompt || 'No recap prompt provided'} <br />
                       <strong>Tweet Prompt:</strong>{' '}
-                      {agent.tweetPrompt || 'No tweet prompt provided'} <br />
+                      {agent.tweetPrompt || 'No tweet prompt provided'}
                     </Td>
                   </Tr>
                 ))}
