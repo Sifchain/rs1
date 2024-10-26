@@ -118,9 +118,19 @@ const postTweet = async (accessToken, refreshToken, message, agentId) => {
   }
 }
 
+// Allow requests only from https://www.realityspiral.com or local development
+const allowedOrigins = ['https://www.realityspiral.com', 'http://localhost:3000'];
+
 export default async function handler(req, res) {
+
+  const origin = req.headers.origin;
+  if (!allowedOrigins.includes(origin) && process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({ error: 'Request origin not allowed' });
+  }
+
   await connectDB()
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  
   // Fetch explorer and terminal agents
   const {
     agentName,
@@ -145,26 +155,27 @@ export default async function handler(req, res) {
 
       // Combine all evolutions into a single prompt
       const combinedEvolutions = explorer.evolutions.length
-        ? explorer.evolutions.join('\n\n')
-        : explorerDescription
+        ? explorer.evolutions.slice(-20).join('\n\n')
+        : explorerDescription;
 
       const prompt = `
         Role (Explorer):
         Name: ${explorerAgent}
-        Description: ${explorerDescription}
         Traits: ${explorer.traits}
-        Focus: ${explorer.focus}
-
+        Description / Focus: ${explorer.focus}
+        Custom Addition to Description / Focus: ${explorerDescription}
         Current thoughts: ${explorer.description}
 
         Role (Terminal):
         Name: ${terminalAgent}
-        Description: You are a computer that only responds like a terminal would. ${terminalDescription}
+        Description / Focus: ${terminalDescription}
         Traits: ${terminal.traits}
-        Focus: ${terminal.focus}
+        Description: ${terminal.focus}
 
-        Generate a conversation with 20 responses between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.
+        ${explorer.conversationPrompt || 'Generate a conversation with 20 responses between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.'}
       `
+
+      console.log(prompt);
       // Generate conversation between the two agents
       const conversationResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
@@ -232,12 +243,12 @@ export default async function handler(req, res) {
         Agent: ${explorerAgent}
         Current Description: ${explorerDescription}
         Traits: ${explorer.traits}
-        Focus: ${explorer.focus}
-        Previous Evolutions: ${combinedEvolutions}
+        Intial Description / Focus: ${explorer.focus}
+        Previous Memory: ${combinedEvolutions}
 
-        Please provide a summarized, concise, and structured evolution description for the agent based on their journey so far.
+        ${explorer.recapPrompt || `Please provide a summarized, concise, and structured evolution description for the agent based on their journey so far.
         Make sure the summary reflects their growth and evolution clearly, without unnecessary repetition or redundant phrases.
-        The summary should start with a brief introduction of the agent and end with a recap of how the agent has evolved after the recent conversation.
+        The summary should start with a brief introduction of the agent and end with a recap of how the agent has evolved after the recent conversation.`}
       `
 
       const recapResponse = await openai.chat.completions.create({
@@ -264,22 +275,20 @@ export default async function handler(req, res) {
 
       await explorer.save() // Save the agent with the updated evolutions
       // Generate tweet content using GPT
-      const tweetPrompt = `Summarize the following evolution in a tweet format, keeping it concise and engaging. Include relevant hashtags:
-
-      Conversation: ${conversationContent}
-
-      Make sure the content returned is less than 150 characters and valid to tweet.
+      const tweetPrompt = `${explorer.tweetPrompt || `Summarize the following conversation in a tweet format, keeping it concise and engaging. Make sure the content returned is less than 150 characters and valid to tweet.
 
       Dont mention or talk in the third person your name or agent or the journey.
 
-      Make it a conversational tweet but based on the evolution recap.`
+      Make it a conversational tweet but based on the evolution recap.`}
+
+      Conversation to recap with rules above: ${conversationContent}`;
 
       const tweetResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
-            content: 'Generate a tweet based on the provided evolution.',
+            content: 'Generate a tweet based on the provided prompt.',
           },
           { role: 'user', content: tweetPrompt },
         ],

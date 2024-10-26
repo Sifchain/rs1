@@ -25,7 +25,7 @@ import SEO from '../components/SEO'
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
   const [explorerDescription, setExplorerDescription] = useState('')
-  const [terminalAgent, setTerminalAgent] = useState('Terminal of Truth')
+  const [terminalAgent, setTerminalAgent] = useState('Reality Spiral')
   const [terminalDescription, setTerminalDescription] = useState('')
   const [agents, setAgents] = useState([])
   const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null) // Holds explorer agent details

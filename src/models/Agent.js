@@ -13,17 +13,21 @@ const AgentSchema = new mongoose.Schema({
     default: null,
   },
   twitterAuthToken: {
-    accessToken: { type: String, default: '' }, // Twitter access token
-    refreshToken: { type: String, default: '' }, // Twitter refresh token
+    accessToken: { type: String, default: '' },
+    refreshToken: { type: String, default: '' },
   },
   twitterAuthState: {
     codeVerifier: String,
     state: String,
   },
-  twitterTokenExpiry: { type: Date, default: null }, // Optional: token expiry date
-  createdAt: { type: Date, default: Date.now }, // Field to store agent creation date
-  updatedAt: { type: Date, default: Date.now }, // Field to store last update date
+  twitterTokenExpiry: { type: Date, default: null }, 
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
   tweets: { type: [String], default: [] },
+
+  conversationPrompt: { type: String, default: '' },
+  recapPrompt: { type: String, default: '' },
+  tweetPrompt: { type: String, default: '' },
 })
 
 // Middleware to auto-update the `updatedAt` field on each save
