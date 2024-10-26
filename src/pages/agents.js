@@ -249,20 +249,26 @@ function Agents() {
               Agents
             </Heading>
             <Tooltip
-              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`}
-              // isDisabled={!enoughFunds}
+              label={
+                enoughFunds
+                  ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`
+                  : ''
+              }
               hasArrow
               placement="top"
             >
-              <Button
-                // isDisabled={!enoughFunds} // Disable the button if the user doesn't have enough funds
-                colorScheme="blue"
-                onClick={() => router.push('/create-agent')} // Redirect to create an agent page
-                size="md"
-                fontWeight="bold"
-              >
-                + New Agent
-              </Button>
+              <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
+                <Button
+                  onClick={() => router.push('/create-agent')} // Disable click functionality
+                  colorScheme="blue"
+                  size="md"
+                  fontWeight="bold"
+                  // isDisabled={!enoughFunds} // Button looks disabled
+                  // pointerEvents={enoughFunds ? 'auto' : 'none'} // Disable pointer events if not enough funds
+                >
+                  + New Agent
+                </Button>
+              </Box>
             </Tooltip>
           </Flex>
           {/* Dropdown to select agent */}
@@ -431,14 +437,33 @@ function Agents() {
                   </Box>
                   <Box minWidth="120px" textAlign="right">
                     {/* Edit button */}
-                    <Button
-                      disabled={!hasEditPermission()}
-                      colorScheme="blue"
-                      onClick={handleEditClick}
-                      mb={4}
+                    <Tooltip
+                      label={
+                        !hasEditPermission()
+                          ? `You have to be the owner of the agent to edit it`
+                          : ''
+                      }
+                      hasArrow
+                      placement="top"
                     >
-                      Edit
-                    </Button>
+                      <Box
+                        as="span"
+                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                      >
+                        <Button
+                          onClick={
+                            hasEditPermission() ? handleEditClick : undefined
+                          } // Disable click functionality
+                          colorScheme="blue"
+                          mb={4}
+                          isDisabled={!hasEditPermission()} // Button looks disabled but can still be hovered for Tooltip
+                          pointerEvents={hasEditPermission() ? 'auto' : 'none'} // Prevent clicking
+                        >
+                          Edit
+                        </Button>
+                      </Box>
+                    </Tooltip>
+
                     <Flex alignItems="center" justifyContent="flex-end">
                       <Icon as={FiCalendar} mr={1} />
                       <Text fontSize="sm" color="#7f8c8d" whiteSpace="nowrap">
