@@ -88,33 +88,15 @@ function CreateAgent() {
         if (!response.ok) {
           throw new Error('Failed to create agent')
         }
+        
+        setAgentId(data._id);
 
         setLoadingStep(3)
       }, 2000)
-      await router.push('/agents')
+      // await router.push('/agents')
     } catch (error) {
       console.error('Error creating agent:', error)
       setLoadingStep(0)
-    }
-  }
-
-  // Trigger Twitter OAuth flow
-  const handleTwitterAuth = async () => {
-    if (!agentId) {
-      console.error('Agent ID is required before linking Twitter account')
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/auth/twitter?agentId=${agentId}`)
-      const data = await response.json()
-      if (data.url) {
-        window.location.href = data.url // Redirect to Twitter OAuth
-      } else {
-        console.error('No URL returned from /api/auth/twitter')
-      }
-    } catch (error) {
-      console.error('Error during Twitter OAuth:', error)
     }
   }
 

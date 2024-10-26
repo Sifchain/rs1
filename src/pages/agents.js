@@ -136,23 +136,44 @@ function ViewAgents() {
           </Heading>
 
           {/* Dropdown to select agent */}
-          <Flex direction="column" mb={8} alignItems="center">
-            <Select
-              placeholder="Select Agent"
-              onChange={handleAgentSelection}
-              maxW="400px"
-              bg="#ffffff"
-              color="#34495e"
-              border="2px solid #ecf0f1"
-              _hover={{ borderColor: '#3498db' }}
+          {/* Dropdown to select agent and Create Agent button */}
+        <Flex direction="row" mb={8} alignItems="center" justifyContent="center" gap={4}>
+        <Select
+            placeholder="Select Agent"
+            onChange={handleAgentSelection}
+            maxW="400px"
+            bg="#ffffff"
+            color="#34495e"
+            border="2px solid #ecf0f1"
+            _hover={{ borderColor: '#3498db' }}
+        >
+            {agents.map(agent => (
+            <option key={agent._id} value={agent._id}>
+                {agent.name}
+            </option>
+            ))}
+        </Select>
+
+        {/* Create Agent Button */}
+        <Box>
+            <button
+            onClick={() => router.push('/create-agent')} // Adjust this route to where the create agent page is located
+            style={{
+                backgroundColor: '#2980b9',
+                color: '#ffffff',
+                padding: '8px 16px',
+                borderRadius: '5px',
+                fontWeight: 'bold',
+                border: 'none',
+                cursor: 'pointer',
+                outline: 'none',
+            }}
             >
-              {agents.map(agent => (
-                <option key={agent._id} value={agent._id}>
-                  {agent.name}
-                </option>
-              ))}
-            </Select>
-          </Flex>
+            Create Agent
+            </button>
+        </Box>
+        </Flex>
+
 
           {/* Display agent details */}
           {selectedAgent && (
