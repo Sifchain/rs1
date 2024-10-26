@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { name, traits, focus, userId, conversationPrompt, recapPrompt, tweetPrompt } = req.body
+      const { name, traits, focus, user, conversationPrompt, recapPrompt, tweetPrompt } = req.body
 
       if (!name || !traits || !focus) {
         return res
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         name, 
         traits, 
         focus, 
-        user: userId,
+        user,
         conversationPrompt, 
         recapPrompt, 
         tweetPrompt 
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       // Fetch agents and include only the specified fields
       const agents = await Agent.find(
         {},
-        '_id name traits focus description evolutions tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt'
+        '_id name traits focus description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt'
       )
       res.status(200).json(agents)
     } catch (error) {

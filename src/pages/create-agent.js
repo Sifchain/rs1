@@ -128,7 +128,10 @@ function CreateAgent() {
     try {
       setTimeout(async () => {
         setLoadingStep(2);
-        console.log(conversationPrompt, recapPrompt, tweetPrompt)
+        // console.log(conversationPrompt, recapPrompt, tweetPrompt)
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userId = user ? user._id : null;
         const response = await fetch('/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -136,7 +139,7 @@ function CreateAgent() {
             name: agentName,
             traits,
             focus: description,
-            userId: localStorage.getItem('user')._id,
+            user: userId,
             conversationPrompt,
             recapPrompt,
             tweetPrompt

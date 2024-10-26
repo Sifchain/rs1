@@ -101,7 +101,7 @@ function Agents() {
       const tagsFromConversations = filteredConversations.flatMap(
         backroom => backroom.tags || []
       )
-      setBackroomTags(Array.from(new Set(tagsFromConversations))) // Remove duplicate tags
+      setBackroomTags(Array.from(new Set(tagsFromConversations))) 
     } catch (error) {
       console.error('Error fetching recent backroom conversations:', error)
     }
@@ -141,18 +141,17 @@ function Agents() {
           traits,
           focus,
           agentId: selectedAgent._id,
-          userId: localStorage.getItem('user')._id
+          userId: JSON.parse(localStorage.getItem('user'))
         }),
       })
       if (!response.ok) {
         throw new Error('Failed to update agent')
       }
       const agents = await response.json()
-      // Manually update selectedAgent with updated values
       const updatedAgent = { ...selectedAgent, name: agentName, traits, focus }
-      setSelectedAgent(updatedAgent) // Update selectedAgent with the new values
-      setEditMode(false) // Exit edit mode
-      setAgents(agents) //
+      setSelectedAgent(updatedAgent) 
+      setEditMode(false)
+      setAgents(agents)
     } catch (error) {
       console.error('Error updating agent:', error)
     }
@@ -174,6 +173,11 @@ function Agents() {
       </Box>
     ))
   }
+  
+  const hasEditPermission = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user && selectedAgent && user._id === selectedAgent.user;
+  };
 
   const displayRecentBackrooms = () => {
     if (recentBackroomConversations.length === 0) {
@@ -261,25 +265,6 @@ function Agents() {
                 <option disabled>No agents available</option>
               )}
             </Select>
-
-            {/* Create Agent Button */}
-            <Box>
-              <button
-                onClick={() => router.push('/create-agent')} // Adjust this route to where the create agent page is located
-                style={{
-                  backgroundColor: '#2980b9',
-                  color: '#ffffff',
-                  padding: '8px 16px',
-                  borderRadius: '5px',
-                  fontWeight: 'bold',
-                  border: 'none',
-                  cursor: 'pointer',
-                  outline: 'none',
-                }}
-              >
-                Create Agent
-              </button>
-            </Box>
           </Flex>
 
 
@@ -378,7 +363,7 @@ function Agents() {
                   </Box>
                   <Box minWidth="120px" textAlign="right">
                     {/* Edit button */}
-                    <Button colorScheme="blue" onClick={handleEditClick} mb={4}>
+                    <Button disabled={!hasEditPermission()} colorScheme="blue" onClick={handleEditClick} mb={4}>
                       Edit
                     </Button>
                     <Flex alignItems="center" justifyContent="flex-end">
