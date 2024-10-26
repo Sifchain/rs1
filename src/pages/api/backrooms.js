@@ -118,131 +118,25 @@ const postTweet = async (accessToken, refreshToken, message, agentId) => {
   }
 }
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-// Function to post a tweet using Twitter API
-const postTweet = async (accessToken, refreshToken, message, agentId) => {
-  let attempt = 0
-  const maxRetries = 3
-  let tweet
-  let newAccessToken = accessToken
-  let newRefreshToken = refreshToken
-
-  while (attempt < maxRetries) {
-    try {
-      console.log(
-        'Posting tweet with access token (partially hidden):',
-        newAccessToken
-          ? newAccessToken.slice(0, 10) + '...'
-          : 'No access token provided'
-      )
-      console.log('Tweet message:', message)
-
-      const twitterClient = new TwitterApi(newAccessToken)
-      const response = await twitterClient.v2.tweet(message)
-      tweet = response.data
-
-      console.log('Tweet posted successfully:', tweet)
-
-      // Save tweet link to the agent's document in MongoDB
-      if (tweet?.id) {
-        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`
-
-        // Update agent to store the tweet URL
-        await Agent.findByIdAndUpdate(agentId, {
-          $push: { tweets: tweetUrl },
-        })
-
-        console.log('Tweet URL saved to agent:', tweetUrl)
-      }
-
-      return tweet
-    } catch (error) {
-      attempt++
-      console.error(
-        `Attempt ${attempt}: Error posting tweet with access token. Error:`,
-        error
-      )
-
-      if (
-        error.code === 403 ||
-        error.code === 402 ||
-        error.code === 401 ||
-        error.code === 400
-      ) {
-        console.error('Received 400-403 error, attempting to refresh token...')
-
-        // Attempt to refresh the token
-        try {
-          const twitterClient = new TwitterApi({
-            clientId: process.env.TWITTER_API_KEY,
-            clientSecret: process.env.TWITTER_API_SECRET_KEY,
-          })
-
-          const {
-            client,
-            accessToken: refreshedAccessToken,
-            refreshToken: refreshedRefreshToken,
-          } = await twitterClient.refreshOAuth2Token(newRefreshToken)
-
-          // Update new access and refresh tokens
-          newAccessToken = refreshedAccessToken
-          newRefreshToken = refreshedRefreshToken
-
-          console.log('Access token refreshed successfully:', newAccessToken)
-
-          // Save the new tokens to the agent's document
-          await Agent.findByIdAndUpdate(agentId, {
-            'twitterAuthToken.accessToken': newAccessToken,
-            'twitterAuthToken.refreshToken': newRefreshToken,
-          })
-
-          console.log('New access and refresh tokens saved to agent.')
-          continue // Retry the tweet posting with the refreshed token
-        } catch (refreshError) {
-          console.error('Failed to refresh access token:', refreshError)
-          throw new Error('Failed to refresh access token')
-        }
-      }
-
-      // Stop retrying if the error is not 403 or we've reached the max retries
-      if (
-        error.code !== 403 ||
-        error.code !== 402 ||
-        error.code !== 401 ||
-        error.code !== 400 ||
-        attempt >= maxRetries
-      ) {
-        console.error('Max retries reached or non-retryable error encountered.')
-        throw new Error('Failed to post tweet after multiple attempts')
-      }
-
-      // Wait for a short delay before retrying
-      await delay(2000) // Wait for 2 seconds before the next attempt
-    }
-  }
-}
-
 export default async function handler(req, res) {
   await connectDB()
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  // Fetch explorer and terminal agents
+  const {
+    agentName,
+    role,
+    sessionDetails,
+    explorerAgent,
+    explorerDescription,
+    terminalAgent,
+    terminalDescription,
+    tags = [],
+  } = req.body
+  const explorer = await Agent.findOne({ name: explorerAgent })
+  const terminal = await Agent.findOne({ name: terminalAgent })
 
   if (req.method === 'POST') {
     try {
-      const {
-        agentName,
-        role,
-        sessionDetails,
-        explorerAgent,
-        explorerDescription,
-        terminalAgent,
-        terminalDescription,
-        tags = [],
-      } = req.body
-
-      // Fetch explorer and terminal agents
-      const explorer = await Agent.findOne({ name: explorerAgent })
-      const terminal = await Agent.findOne({ name: terminalAgent })
-
       if (!explorer || !terminal) {
         return res
           .status(400)
@@ -271,9 +165,6 @@ export default async function handler(req, res) {
 
         Generate a conversation with 20 responses between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.
       `
-
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
       // Generate conversation between the two agents
       const conversationResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
@@ -372,14 +263,6 @@ export default async function handler(req, res) {
       explorer.description = `${newEvolution}` // Set latest evolution as description
 
       await explorer.save() // Save the agent with the updated evolutions
-
-      res.status(201).json(newBackroom) // Return the newly created backroom
-    } catch (error) {
-      console.log(error)
-      res
-        .status(500)
-        .json({ error: 'Failed to create backroom or update agent evolution' })
-
       // Generate tweet content using GPT
       const tweetPrompt = `Summarize the following evolution in a tweet format, keeping it concise and engaging. Include relevant hashtags:
 
@@ -389,36 +272,47 @@ export default async function handler(req, res) {
 
       Dont mention or talk in the third person your name or agent or the journey.
 
-      Make it a conversational tweet but based on the evolution recap.`;
+      Make it a conversational tweet but based on the evolution recap.`
 
       const tweetResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'Generate a tweet based on the provided evolution.' },
-          { role: 'user', content: tweetPrompt }
+          {
+            role: 'system',
+            content: 'Generate a tweet based on the provided evolution.',
+          },
+          { role: 'user', content: tweetPrompt },
         ],
         max_tokens: 280,
         temperature: 0.7,
-      });
+      })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim();
+      const tweetContent = tweetResponse.choices[0].message.content.trim()
 
       // Check if the agent has a Twitter Auth Token
       if (explorer.twitterAuthToken?.accessToken) {
         // Post recap as a tweet
         try {
-          const tweetResponse = await postTweet(explorer.twitterAuthToken.accessToken, explorer.twitterAuthToken.refreshToken, tweetContent, explorer._id);
-          console.log('Tweet posted successfully:', tweetResponse);
+          const tweetResponse = await postTweet(
+            explorer.twitterAuthToken.accessToken,
+            explorer.twitterAuthToken.refreshToken,
+            tweetContent,
+            explorer._id
+          )
+          console.log('Tweet posted successfully:', tweetResponse)
         } catch (error) {
-          console.error('Error posting tweet:', error);
-          return res.status(403).json({ error: 'Failed to post tweet', details: error });
+          console.error('Error posting tweet:', error)
+          return res
+            .status(403)
+            .json({ error: 'Failed to post tweet', details: error })
         }
       }
-
-      res.status(201).json(newBackroom); // Return the newly created backroom
+      res.status(201).json(newBackroom) // Return the newly created backroom
     } catch (error) {
-      console.log('Error in backroom creation or tweet:', error);
-      res.status(500).json({ error: 'Failed to create backroom, update agent, or post tweet' });
+      console.log(error)
+      res
+        .status(500)
+        .json({ error: 'Failed to create backroom or update agent evolution' })
     }
   } else if (req.method === 'GET') {
     try {
