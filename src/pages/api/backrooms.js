@@ -171,7 +171,6 @@ export default async function handler(req, res) {
         Traits: ${explorer.traits}
         Description / Focus: ${explorer.focus}
         Custom Addition to Description / Focus: ${explorerDescription}
-        Current thoughts: ${explorer.description}
 
         Role (Terminal):
         Name: ${terminalAgent}
@@ -182,7 +181,6 @@ export default async function handler(req, res) {
         ${explorer.conversationPrompt || 'Generate a conversation with 20 responses between these two agents based on their role, traits, focus, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.'}
       `
 
-      console.log(prompt);
       // Generate conversation between the two agents
       const conversationResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
@@ -220,11 +218,11 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
-      const conversationContent =
-        conversationResponse.choices[0].message.content
+      const conversationContent = conversationResponse.choices[0].message.content
 
       // Extract hashtags from the conversation using a regular expression
       const extractedHashtags = conversationContent.match(/#\w+/g) || [] // Matches hashtags like #AI, #Technology, etc.
+
       // Create a snippet of the content for quick preview
       const snippetContent = conversationContent.slice(0, 150) + '...' // Create a snippet of the content
 
@@ -238,8 +236,8 @@ export default async function handler(req, res) {
         terminalAgentName: terminalAgent,
         terminalDescription,
         content: conversationContent,
-        snippetContent: snippetContent, // Save snippetContent for quick display
-        tags: [...new Set([...tags, ...extractedHashtags])], // Merge any provided tags with extracted hashtags and ensure uniqueness
+        snippetContent: snippetContent,
+        tags: [...new Set([...tags, ...extractedHashtags])],
         createdAt: Date.now(),
       })
 
@@ -276,11 +274,9 @@ export default async function handler(req, res) {
         .replace(/Updated Description/g, '')
         .trim()
 
-      // Add the new evolution to the evolutions array and update the description
-      explorer.evolutions.push(newEvolution) // Append the new evolution to the evolutions array
-      explorer.description = `${newEvolution}` // Set latest evolution as description
+      explorer.evolutions.push(newEvolution)
+      await explorer.save()
 
-      await explorer.save() // Save the agent with the updated evolutions
       // Generate tweet content using GPT
       const tweetPrompt = `${explorer.tweetPrompt || `Summarize the following conversation in a tweet format, keeping it concise and engaging. Make sure the content returned is less than 150 characters and valid to tweet.
 
