@@ -136,20 +136,6 @@ function Navigation() {
             >
               Agents
             </Link>
-            <Link
-              onClick={() => router.push('/create-agent')}
-              fontFamily="Arial, sans-serif"
-              _hover={{ color: '#3498db' }}
-            >
-              Create Agent
-            </Link>
-            <Link
-              onClick={() => router.push('/create-backroom')}
-              fontFamily="Arial, sans-serif"
-              _hover={{ color: '#3498db' }}
-            >
-              Create Backroom
-            </Link>
             {isConnected ? (
               <HStack spacing={4} alignItems="center">
                 <Jazzicon diameter={30} seed={jsNumberForAddress(address)} />
