@@ -337,7 +337,19 @@ function CreateBackroom() {
                     <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
                     <Td fontFamily="Arial, sans-serif">
                       <strong>Traits:</strong> {agent.traits} <br />
-                      <strong>Focus:</strong> {agent.focus}
+                      <strong>Focus:</strong> {agent.focus} <br />
+                      <strong>Description:</strong> {agent.description} <br />
+                      <strong>Backroom Prompt:</strong>{' '}
+                      {agent.backroomPrompt || 'No backroom prompt provided'}{' '}
+                      <br />
+                      <strong>Conversation Prompt:</strong>{' '}
+                      {agent.conversationPrompt ||
+                        'No conversation prompt provided'}{' '}
+                      <br />
+                      <strong>Recap Prompt:</strong>{' '}
+                      {agent.recapPrompt || 'No recap prompt provided'} <br />
+                      <strong>Tweet Prompt:</strong>{' '}
+                      {agent.tweetPrompt || 'No tweet prompt provided'} <br />
                     </Td>
                   </Tr>
                 ))}
