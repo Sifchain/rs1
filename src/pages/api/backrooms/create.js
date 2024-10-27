@@ -251,7 +251,7 @@ export default async function handler(req, res) {
       ? `
         Recent Backroom Conversation Summary:
         \`\`\`
-        ${newEvolution} // Prepend evolution summary if tweetPrompt is already defined
+        ${newEvolution}
         \`\`\`
 
         ${explorer.tweetPrompt}`
@@ -263,7 +263,7 @@ export default async function handler(req, res) {
 
       Recent Backroom Conversation Summary:
       \`\`\`
-      ${newEvolution} // Use the evolution summary, as it's more concise than the full conversation
+      ${newEvolution}
       \`\`\`
 
       Objective: Write a tweet from ${explorerAgent}'s perspective that:
