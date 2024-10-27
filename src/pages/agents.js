@@ -511,7 +511,7 @@ function Agents() {
                     </Button>
                     <Button
                       size="sm"
-                      colorScheme="gray"
+                      colorScheme="blue"
                       onClick={handleCancelEdit}
                     >
                       Cancel
