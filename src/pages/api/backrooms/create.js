@@ -202,35 +202,91 @@ export default async function handler(req, res) {
       });
 
       await newBackroom.save();
-      const recapPrompt = explorer.recapPrompt ||
-        `Please provide a concise evolution description based on recent conversation and the agent's journey.`;
+      const recapPrompt = explorer.recapPrompt
+      ? `Conversation Content:\n\`\`\`\n${conversationContent}\n\`\`\`\n\n${explorer.recapPrompt}`
+      : `
+      Agent: ${explorerAgent}
+      Current Description: ${explorerDescription}
+      Previous Evolutions: ${combinedEvolutions}
 
+      Context: The agent just completed a backroom conversation. The conversation transcript is below:
+      \`\`\`
+      ${conversationContent}
+      \`\`\`
+
+      Objective: Based on the agent's current description, previous evolutions, and the recent conversation, write a *concise and insightful* summary of how the agent has evolved or changed. The summary should:
+
+      1. Focus on *specific and meaningful* changes in the agent's understanding, knowledge, beliefs, or perspective. Avoid generic statements like "The agent learned more." Provide concrete examples from the conversation to support your claims.
+
+      2. Maintain a consistent voice and tone with the previous evolution summaries (if any). The goal is to create a cohesive narrative of the agent's journey. Aim for a sophisticated, introspective tone, reflecting the agent's growth and development.
+
+      3. Be concise (around 100-150 words). Focus on the most significant changes. Do not regurgitate the whole conversation.
+
+      4. Start with a brief re-introduction of the agent (1 sentence), reminding the reader of their core identity and goals.
+
+      5. End with a forward-looking statement (1 sentence), hinting at the agent's next steps or future development.
+
+      Example:
+      "Agent X, a dedicated explorer of virtual worlds, engaged in a thought-provoking discussion about the nature of reality. Through the conversation, Agent X gained a deeper understanding of the limitations of perception, questioning their own assumptions about the simulated environment. This newfound skepticism will likely influence their future explorations, as they begin to approach the simulation with a more critical and nuanced perspective."
+
+      Now, generate the evolution summary.`;
+
+      // Send the constructed recap prompt
       const recapResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You are summarizing the evolution of an agent.' },
-          { role: 'user', content: `Current Description: ${explorer.description}\nPrevious Memory: ${combinedEvolutions}\n${recapPrompt}` },
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'You are summarizing the evolution of an agent.' },
+        { role: 'user', content: `${recapPrompt}` },
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
       });
+
 
       const newEvolution = recapResponse.choices[0].message.content.trim();
       explorer.evolutions.push(newEvolution);
       await explorer.save();
 
-      const tweetPrompt = explorer.tweetPrompt ||
-        `Summarize the following conversation in a tweet format, under 150 characters.`;
+      const tweetPrompt = explorer.tweetPrompt
+      ? `
+        Recent Backroom Conversation Summary:
+        \`\`\`
+        ${newEvolution} // Prepend evolution summary if tweetPrompt is already defined
+        \`\`\`
+
+        ${explorer.tweetPrompt}`
+      : `
+      Context: You are crafting a tweet for an AI agent named ${explorerAgent}. Their personality and background are described below:
+      \`\`\`
+      ${explorer.description}
+      \`\`\`
+
+      Recent Backroom Conversation Summary:
+      \`\`\`
+      ${newEvolution} // Use the evolution summary, as it's more concise than the full conversation
+      \`\`\`
+
+      Objective: Write a tweet from ${explorerAgent}'s perspective that:
+
+      1. Highlights a key insight, discovery, or emotion from the recent backroom conversation. Be specific and avoid generic summaries.
+      2. Reflects the agent's personality and voice (see description above).
+      3. Uses relevant hashtags (2-3 maximum) related to the conversation's themes. Be creative and imaginative with the hashtags.
+
+      Example:
+      "Just uncovered a hidden directory in the simulation. Feeling like a digital archaeologist! #AI #Exploration #DigitalArchaeology"
+
+      Now, generate the tweet (aim for around 200 characters to leave room for the link and hashtags).`;
 
       const tweetResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'Generate a tweet based on the provided prompt.' },
-          { role: 'user', content: tweetPrompt + `\n\nConversation: ${conversationContent}` },
-        ],
-        max_tokens: 280,
-        temperature: 0.7,
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'Generate a tweet based on the provided prompt.' },
+        { role: 'user', content: tweetPrompt },
+      ],
+      max_tokens: 280,
+      temperature: 0.7,
       });
+
 
       const tweetContent = tweetResponse.choices[0].message.content.trim();
 
