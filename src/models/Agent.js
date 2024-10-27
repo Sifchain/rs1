@@ -1,9 +1,7 @@
 import mongoose from 'mongoose'
 
 const AgentSchema = new mongoose.Schema({
-  name: { type: String, required: false },
-  traits: { type: String, required: false },
-  focus: { type: String, required: false },
+  name: { type: String, required: true },
   evolutions: { type: [String], default: [] },
   user: {
     type: mongoose.Schema.Types.ObjectId,

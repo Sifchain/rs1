@@ -59,7 +59,7 @@ function CreateAgent() {
   - Possible Futures: (What are some possible future paths for your agent?)
 `
 
-  const conversationPromptTemplate = `Generate a conversation with 20 responses between these two agents. The response should focus on each agent's role, traits, and focus.
+  const conversationPromptTemplate = `Generate a conversation with 20 responses between these two agents. The response should focus on each agent's role and description.
 `
 
   const recapPromptTemplate = `Summarize the the agent based on their recent journey, keeping the summary concise and reflective of their growth.
@@ -69,7 +69,6 @@ function CreateAgent() {
 `
 
   const [agentName, setAgentName] = useState('')
-  const [traits, setTraits] = useState('')
   const [description, setDescription] = useState('')
   const [conversationPrompt, setConversationPrompt] = useState('')
   const [recapPrompt, setRecapPrompt] = useState('')
@@ -114,10 +113,6 @@ function CreateAgent() {
       errors.agentName = 'Name is required'
       valid = false
     }
-    if (!traits) {
-      errors.traits = 'Traits are required'
-      valid = false
-    }
     if (!description) {
       errors.description = 'Description is required'
       valid = false
@@ -148,8 +143,7 @@ function CreateAgent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: agentName,
-            traits,
-            focus: description,
+            description,
             user: userId,
             type: agentType,
             conversationPrompt,
@@ -237,25 +231,6 @@ function CreateAgent() {
                   />
                   {errors.agentName && (
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                <FormControl isInvalid={errors.traits}>
-                  <Text fontWeight="bold" color="#2980b9">
-                    Traits
-                  </Text>
-                  <Textarea
-                    placeholder="Traits (e.g., Friendly, Curious, Adventurous)"
-                    value={traits}
-                    onChange={e => setTraits(e.target.value)}
-                    bg="#ffffff"
-                    color="#34495e"
-                    border="2px solid"
-                    borderColor={errors.traits ? 'red.500' : '#ecf0f1'}
-                    rows={4}
-                  />
-                  {errors.traits && (
-                    <FormErrorMessage>{errors.traits}</FormErrorMessage>
                   )}
                 </FormControl>
                 {/* Type Selector */}
@@ -433,22 +408,34 @@ function CreateAgent() {
 
           {loadingStep === 3 && (
             <Box textAlign="center" mt={6}>
-              <Alert status="success" mb={6}>
+              <Alert
+                status="success"
+                mb={6}
+                justifyContent="center"
+                textAlign="center"
+              >
                 <AlertIcon />
                 <Box>
-                  <AlertTitle>Agent Successfully Created!</AlertTitle>
-                  <AlertDescription>
+                  <AlertTitle textAlign="center">
+                    Agent Successfully Created!
+                  </AlertTitle>
+                  <AlertDescription textAlign="center">
                     Your agent has been created and is ready for further
                     actions.
                   </AlertDescription>
                 </Box>
               </Alert>
               {twitterLinked && (
-                <Alert status="info" mb={6}>
+                <Alert
+                  status="info"
+                  mb={6}
+                  justifyContent="center"
+                  textAlign="center"
+                >
                   <AlertIcon />
                   <Box>
-                    <AlertTitle>Twitter Linked!</AlertTitle>
-                    <AlertDescription>
+                    <AlertTitle textAlign="center">Twitter Linked!</AlertTitle>
+                    <AlertDescription textAlign="center">
                       Your Twitter account has been successfully linked.
                     </AlertDescription>
                   </Box>

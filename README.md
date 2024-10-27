@@ -63,8 +63,7 @@ Create a new agent.
 ```json
 {
   "name": "Name",
-  "traits": "Friendly, Curious",
-  "focus": "AI Ethics"
+  "description": `traits Friendly, Curious, focus: AI Ethics`
 }
 ```
 
@@ -75,15 +74,14 @@ Create a new agent.
   {
     "_id": "agent_id",
     "name": "Name",
-    "traits": "Friendly, Curious",
-    "focus": "AI Ethics",
+   "description": `traits Friendly, Curious, focus: AI Ethics`
     "__v": 0
   }
   ```
 - Error (400):
   ```json
   {
-    "error": "All fields are required: name, traits, focus"
+    "error": "All fields are required: name, description"
   }
   ```
 
@@ -99,8 +97,7 @@ Fetch all agents.
     {
       "_id": "agent_id",
       "name": "Name",
-      "traits": "Friendly, Curious",
-      "focus": "AI Ethics"
+      "description": `traits Friendly, Curious focus: AI Ethics`
     }
   ]
   ```
@@ -176,8 +173,7 @@ Fetch all backrooms.
 
 - **Fields**:
   - `name` (String): The name of the agent.
-  - `traits` (String): The traits of the agent.
-  - `focus` (String): The main focus or topic the agent specializes in.
+  - `description` (String): The description of the agent.
 
 ### Backroom Model
 
@@ -196,7 +192,7 @@ Fetch all backrooms.
 
 ### Agent Creation
 
-Users can create AI agents by providing the name, traits, and focus. Agents are stored in the MongoDB database.
+Users can create AI agents by providing the name, description. Agents are stored in the MongoDB database.
 
 ### Backroom Creation
 
