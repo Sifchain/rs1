@@ -112,21 +112,6 @@ function Agents() {
   const handleAgentSelection = async event => {
     const agentId = event.target.value
     const agent = agents.find(agent => agent?._id === agentId)
-    agent.pendingTweets = [
-      {
-        tweetContent:
-          'In a captivating conversation, Explorer and Aion delve into the essence of wellness, exploring challenges and aspirations towards optimized human well-being. A journey of growth, collaboration, and transformation in wellness exploration unfolds, showcasing the power of proactive well-being practices and technological advancements. #WellnessJourney #Collaboration #OptimizedWellBeing 🌟',
-        backroomId: '671e93b5d7ab7081645d6b45',
-        createdAt: '2024-10-27T19:25:45.204Z',
-        _id: '671e93b9d7ab7081645d6b47',
-      },
-      {
-        tweetContent: `"Exploration unveiled a path to personalized wellness mastery, resonating with each user's unique journey. Embracing evolution, we illuminate the way forward. #WellnessEvolution #PersonalizedWellness"`,
-        backroomId: '671ea0a7ffb741a4ae87d5d2',
-        createdAt: '2024-10-27T20:20:58.265Z',
-        _id: '671ea0aaffb741a4ae87d5d5',
-      },
-    ]
     setSelectedAgent(agent)
 
     // Pre-fill the edit form
