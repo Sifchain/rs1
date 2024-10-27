@@ -159,9 +159,16 @@ function Backrooms() {
   if (loading) {
     return (
       <ChakraProvider>
-        <Flex height="100vh" alignItems="center" justifyContent="center">
-          <Spinner size="xl" />
-        </Flex>
+        <SEO
+          title="Reality Spiral - Explore Backrooms and Create Agents"
+          description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
+          url="/"
+        />
+        <Box position="relative" height="100vh" bg="#424242">
+          <Flex alignItems="center" justifyContent="center" height="100vh">
+            <Spinner size="xl" />
+          </Flex>
+        </Box>
       </ChakraProvider>
     )
   }
