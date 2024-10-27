@@ -229,7 +229,7 @@ function CreateAgent() {
         title="Create an Agent"
         description="Create and link an agent with Twitter"
       />
-      <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
+      <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
         <Box py={10} px={6} maxW="800px" mx="auto">
           {/* Back Button */}
@@ -241,7 +241,7 @@ function CreateAgent() {
           >
             Back
           </Button>
-          <Heading textAlign="center" mb={10} fontSize="4xl" color="#2980b9">
+          <Heading textAlign="center" mb={10} fontSize="4xl" color="#81d4fa">
             Create an Agent
           </Heading>
 
@@ -249,17 +249,17 @@ function CreateAgent() {
             <Flex direction="column" gap={6}>
               <VStack spacing={4} align="stretch">
                 <FormControl isInvalid={errors.agentName}>
-                  <Text fontWeight="bold" color="#2980b9">
+                  <Text fontWeight="bold" color="#81d4fa">
                     Name
                   </Text>
                   <Input
                     placeholder="Enter agent name"
                     value={agentName}
                     onChange={e => setAgentName(e.target.value)}
-                    bg="#ffffff"
-                    color="#34495e"
+                    bg="#424242"
+                    color="#e0e0e0"
                     border="2px solid"
-                    borderColor={errors.agentName ? 'red.500' : '#ecf0f1'}
+                    borderColor={errors.agentName ? 'red.500' : '#757575'}
                   />
                   {errors.agentName && (
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
@@ -268,7 +268,7 @@ function CreateAgent() {
                 {/* Description Section */}
                 <FormControl isInvalid={errors.description}>
                   <Flex justify="space-between" align="center">
-                    <Text fontWeight="bold" color="#2980b9">
+                    <Text fontWeight="bold" color="#81d4fa">
                       Description
                     </Text>
                     <Button
@@ -284,7 +284,7 @@ function CreateAgent() {
                     <Box
                       mt={4}
                       p={4}
-                      bg="#f7fafc"
+                      bg="#424242"
                       borderRadius="md"
                       fontSize="sm"
                     >
@@ -306,10 +306,10 @@ function CreateAgent() {
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={10}
-                    bg="#ffffff"
-                    color="#34495e"
+                    bg="#424242"
+                    color="#e0e0e0"
                     border="2px solid"
-                    borderColor={errors.description ? 'red.500' : '#ecf0f1'}
+                    borderColor={errors.description ? 'red.500' : '#757575'}
                   />
                   {errors.description && (
                     <FormErrorMessage>{errors.description}</FormErrorMessage>
@@ -354,7 +354,7 @@ function CreateAgent() {
                   <Box key={index}>
                     <FormControl isInvalid={prompt.error}>
                       <Flex justify="space-between" align="center">
-                        <Text fontWeight="bold" color="#2980b9">
+                        <Text fontWeight="bold" color="#81d4fa">
                           {prompt.title} (Optional)
                         </Text>
                         <Button
@@ -370,7 +370,7 @@ function CreateAgent() {
                         <Box
                           mt={4}
                           p={4}
-                          bg="#f7fafc"
+                          bg="#424242"
                           borderRadius="md"
                           fontSize="sm"
                         >
@@ -392,10 +392,10 @@ function CreateAgent() {
                         value={prompt.value}
                         onChange={e => prompt.setter(e.target.value)}
                         rows={3}
-                        bg="#ffffff"
-                        color="#34495e"
+                        bg="#424242"
+                        color="#e0e0e0"
                         border="2px solid"
-                        borderColor="#ecf0f1"
+                        borderColor="#757575"
                       />
                       {prompt.error && (
                         <FormErrorMessage>{prompt.error}</FormErrorMessage>
@@ -434,13 +434,15 @@ function CreateAgent() {
                 mb={6}
                 justifyContent="center"
                 textAlign="center"
+                bg="#424242"
+                borderColor="#64b5f6"
               >
                 <AlertIcon />
                 <Box>
-                  <AlertTitle textAlign="center">
+                  <AlertTitle textAlign="center" color="#81d4fa">
                     Agent Successfully Created!
                   </AlertTitle>
-                  <AlertDescription textAlign="center">
+                  <AlertDescription textAlign="center" color="#e0e0e0">
                     Your agent has been created and is ready for further
                     actions.
                   </AlertDescription>
@@ -452,11 +454,15 @@ function CreateAgent() {
                   mb={6}
                   justifyContent="center"
                   textAlign="center"
+                  bg="#424242"
+                  borderColor="#64b5f6"
                 >
                   <AlertIcon />
                   <Box>
-                    <AlertTitle textAlign="center">Twitter Linked!</AlertTitle>
-                    <AlertDescription textAlign="center">
+                    <AlertTitle textAlign="center" color="#81d4fa">
+                      Twitter Linked!
+                    </AlertTitle>
+                    <AlertDescription textAlign="center" color="#e0e0e0">
                       Your Twitter account has been successfully linked.
                     </AlertDescription>
                   </Box>
