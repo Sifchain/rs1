@@ -1,8 +1,8 @@
-import Backroom from '../../models/Backroom'
-import Agent from '../../models/Agent'
-import mongoose from 'mongoose'
-import OpenAI from 'openai'
-import { TwitterApi } from 'twitter-api-v2'
+import Backroom from '../../../models/Backroom';
+import Agent from '../../../models/Agent';
+import mongoose from 'mongoose';
+import OpenAI from 'openai';
+import { TwitterApi } from 'twitter-api-v2';
 
 // Connect to MongoDB
 const connectDB = async () => {
