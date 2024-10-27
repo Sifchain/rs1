@@ -26,7 +26,6 @@ import {
   TOKEN_CONTRACT_ADDRESS,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
-import { useToast } from '@chakra-ui/react' // Import useToast for notifications
 
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([])
@@ -173,8 +172,6 @@ function Backrooms() {
       </ChakraProvider>
     )
   }
-
-  console.log(selectedAgent)
 
   return (
     <ChakraProvider>
