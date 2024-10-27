@@ -96,7 +96,6 @@ function Agents() {
     try {
       const response = await fetch('/api/agents')
       const data = await response.json()
-      console.log(data)
       setAgents(data)
     } catch (error) {
       console.error('Error fetching agents:', error)
@@ -559,7 +558,6 @@ function Agents() {
       )
     )
   }
-  console.log(selectedAgent)
 
   return (
     <ChakraProvider>
