@@ -17,13 +17,14 @@ import {
   FormErrorMessage,
   Button,
   Tooltip,
+  useToast,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
-import { FiCalendar } from 'react-icons/fi'
+import { FiCalendar, FiTrash2 } from 'react-icons/fi'
 import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
@@ -49,6 +50,7 @@ function Agents() {
   const [tweetPrompt, setTweetPrompt] = useState('')
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
+  const toast = useToast() // Initialize useToast for notifications
 
   useEffect(() => {
     if (address) {
@@ -75,6 +77,7 @@ function Agents() {
     try {
       const response = await fetch('/api/agents')
       const data = await response.json()
+      console.log(data)
       setAgents(data)
     } catch (error) {
       console.error('Error fetching agents:', error)
@@ -91,6 +94,7 @@ function Agents() {
     const agentId = event.target.value
     const agent = agents.find(agent => agent?._id === agentId)
     setSelectedAgent(agent)
+
     // Pre-fill the edit form
     setAgentName(agent?.name)
     setDescription(agent?.description || '') // Optional fields
@@ -286,6 +290,213 @@ function Agents() {
     router.push(`/backrooms?tags=${encodeURIComponent(tagWithoutHash)}`)
   }
 
+  const handleDiscardTweet = async tweetId => {
+    if (window.confirm('Are you sure you want to discard this tweet?')) {
+      try {
+        const response = await fetch('/api/twitter/discardTweet', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: selectedAgent._id,
+            tweetId,
+          }),
+        })
+        if (response.ok) {
+          const updatedAgent = await response.json()
+          setSelectedAgent(updatedAgent)
+          toast({
+            title: 'Tweet Discarded',
+            description: 'The tweet has been successfully discarded.',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          })
+        } else {
+          const error = await response.json()
+          toast({
+            title: 'Error',
+            description:
+              error.error || 'Failed to discard the tweet. Please try again.',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          })
+        }
+      } catch (error) {
+        console.error('Error discarding tweet:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to discard the tweet. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    }
+  }
+
+  const handleApproveTweet = async tweet => {
+    try {
+      const response = await fetch('/api/twitter/approveTweet', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: selectedAgent._id,
+          tweetId: tweet._id,
+        }),
+      })
+      if (response.ok) {
+        const updatedAgent = await response.json()
+        setSelectedAgent(updatedAgent)
+        toast({
+          title: 'Tweet Approved',
+          description: 'The tweet has been successfully posted.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: 'Error',
+          description:
+            error.error || 'Failed to post the tweet. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    } catch (error) {
+      console.error('Error approving tweet:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to post the tweet. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleEditTweet = async (tweetId, promptValue) => {
+    try {
+      const response = await fetch('/api/twitter/editTweet', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: selectedAgent._id,
+          tweetId,
+          tweetContent: promptValue,
+        }),
+      })
+      if (response.ok) {
+        const updatedAgent = await response.json()
+        setSelectedAgent(updatedAgent)
+        toast({
+          title: 'Tweet Updated',
+          description: 'The tweet content has been updated.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: 'Error',
+          description:
+            error.error || 'Failed to update the tweet. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    } catch (error) {
+      console.error('Error updating tweet:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to update the tweet. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const displayPendingTweets = () => {
+    if (selectedAgent?.pendingTweets?.length === 0) {
+      return (
+        <Text textAlign="center" fontSize="lg" color="#e0e0e0">
+          No pending tweets.
+        </Text>
+      )
+    }
+
+    return (
+      <Box
+        p={4}
+        bg="#424242"
+        borderRadius="lg"
+        border="2px solid #757575"
+        boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+        mb={4}
+      >
+        <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+          Pending Tweets
+        </Text>
+        <VStack spacing={4} align="stretch">
+          {selectedAgent?.pendingTweets?.map(tweet => (
+            <Box
+              key={tweet._id}
+              border="2px solid #757575"
+              p={3}
+              borderRadius="md"
+            >
+              <Flex justifyContent="space-between">
+                <Text color="#e0e0e0" mb={2}>
+                  {tweet.tweetContent}
+                </Text>
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={() => handleEditTweet(tweet._id, tweet.tweetContent)} // Pass tweetContent for editing
+                >
+                  Edit
+                </Button>
+              </Flex>
+              <Text fontSize="sm" color="#b0bec5" mb={2}>
+                Generated on: {new Date(tweet.createdAt).toLocaleString()}
+              </Text>
+              <Flex justifyContent="space-between" alignItems="center">
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => handleDiscardTweet(tweet._id)}
+                  leftIcon={<FiTrash2 />}
+                >
+                  Discard
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="green"
+                  onClick={() => handleApproveTweet(tweet)}
+                >
+                  Approve and Post
+                </Button>
+              </Flex>
+            </Box>
+          ))}
+        </VStack>
+      </Box>
+    )
+  }
+  console.log(selectedAgent)
+
   return (
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
@@ -352,7 +563,7 @@ function Agents() {
               </Tooltip>
             </Flex>
           </Flex>
-
+          {displayPendingTweets()}
           {/* Display agent details */}
           {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch">

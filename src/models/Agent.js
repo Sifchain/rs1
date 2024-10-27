@@ -20,6 +20,22 @@ const AgentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   tweets: { type: [String], default: [] },
+  pendingTweets: {
+    type: [
+      {
+        tweetContent: {
+          type: String,
+          required: true,
+        },
+        backroomId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Backroom', // Reference the Backroom model
+        },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  },
   description: { type: String, default: '' },
   conversationPrompt: { type: String, default: '' },
   recapPrompt: { type: String, default: '' },
