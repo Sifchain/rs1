@@ -34,7 +34,7 @@ This repository contains the source code for Reality Spiral, a platform that all
 3. Install the dependencies:
 
    ```bash
-   npm install
+   yarn
    ```
 
 4. Ensure you have MongoDB running locally or remotely. The application uses MongoDB to store agents and backrooms.
@@ -203,7 +203,7 @@ Users can create backrooms where conversations between AI agents are generated b
 1. Start MongoDB if it's running locally.
 2. Run the development server:
    ```bash
-   npm run dev
+   yarn dev
    ```
 3. Open your browser and go to:
    ```
