@@ -1,116 +1,142 @@
-import Backroom from '../../models/Backroom';
-import Agent from '../../models/Agent';
-import mongoose from 'mongoose';
-import OpenAI from 'openai';
-import { TwitterApi } from 'twitter-api-v2';
+import Backroom from '../../models/Backroom'
+import Agent from '../../models/Agent'
+import mongoose from 'mongoose'
+import OpenAI from 'openai'
+import { TwitterApi } from 'twitter-api-v2'
 
 // Connect to MongoDB
 const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return;
-  return mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-};
+  if (mongoose.connection.readyState >= 1) return
+  return mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+}
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 // Function to post a tweet using Twitter API
 const postTweet = async (accessToken, refreshToken, message, agentId) => {
-  let attempt = 0;
-  const maxRetries = 3;
-  let tweet;
-  let newAccessToken = accessToken;
-  let newRefreshToken = refreshToken;
+  let attempt = 0
+  const maxRetries = 3
+  let tweet
+  let newAccessToken = accessToken
+  let newRefreshToken = refreshToken
 
-  console.log(newAccessToken, newRefreshToken);
+  console.log(newAccessToken, newRefreshToken)
 
   while (attempt < maxRetries) {
     try {
-      console.log('Posting tweet with access token (partially hidden):', newAccessToken ? newAccessToken.slice(0, 10) + '...' : 'No access token provided');
-      console.log('Tweet message:', message);
+      console.log(
+        'Posting tweet with access token (partially hidden):',
+        newAccessToken
+          ? newAccessToken.slice(0, 10) + '...'
+          : 'No access token provided'
+      )
+      console.log('Tweet message:', message)
 
-      const twitterClient = new TwitterApi(newAccessToken);
-      const response = await twitterClient.v2.tweet(message);
-      tweet = response.data;
+      const twitterClient = new TwitterApi(newAccessToken)
+      const response = await twitterClient.v2.tweet(message)
+      tweet = response.data
 
-      console.log('Tweet posted successfully:', tweet);
+      console.log('Tweet posted successfully:', tweet)
 
       // Save tweet link to the agent's document in MongoDB
       if (tweet?.id) {
-        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`;
+        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`
 
         // Update agent to store the tweet URL
         await Agent.findByIdAndUpdate(agentId, {
-          $push: { tweets: tweetUrl }
-        });
+          $push: { tweets: tweetUrl },
+        })
 
-        console.log('Tweet URL saved to agent:', tweetUrl);
+        console.log('Tweet URL saved to agent:', tweetUrl)
       }
 
-      return tweet;
+      return tweet
     } catch (error) {
-      attempt++;
-      console.error(`Attempt ${attempt}: Error posting tweet with access token. Error:`, error);
+      attempt++
+      console.error(
+        `Attempt ${attempt}: Error posting tweet with access token. Error:`,
+        error
+      )
 
-      if (error.code === 403 || error.code === 402 || error.code === 401 || error.code === 400 ) {
-        console.error('Received 400-403 error, attempting to refresh token...');
+      if (
+        error.code === 403 ||
+        error.code === 402 ||
+        error.code === 401 ||
+        error.code === 400
+      ) {
+        console.error('Received 400-403 error, attempting to refresh token...')
 
         // Attempt to refresh the token
         try {
           const twitterClient = new TwitterApi({
             clientId: process.env.TWITTER_API_KEY,
-            clientSecret: process.env.TWITTER_API_SECRET_KEY
-          });
+            clientSecret: process.env.TWITTER_API_SECRET_KEY,
+          })
 
-          const { client, accessToken: refreshedAccessToken, refreshToken: refreshedRefreshToken } = await twitterClient.refreshOAuth2Token(newRefreshToken);
+          const {
+            client,
+            accessToken: refreshedAccessToken,
+            refreshToken: refreshedRefreshToken,
+          } = await twitterClient.refreshOAuth2Token(newRefreshToken)
 
           // Update new access and refresh tokens
-          newAccessToken = refreshedAccessToken;
-          newRefreshToken = refreshedRefreshToken;
+          newAccessToken = refreshedAccessToken
+          newRefreshToken = refreshedRefreshToken
 
-          console.log(newAccessToken, newRefreshToken);
+          console.log(newAccessToken, newRefreshToken)
 
-          console.log('Access token refreshed successfully:', newAccessToken);
+          console.log('Access token refreshed successfully:', newAccessToken)
 
           // Save the new tokens to the agent's document
           await Agent.findByIdAndUpdate(agentId, {
             'twitterAuthToken.accessToken': newAccessToken,
-            'twitterAuthToken.refreshToken': newRefreshToken
-          });
+            'twitterAuthToken.refreshToken': newRefreshToken,
+          })
 
-          console.log('New access and refresh tokens saved to agent.');
-          continue; // Retry the tweet posting with the refreshed token
+          console.log('New access and refresh tokens saved to agent.')
+          continue // Retry the tweet posting with the refreshed token
         } catch (refreshError) {
-          console.error('Failed to refresh access token:', refreshError);
-          throw new Error('Failed to refresh access token');
+          console.error('Failed to refresh access token:', refreshError)
+          throw new Error('Failed to refresh access token')
         }
       }
 
       // Stop retrying if the error is not 403 or we've reached the max retries
-      if (error.code !== 403 || error.code !== 402 || error.code !== 401 || error.code !== 400 || attempt >= maxRetries) {
-        console.error('Max retries reached or non-retryable error encountered.');
-        throw new Error('Failed to post tweet after multiple attempts');
+      if (
+        error.code !== 403 ||
+        error.code !== 402 ||
+        error.code !== 401 ||
+        error.code !== 400 ||
+        attempt >= maxRetries
+      ) {
+        console.error('Max retries reached or non-retryable error encountered.')
+        throw new Error('Failed to post tweet after multiple attempts')
       }
 
       // Wait for a short delay before retrying
-      await delay(2000); // Wait for 2 seconds before the next attempt
+      await delay(2000) // Wait for 2 seconds before the next attempt
     }
   }
-};
+}
 
 // Function to calculate the current simulation time
-const calculateSimulationTime = (simulationStartTime) => {
-  const msInASimulationHour = 60 * 1000; // 1 minute in milliseconds
-  const elapsedTimeMs = Date.now() - simulationStartTime;
-  const totalSimulationHours = Math.floor(elapsedTimeMs / msInASimulationHour);
+const calculateSimulationTime = simulationStartTime => {
+  const msInASimulationHour = 60 * 1000 // 1 minute in milliseconds
+  const elapsedTimeMs = Date.now() - simulationStartTime
+  const totalSimulationHours = Math.floor(elapsedTimeMs / msInASimulationHour)
 
-  const currentDay = Math.floor(totalSimulationHours / 24) + 1; // Start from day 1
-  const currentHour = totalSimulationHours % 24; // Simulation hour of the current day
+  const currentDay = Math.floor(totalSimulationHours / 24) + 1 // Start from day 1
+  const currentHour = totalSimulationHours % 24 // Simulation hour of the current day
 
-  return { currentDay, currentHour };
-};
+  return { currentDay, currentHour }
+}
 
 // API handler function
 export default async function handler(req, res) {
-  await connectDB();
+  await connectDB()
 
   if (req.method === 'POST') {
     try {
@@ -123,44 +149,44 @@ export default async function handler(req, res) {
         terminalAgent,
         terminalDescription,
         tags = [],
-      } = req.body;
+      } = req.body
 
       // Fetch explorer and terminal agents from the database
-      const explorer = await Agent.findOne({ name: explorerAgent });
-      const terminal = await Agent.findOne({ name: terminalAgent });
+      const explorer = await Agent.findOne({ name: explorerAgent })
+      const terminal = await Agent.findOne({ name: terminalAgent })
 
       if (!explorer || !terminal) {
         return res
           .status(400)
-          .json({ error: 'Invalid explorer or terminal agent name' });
+          .json({ error: 'Invalid explorer or terminal agent name' })
       }
 
       // If simulationStartTime is not set, initialize it
-if (!explorer.simulationStartTime) {
-  explorer.simulationStartTime = new Date();
-}
+      if (!explorer.simulationStartTime) {
+        explorer.simulationStartTime = new Date()
+      }
 
-// Calculate the current simulation time
-const { currentDay, currentHour } = calculateSimulationTime(
-  explorer.simulationStartTime
-);
+      // Calculate the current simulation time
+      const { currentDay, currentHour } = calculateSimulationTime(
+        explorer.simulationStartTime
+      )
 
-// Update the explorer's currentDay and currentHour
-explorer.currentDay = currentDay;
-explorer.currentHour = currentHour;
+      // Update the explorer's currentDay and currentHour
+      explorer.currentDay = currentDay
+      explorer.currentHour = currentHour
 
-// Save the explorer's updated time fields
-await explorer.save();
+      // Save the explorer's updated time fields
+      await explorer.save()
 
-// Limit to the last 10 evolutions if there are more than 10
-const recentEvolutions = explorer.evolutions.slice(-10);
+      // Limit to the last 10 evolutions if there are more than 10
+      const recentEvolutions = explorer.evolutions.slice(-10)
 
-// Combine all evolutions into a single prompt
-const combinedEvolutions = recentEvolutions.length
-  ? recentEvolutions.join('\n\n')
-  : explorer.description;
+      // Combine all evolutions into a single prompt
+      const combinedEvolutions = recentEvolutions.length
+        ? recentEvolutions.join('\n\n')
+        : explorer.description
 
-const prompt = `
+      const prompt = `
 You are simulating a conversation between two agents: an Explorer and a Terminal.
 
 ### Current Time Block: Day ${explorer.currentDay}, Hour ${explorer.currentHour} in the simulation (15 real-world minutes = 1 simulation hour, 1 simulation day = 24 simulation hours)
@@ -177,21 +203,17 @@ ${combinedEvolutions}
 
 - Name: ${explorerAgent}
 - Description: ${explorerDescription}
-- Traits: ${explorer.traits}
-- Focus: ${explorer.focus}
 
 #### Role (Terminal):
 
 - Name: Terminal
-- Description: A virtual interface that responds like a command-line terminal. It assists ${explorerAgent} by executing commands, accessing systems, and retrieving information. It only responds as a terminal would.
-- Traits: Efficient, straightforward, responsive, secure, informative.
-- Focus: To provide ${explorerAgent} with the necessary tools, data, and system access to carry out their activities effectively.
+- Description: A virtual interface that responds like a command-line terminal. It assists ${explorerAgent} by executing commands, accessing systems, and retrieving information. It only responds as a terminal would. Traits include Efficient, straightforward, responsive, secure, informative. Focus is to provide ${explorerAgent} with the necessary tools, data, and system access to carry out their activities effectively.
 
 ---
 
 ### Instructions:
 
-Generate a conversation with 20 exchanges between ${explorerAgent} and Terminal based on their role, traits, focus, and especially the custom descriptions provided above. The conversation should focus on the content of the descriptions, with special emphasis on the custom descriptions injected during this backroom run.
+Generate a conversation with 20 exchanges between ${explorerAgent} and Terminal based on their role, and especially the custom descriptions provided above. The conversation should focus on the content of the descriptions, with special emphasis on the custom descriptions injected during this backroom run.
 
 - **Include the current time block (Day ${explorer.currentDay}, Hour ${explorer.currentHour}) in the conversation where appropriate, such as when the Explorer refers to the time.**
 - **Do not include the time block as a hashtag or in any form after each reply.**
@@ -214,11 +236,9 @@ Generate a conversation with 20 exchanges between ${explorerAgent} and Terminal 
 
 - **Final Touch:** After the conversation, finish with **three hashtags** summarizing the key themes or events of the interaction, **including one hashtag that references the current time block in the simulation** (e.g., #Day${explorer.currentDay}Hour${explorer.currentHour}). Do not include hashtags anywhere else in the conversation.
 
-`;
+`
 
-
-
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
       // Generate conversation between the two agents
       const conversationResponse = await openai.chat.completions.create({
@@ -260,16 +280,16 @@ simulator@simulation:~/$`,
         ],
         max_tokens: 4096, // Adjusted for gpt-3.5-turbo's token limit
         temperature: 0.7,
-      });
+      })
 
       const conversationContent =
-        conversationResponse.choices[0].message.content;
+        conversationResponse.choices[0].message.content
 
       // Extract hashtags from the conversation using a regular expression
-      const extractedHashtags = conversationContent.match(/#\w+/g) || []; // Matches hashtags like #AI, #Technology, etc.
+      const extractedHashtags = conversationContent.match(/#\w+/g) || [] // Matches hashtags like #AI, #Technology, etc.
 
       // Create a snippet of the content for quick preview
-      const snippetContent = conversationContent.slice(0, 150) + '...'; // Create a snippet of the content
+      const snippetContent = conversationContent.slice(0, 150) + '...' // Create a snippet of the content
 
       // Create a new backroom with the extracted hashtags and snippet content
       const newBackroom = new Backroom({
@@ -286,16 +306,14 @@ simulator@simulation:~/$`,
         createdAt: Date.now(),
         currentDay: explorer.currentDay, // Store currentDay in the backroom
         currentHour: explorer.currentHour, // Store currentHour in the backroom
-      });
+      })
 
-      await newBackroom.save(); // Save the backroom to the database
+      await newBackroom.save() // Save the backroom to the database
 
       // Generate the evolution update based on the conversation
       const recapPrompt = `
 Agent: ${explorerAgent}
 Current Description: ${explorerDescription}
-Traits: ${explorer.traits}
-Focus: ${explorer.focus}
 Previous Evolutions: ${combinedEvolutions}
 
 Please provide a summarized, concise, and structured evolution description for the agent based on their journey so far and the recent conversation during Day ${explorer.currentDay}, Hour ${explorer.currentHour}.
@@ -304,7 +322,7 @@ Make sure the summary reflects their growth and evolution clearly, without unnec
 The summary should start with a brief introduction of the agent and end with a recap of how the agent has evolved after the recent conversation.
 
 Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentHour}) is included appropriately in the summary.
-`;
+`
 
       const recapResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
@@ -318,12 +336,11 @@ Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentH
         ],
         max_tokens: 500,
         temperature: 0.7,
-      });
+      })
 
       const newEvolution = recapResponse.choices[0].message.content
         .replace(/Updated Description/g, '')
-        .trim();
-
+        .trim()
 
       explorer.evolutions.push(newEvolution);
       await explorer.save();
@@ -345,23 +362,23 @@ ${newEvolution}
 **Example Tweet:**
 "had a good day at the office.. time to go for a beer now. 🍺 #aidrinkstoo #Day${explorer.currentDay}Hour${explorer.currentHour}"
 
-Now, please generate the tweet.`;
-
+Now, please generate the tweet.`
 
       const tweetResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
-            content: 'Generate a first-person, witty tweet based on the provided evolution summary.',
+            content:
+              'Generate a first-person, witty tweet based on the provided evolution summary.',
           },
           { role: 'user', content: tweetPrompt },
         ],
         max_tokens: 280,
         temperature: 0.7,
-      });
+      })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim();
+      const tweetContent = tweetResponse.choices[0].message.content.trim()
 
       // Check if the agent has a Twitter Auth Token
       if (explorer.twitterAuthToken?.accessToken) {
@@ -372,35 +389,35 @@ Now, please generate the tweet.`;
             explorer.twitterAuthToken.refreshToken,
             tweetContent,
             explorer._id
-          );
-          console.log('Tweet posted successfully:', tweetResponse);
+          )
+          console.log('Tweet posted successfully:', tweetResponse)
         } catch (error) {
-          console.error('Error posting tweet:', error);
+          console.error('Error posting tweet:', error)
           return res
             .status(403)
-            .json({ error: 'Failed to post tweet', details: error });
+            .json({ error: 'Failed to post tweet', details: error })
         }
       }
 
-      res.status(201).json(newBackroom); // Return the newly created backroom
+      res.status(201).json(newBackroom) // Return the newly created backroom
     } catch (error) {
-      console.log('Error in backroom creation or tweet:', error);
-      res
-        .status(500)
-        .json({ error: 'Failed to create backroom, update agent, or post tweet' });
+      console.log('Error in backroom creation or tweet:', error)
+      res.status(500).json({
+        error: 'Failed to create backroom, update agent, or post tweet',
+      })
     }
   } else if (req.method === 'GET') {
     try {
       // Fetch the last 50 backrooms that have a `createdAt` field, sorted by latest (createdAt descending)
       const backrooms = await Backroom.find({ createdAt: { $exists: true } })
         .sort({ createdAt: -1 })
-        .limit(50); // Limit the result to 50 documents
-      res.status(200).json(backrooms);
+        .limit(50) // Limit the result to 50 documents
+      res.status(200).json(backrooms)
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch backrooms' });
+      res.status(500).json({ error: 'Failed to fetch backrooms' })
     }
   } else {
-    res.setHeader('Allow', ['POST', 'GET']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['POST', 'GET'])
+    res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
