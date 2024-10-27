@@ -41,8 +41,8 @@ function Navigation() {
       {/* Desktop and Mobile Menu Toggle */}
       <Flex
         as="nav"
-        bg="#ffffff"
-        color="#34495e"
+        bg="#424242"
+        color="#e0e0e0"
         p={4}
         alignItems="center"
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
@@ -55,7 +55,7 @@ function Navigation() {
             fontSize={{ base: 'lg', md: 'xs' }}
             fontFamily="Arial, sans-serif"
             maxWidth="800px"
-            color="#2c3e50"
+            color="#b0bec5"
           >
             A unique platform to create, explore, and connect with agents and
             backrooms in the digital dimension.
@@ -68,21 +68,21 @@ function Navigation() {
           <Link
             onClick={() => router.push('/about')}
             fontFamily="Arial, sans-serif"
-            _hover={{ color: '#3498db' }}
+            _hover={{ color: '#81d4fa' }}
           >
             About
           </Link>
           <Link
             onClick={() => router.push('/backrooms')}
             fontFamily="Arial, sans-serif"
-            _hover={{ color: '#3498db' }}
+            _hover={{ color: '#81d4fa' }}
           >
             Backrooms
           </Link>
           <Link
             onClick={() => router.push('/agents')}
             fontFamily="Arial, sans-serif"
-            _hover={{ color: '#3498db' }}
+            _hover={{ color: '#81d4fa' }}
           >
             Agents
           </Link>
@@ -98,7 +98,7 @@ function Navigation() {
               onClick={connect}
               colorScheme="blue"
               variant="solid"
-              _hover={{ bg: '#2980b9', boxShadow: '0 0 15px #2980b9' }}
+              _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
             >
               Connect Wallet
             </Button>
@@ -120,19 +120,19 @@ function Navigation() {
 
       {/* Mobile Menu */}
       <Collapse in={isOpen} animateOpacity>
-        <Box bg="#ffffff" pb={4} display={{ md: 'none' }}>
+        <Box bg="#212121" pb={4} display={{ md: 'none' }}>
           <VStack spacing={4} align="stretch" px={4}>
             <Link
               onClick={() => router.push('/backrooms')}
               fontFamily="Arial, sans-serif"
-              _hover={{ color: '#3498db' }}
+              _hover={{ color: '#81d4fa' }}
             >
               Backrooms
             </Link>
             <Link
               onClick={() => router.push('/agents')}
               fontFamily="Arial, sans-serif"
-              _hover={{ color: '#3498db' }}
+              _hover={{ color: '#81d4fa' }}
             >
               Agents
             </Link>
@@ -148,7 +148,7 @@ function Navigation() {
                 onClick={connect}
                 colorScheme="blue"
                 variant="solid"
-                _hover={{ bg: '#2980b9', boxShadow: '0 0 15px #2980b9' }}
+                _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
               >
                 Connect Wallet
               </Button>

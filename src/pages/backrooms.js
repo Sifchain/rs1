@@ -159,9 +159,16 @@ function Backrooms() {
   if (loading) {
     return (
       <ChakraProvider>
-        <Flex height="100vh" alignItems="center" justifyContent="center">
-          <Spinner size="xl" />
-        </Flex>
+        <SEO
+          title="Reality Spiral - Explore Backrooms and Create Agents"
+          description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
+          url="/"
+        />
+        <Box position="relative" height="100vh" bg="#424242">
+          <Flex alignItems="center" justifyContent="center" height="100vh">
+            <Spinner size="xl" />
+          </Flex>
+        </Box>
       </ChakraProvider>
     )
   }
@@ -174,13 +181,13 @@ function Backrooms() {
         url="/"
       />
       <Navigation />
-      <Box bg="#f0f4f8" color="#34495e" minHeight="100vh" py={10} px={6}>
+      <Box bg="#424242" color="#e0e0e0" minHeight="100vh" py={10} px={6}>
         <Box maxW="container.xl" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={10}>
             <Heading
               textAlign="center"
               fontSize={{ base: '2xl', md: '4xl' }}
-              color="#2980b9"
+              color="#81d4fa"
               fontFamily="'Arial', sans-serif"
             >
               Backrooms
@@ -213,8 +220,12 @@ function Backrooms() {
               onChange={e => setSelectedAgent(e.target.value)}
               maxW="300px"
               mb={{ base: 4, md: 0 }}
+              bg="#424242"
+              color="#e0e0e0"
+              borderColor="#757575"
+              _hover={{ borderColor: '#81d4fa' }}
             >
-              <option value="All">All Agents</option>{' '}
+              <option value="All">All Agents</option>
               {/* The default option for 'All Agents' */}
               {/* Dynamically populate the dropdown with agent names */}
               {Array.from(
@@ -233,6 +244,10 @@ function Backrooms() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               maxW="300px"
+              bg="#424242"
+              color="#e0e0e0"
+              borderColor="#757575"
+              _hover={{ borderColor: '#81d4fa' }}
             />
           </Flex>
 
@@ -258,14 +273,14 @@ function Backrooms() {
                 <Box
                   key={index}
                   p={4}
-                  bg="#ffffff"
+                  bg="#424242"
                   borderRadius="lg"
-                  border="2px solid #ecf0f1"
-                  boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+                  border="2px solid #757575"
+                  boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
                 >
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
-                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         {backroom.agentName} &rarr; {backroom.terminalAgentName}
                       </Text>
                     </Box>
@@ -312,11 +327,11 @@ function Backrooms() {
                   </Flex>
 
                   {/* Snippet content moved below */}
-                  <Text fontSize="sm" color="#7f8c8d" mb={2}>
+                  <Text fontSize="sm" color="#b0bec5" mb={2}>
                     {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
                     {new Date(backroom.createdAt).toLocaleTimeString()}
                   </Text>
-                  <Text color="#34495e" mb={4}>
+                  <Text color="#e0e0e0" mb={4}>
                     {backroom.snippetContent}
                   </Text>
 
@@ -340,13 +355,15 @@ function Backrooms() {
 
                   <Collapse in={expandedIndex === index} animateOpacity>
                     <Box mt={4}>
-                      <Text whiteSpace="pre-wrap">{backroom.content}</Text>
+                      <Text whiteSpace="pre-wrap" color="#e0e0e0">
+                        {backroom.content}
+                      </Text>
                     </Box>
                   </Collapse>
                 </Box>
               ))
             ) : (
-              <Text textAlign="center" fontSize="xl">
+              <Text textAlign="center" fontSize="xl" color="#e0e0e0">
                 No backroom conversations found.
               </Text>
             )}

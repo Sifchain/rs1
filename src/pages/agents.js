@@ -232,10 +232,10 @@ function Agents() {
 
     return evolutions.map((evolution, index) => (
       <Box key={index} mb={4}>
-        <Text fontWeight="bold" color="#2980b9">
+        <Text fontWeight="bold" color="#81d4fa">
           Conversation with {selectedAgent.name}
         </Text>
-        <Text fontFamily="'Arial', sans-serif" color="#34495e">
+        <Text fontFamily="'Arial', sans-serif" color="#e0e0e0">
           {evolution}
         </Text>
       </Box>
@@ -258,29 +258,28 @@ function Agents() {
         justifyContent="space-between"
         alignItems="center"
         p={3}
-        bg="white"
+        bg="#424242"
         borderRadius="md"
-        boxShadow="0 0 10px rgba(0, 0, 0, 0.05)"
+        boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
         mb={3}
         cursor="pointer"
         onClick={() => router.push(`/backrooms?expanded=${backroom._id}`)}
       >
         <Text
           as="a"
-          color="blue.500"
+          color="#64b5f6"
           textDecoration="underline"
-          _hover={{ color: 'blue.700' }}
+          _hover={{ color: '#29b6f6' }}
           cursor="pointer"
         >
           {backroom.agentName} &rarr; {backroom.terminalAgentName}
         </Text>
-        <Text fontSize="sm" color="#7f8c8d">
+        <Text fontSize="sm" color="#b0bec5">
           {new Date(backroom.createdAt).toLocaleDateString()}
         </Text>
       </Flex>
     ))
   }
-
   const handleTagClick = tag => {
     // Navigate to the backrooms page with the tag as a URL parameter
     const tagWithoutHash = tag.replace('#', '')
@@ -289,7 +288,7 @@ function Agents() {
 
   return (
     <ChakraProvider>
-      <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
+      <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
         <Box py={10} px={6} maxW="1000px" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={1}>
@@ -297,7 +296,7 @@ function Agents() {
               textAlign="center"
               mb={10}
               fontSize="4xl"
-              color="#2980b9"
+              color="#81d4fa"
               fontFamily="'Arial', sans-serif"
             >
               Agents
@@ -313,10 +312,10 @@ function Agents() {
                 placeholder="Select Agent"
                 onChange={handleAgentSelection}
                 maxW="400px"
-                bg="#ffffff"
-                color="#34495e"
-                border="2px solid #ecf0f1"
-                _hover={{ borderColor: '#3498db' }}
+                bg="#424242"
+                color="#e0e0e0"
+                border="2px solid #757575"
+                _hover={{ borderColor: '#81d4fa' }}
               >
                 {Array.isArray(agents) && agents.length > 0 ? (
                   agents.map(agent => (
@@ -360,14 +359,14 @@ function Agents() {
               {/* Top Box with Agent Info */}
               <Box
                 p={4}
-                bg="#ffffff"
+                bg="#424242"
                 borderRadius="lg"
-                border="2px solid #ecf0f1"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
                 <Flex justifyContent="space-between" alignItems="flex-start">
                   <Box>
-                    <Text fontSize="2xl" fontWeight="bold" color="#2980b9">
+                    <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
                     <Tag size="lg" colorScheme="blue" mt={2}>
@@ -377,20 +376,20 @@ function Agents() {
                     </Tag>
                     {/* Display Description */}
                     <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Description:
                       </Text>
-                      <Text mt={2} color="#34495e">
+                      <Text mt={2} color="#e0e0e0">
                         {selectedAgent.description || 'No description provided'}
                       </Text>
                     </Box>
 
                     {/* Display Conversation Prompt */}
                     <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Conversation Prompt:
                       </Text>
-                      <Text mt={2} color="#34495e">
+                      <Text mt={2} color="#e0e0e0">
                         {selectedAgent.conversationPrompt ||
                           'No conversation prompt provided'}
                       </Text>
@@ -398,10 +397,10 @@ function Agents() {
 
                     {/* Display Recap Prompt */}
                     <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Recap Prompt:
                       </Text>
-                      <Text mt={2} color="#34495e">
+                      <Text mt={2} color="#e0e0e0">
                         {selectedAgent.recapPrompt ||
                           'No recap prompt provided'}
                       </Text>
@@ -409,10 +408,10 @@ function Agents() {
 
                     {/* Display Tweet Prompt */}
                     <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Tweet Prompt:
                       </Text>
-                      <Text mt={2} color="#34495e">
+                      <Text mt={2} color="#e0e0e0">
                         {selectedAgent.tweetPrompt ||
                           'No tweet prompt provided'}
                       </Text>
@@ -422,7 +421,7 @@ function Agents() {
                       <Text
                         fontSize="lg"
                         fontWeight="bold"
-                        color="#2980b9"
+                        color="#81d4fa"
                         mt={3}
                       >
                         Backroom Tags:
@@ -478,7 +477,7 @@ function Agents() {
 
                     <Flex alignItems="center" justifyContent="flex-end">
                       <Icon as={FiCalendar} mr={1} />
-                      <Text fontSize="sm" color="#7f8c8d" whiteSpace="nowrap">
+                      <Text fontSize="sm" color="#b0bec5" whiteSpace="nowrap">
                         Created: {new Date().toLocaleDateString()}
                       </Text>
                     </Flex>
@@ -489,12 +488,12 @@ function Agents() {
               {/* Agent Journey */}
               <Box
                 p={4}
-                bg="#ffffff"
+                bg="#424242"
                 borderRadius="lg"
-                border="2px solid #ecf0f1"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Agent Journey
                 </Text>
                 <Divider mb={4} />
@@ -504,12 +503,12 @@ function Agents() {
               {/* Recent Backroom Conversations */}
               <Box
                 p={4}
-                bg="#ffffff"
+                bg="#424242"
                 borderRadius="lg"
-                border="2px solid #ecf0f1"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Recent Backroom Conversations
                 </Text>
                 <Divider mb={4} />
@@ -519,18 +518,18 @@ function Agents() {
               {/* Display Tweets */}
               <Box
                 p={4}
-                bg="#ffffff"
+                bg="#424242"
                 borderRadius="lg"
-                border="2px solid #ecf0f1"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Text fontSize="lg" fontWeight="bold" color="#2980b9">
+                <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Tweets
                 </Text>
                 {selectedAgent.tweets && selectedAgent.tweets.length > 0 ? (
                   selectedAgent.tweets.map((tweetUrl, index) => (
                     <Box key={index} mb={3}>
-                      <Link href={tweetUrl} isExternal color="blue.500">
+                      <Link href={tweetUrl} isExternal color="#64b5f6">
                         {tweetUrl}
                       </Link>
                     </Box>
@@ -546,10 +545,10 @@ function Agents() {
             <VStack spacing={6} align="stretch">
               <Box
                 p={4}
-                bg="#ffffff"
+                bg="#424242"
                 borderRadius="lg"
-                border="2px solid #ecf0f1"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.1)"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
                 <Flex justifyContent="space-between" alignItems="center" mb={5}>
                   {/* Back Button */}
@@ -565,7 +564,7 @@ function Agents() {
                   <Heading
                     textAlign="center"
                     fontSize="4xl"
-                    color="#2980b9"
+                    color="#81d4fa"
                     fontFamily="'Arial', sans-serif"
                     flex="1"
                   >
@@ -583,7 +582,7 @@ function Agents() {
                       fontSize="lg"
                       fontWeight="bold"
                       minWidth="150px"
-                      color="#2980b9"
+                      color="#81d4fa"
                     >
                       Name:
                     </Text>
@@ -592,11 +591,11 @@ function Agents() {
                       placeholder="Name"
                       value={agentName}
                       onChange={e => setAgentName(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
+                      bg="#424242"
+                      color="#e0e0e0"
                       border="2px solid"
-                      borderColor={errors.agentName ? 'red.500' : '#ecf0f1'}
-                      _hover={{ borderColor: '#3498db' }}
+                      borderColor={errors.agentName ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
                     />
                   </Flex>
                   {errors.agentName && (
@@ -612,7 +611,7 @@ function Agents() {
                       fontSize="lg"
                       fontWeight="bold"
                       minWidth="150px"
-                      color="#2980b9"
+                      color="#81d4fa"
                     >
                       Description:
                     </Text>
@@ -620,11 +619,11 @@ function Agents() {
                       placeholder="Description"
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
+                      bg="#424242"
+                      color="#e0e0e0"
                       border="2px solid"
-                      borderColor={errors.description ? 'red.500' : '#ecf0f1'}
-                      _hover={{ borderColor: '#3498db' }}
+                      borderColor={errors.description ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
                       minHeight="500px"
                       p={4}
                     />
@@ -643,7 +642,7 @@ function Agents() {
                       fontSize="lg"
                       fontWeight="bold"
                       minWidth="150px"
-                      color="#2980b9"
+                      color="#81d4fa"
                     >
                       Conversation Prompt:
                     </Text>
@@ -651,13 +650,13 @@ function Agents() {
                       placeholder="Conversation Prompt"
                       value={conversationPrompt}
                       onChange={e => setConversationPrompt(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
+                      bg="#424242"
+                      color="#e0e0e0"
                       border="2px solid"
                       borderColor={
-                        errors.conversationPrompt ? 'red.500' : '#ecf0f1'
+                        errors.conversationPrompt ? 'red.500' : '#757575'
                       }
-                      _hover={{ borderColor: '#3498db' }}
+                      _hover={{ borderColor: '#81d4fa' }}
                       p={4}
                     />
                   </Flex>
@@ -675,7 +674,7 @@ function Agents() {
                       fontSize="lg"
                       fontWeight="bold"
                       minWidth="150px"
-                      color="#2980b9"
+                      color="#81d4fa"
                     >
                       Recap Prompt:
                     </Text>
@@ -683,11 +682,11 @@ function Agents() {
                       placeholder="Recap Prompt"
                       value={recapPrompt}
                       onChange={e => setRecapPrompt(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
+                      bg="#424242"
+                      color="#e0e0e0"
                       border="2px solid"
-                      borderColor={errors.recapPrompt ? 'red.500' : '#ecf0f1'}
-                      _hover={{ borderColor: '#3498db' }}
+                      borderColor={errors.recapPrompt ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
                       p={4}
                     />
                   </Flex>
@@ -705,7 +704,7 @@ function Agents() {
                       fontSize="lg"
                       fontWeight="bold"
                       minWidth="150px"
-                      color="#2980b9"
+                      color="#81d4fa"
                     >
                       Tweet Prompt:
                     </Text>
@@ -713,11 +712,11 @@ function Agents() {
                       placeholder="Tweet Prompt"
                       value={tweetPrompt}
                       onChange={e => setTweetPrompt(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
+                      bg="#424242"
+                      color="#e0e0e0"
                       border="2px solid"
-                      borderColor={errors.tweetPrompt ? 'red.500' : '#ecf0f1'}
-                      _hover={{ borderColor: '#3498db' }}
+                      borderColor={errors.tweetPrompt ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
                       p={4}
                     />
                   </Flex>

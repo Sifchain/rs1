@@ -172,7 +172,7 @@ function CreateBackroom() {
         description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
         url="/"
       />
-      <Box minHeight="100vh" bg="#f0f4f8" color="#34495e">
+      <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
         <Box py={10} px={6} maxW="1000px" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={5}>
@@ -189,7 +189,7 @@ function CreateBackroom() {
             <Heading
               textAlign="center"
               fontSize="4xl"
-              color="#2980b9"
+              color="#81d4fa"
               fontFamily="'Arial', sans-serif"
               flex="1"
             >
@@ -207,7 +207,7 @@ function CreateBackroom() {
           >
             {/* Explorer Setup */}
             <Box width={{ base: '100%', md: '48%' }} mb={{ base: 4, md: 0 }}>
-              <Heading size="md" mb={4}>
+              <Heading size="md" mb={4} color="#81d4fa">
                 Explorer Setup
               </Heading>
               <FormControl isInvalid={errors.explorerAgent}>
@@ -215,11 +215,11 @@ function CreateBackroom() {
                   placeholder="Select Explorer Agent"
                   value={explorerAgent}
                   onChange={handleExplorerChange}
-                  bg="#ffffff"
-                  color="#34495e"
+                  bg="#424242"
+                  color="#e0e0e0"
                   border="2px solid"
-                  borderColor={errors.explorerAgent ? 'red.500' : '#ecf0f1'}
-                  _hover={{ borderColor: '#3498db' }}
+                  borderColor={errors.explorerAgent ? 'red.500' : '#757575'}
+                  _hover={{ borderColor: '#64b5f6' }}
                 >
                   {agents.map(agent => (
                     <option key={agent._id} value={agent.name}>
@@ -265,11 +265,11 @@ function CreateBackroom() {
                   placeholder="Optional: Add to the Explorer Description"
                   value={explorerDescription}
                   onChange={e => setExplorerDescription(e.target.value)}
-                  bg="#ffffff"
-                  color="#34495e"
+                  bg="#424242"
+                  color="#e0e0e0"
                   border="2px solid"
-                  borderColor="#ecf0f1"
-                  _hover={{ borderColor: '#3498db' }}
+                  borderColor="#757575"
+                  _hover={{ borderColor: '#64b5f6' }}
                   p={3}
                   minHeight="100px"
                 />
@@ -283,7 +283,7 @@ function CreateBackroom() {
 
             {/* Terminal Setup */}
             <Box width={{ base: '100%', md: '48%' }}>
-              <Heading size="md" mb={4}>
+              <Heading size="md" mb={4} color="#81d4fa">
                 Terminal Setup
               </Heading>
               <FormControl isInvalid={errors.terminalAgent}>
@@ -291,10 +291,10 @@ function CreateBackroom() {
                   placeholder="Select Terminal Agent"
                   value={terminalAgent}
                   onChange={handleTerminalChange}
-                  bg="#ffffff"
-                  color="#34495e"
-                  border="2px solid #ecf0f1"
-                  _hover={{ borderColor: '#3498db' }}
+                  bg="#424242"
+                  color="#e0e0e0"
+                  border="2px solid #757575"
+                  _hover={{ borderColor: '#64b5f6' }}
                 >
                   {agents.map(agent => (
                     <option key={agent._id} value={agent.name}>
@@ -322,10 +322,10 @@ function CreateBackroom() {
                   placeholder="Optional: Add to the Terminal Description"
                   value={terminalDescription}
                   onChange={e => setTerminalDescription(e.target.value)}
-                  bg="#ffffff"
-                  color="#34495e"
-                  border="2px solid #ecf0f1"
-                  _hover={{ borderColor: '#3498db' }}
+                  bg="#424242"
+                  color="#e0e0e0"
+                  border="2px solid #757575"
+                  _hover={{ borderColor: '#64b5f6' }}
                   p={3}
                   minHeight="100px"
                 />
@@ -344,7 +344,7 @@ function CreateBackroom() {
             colorScheme="blue"
             variant="solid"
             onClick={handleSubmit}
-            _hover={{ bg: '#3498db', boxShadow: '0 0 15px #3498db' }}
+            _hover={{ bg: '#64b5f6', boxShadow: '0 0 15px #64b5f6' }}
             width="100%"
           >
             Create Backroom
@@ -353,19 +353,21 @@ function CreateBackroom() {
           {/* Display agent's evolutions */}
           {selectedExplorerEvolutions.length > 0 && (
             <Box mt={8}>
-              <Heading size="lg" mb={4}>
+              <Heading size="lg" mb={4} color="#81d4fa">
                 Evolution History for {explorerAgent}
               </Heading>
               <Table variant="simple" size="lg" colorScheme="blue">
                 <Thead>
                   <Tr>
-                    <Th>Evolution</Th>
+                    <Th color="#e0e0e0">Evolution</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {selectedExplorerEvolutions.map((evolution, index) => (
                     <Tr key={index}>
-                      <Td fontFamily="Arial, sans-serif">{evolution}</Td>
+                      <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
+                        {evolution}
+                      </Td>
                     </Tr>
                   ))}
                 </Tbody>
@@ -374,21 +376,23 @@ function CreateBackroom() {
           )}
 
           <Box mt={8}>
-            <Heading size="lg" mb={4}>
+            <Heading size="lg" mb={4} color="#81d4fa">
               Agents
             </Heading>
             <Table variant="simple" size="lg" colorScheme="blue">
               <Thead>
                 <Tr>
-                  <Th>Name</Th>
-                  <Th>Description</Th>
+                  <Th color="#e0e0e0">Name</Th>
+                  <Th color="#e0e0e0">Description</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {agents.map(agent => (
                   <Tr key={agent._id}>
-                    <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
-                    <Td fontFamily="Arial, sans-serif">
+                    <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
+                      {agent.name}
+                    </Td>
+                    <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
                       <strong>Description:</strong> {agent.description} <br />
                       <strong>Backroom Prompt:</strong>{' '}
                       {agent.backroomPrompt || 'No backroom prompt provided'}{' '}

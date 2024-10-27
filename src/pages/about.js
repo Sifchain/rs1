@@ -32,12 +32,12 @@ function About() {
           description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
           url="/"
         />
-        <Box position="relative" height="100vh" bg="#f0f4f8">
+        <Box position="relative" height="100vh" bg="#424242">
           <Flex alignItems="center" justifyContent="center" height="100vh">
             <Heading
               fontSize="4xl"
-              color="#3498db"
-              textShadow="0 0 10px #3498db"
+              color="#81d4fa"
+              textShadow="0 0 10px #81d4fa"
               fontFamily="Arial, sans-serif"
             >
               Loading Reality Spiral...
@@ -61,8 +61,8 @@ function About() {
 
         <Flex
           flex="1"
-          bg="#f0f4f8"
-          color="#34495e"
+          bg="#424242"
+          color="#e0e0e0"
           py={10}
           px={6}
           justifyContent="center"
@@ -73,7 +73,7 @@ function About() {
             <Heading
               mb={6}
               fontSize={{ base: '4xl', md: '6xl' }}
-              color="#2c3e50"
+              color="#e0e0e0"
               fontFamily="Arial, sans-serif"
             >
               Reality Spiral
@@ -83,7 +83,7 @@ function About() {
               fontSize={{ base: 'lg', md: '2xl' }}
               fontFamily="Arial, sans-serif"
               maxWidth="600px"
-              color="#2c3e50"
+              color="#b0bec5"
             >
               A unique platform to create, explore, and connect with agents and
               backrooms in the digital dimension.
@@ -96,7 +96,7 @@ function About() {
                 colorScheme="blue"
                 variant="solid"
                 size="lg"
-                _hover={{ bg: '#2980b9', boxShadow: '0 0 15px #2980b9' }}
+                _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
                 fontFamily="Arial, sans-serif"
               >
                 Connect Wallet to Enter
@@ -104,10 +104,10 @@ function About() {
             ) : (
               <Button
                 onClick={() => router.push('/backrooms')}
-                colorScheme="green"
+                colorScheme="blue"
                 variant="solid"
                 size="lg"
-                _hover={{ bg: '#27ae60', boxShadow: '0 0 15px #27ae60' }}
+                _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
                 fontFamily="Arial, sans-serif"
               >
                 Explore Backrooms
@@ -117,9 +117,9 @@ function About() {
         </Flex>
 
         {/* Footer */}
-        <Box as="footer" bg="#ecf0f1" py={4} borderTop="1px solid #bdc3c7">
+        <Box as="footer" bg="#757575" py={4} borderTop="1px solid #616161">
           <Flex justifyContent="center">
-            <Text fontSize="sm" fontFamily="Arial, sans-serif" color="#7f8c8d">
+            <Text fontSize="sm" fontFamily="Arial, sans-serif" color="#bdbdbd">
               © 2024 Reality Spiral. All Rights Reserved.
             </Text>
           </Flex>
