@@ -120,11 +120,12 @@ function Navigation() {
 
       {/* Mobile Menu */}
       <Collapse in={isOpen} animateOpacity>
-        <Box bg="#212121" pb={4} display={{ md: 'none' }}>
+        <Box bg="#212121" pt={4} pb={4} display={{ md: 'none' }}>
           <VStack spacing={4} align="stretch" px={4}>
             <Link
               onClick={() => router.push('/backrooms')}
               fontFamily="Arial, sans-serif"
+              color="#e0e0e0"
               _hover={{ color: '#81d4fa' }}
             >
               Backrooms
@@ -132,6 +133,7 @@ function Navigation() {
             <Link
               onClick={() => router.push('/agents')}
               fontFamily="Arial, sans-serif"
+              color="#e0e0e0"
               _hover={{ color: '#81d4fa' }}
             >
               Agents

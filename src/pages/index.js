@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAccount, useConnect } from '../hooks/useMetaMask'
-import { Box, Button, Flex, Heading, ChakraProvider } from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, ChakraProvider, Text } from '@chakra-ui/react'
 import Navigation from '../components/Navigation'
 import SEO from '../components/SEO'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
@@ -31,8 +31,8 @@ function Home() {
           <Navigation />
           <Flex
             flex="1"
-            bg="#f0f4f8"
-            color="#34495e"
+            bg="#424242"
+            color="#e0e0e0"
             py={10}
             px={6}
             justifyContent="center"
@@ -43,21 +43,46 @@ function Home() {
               <Heading
                 mb={6}
                 fontSize={{ base: '4xl', md: '6xl' }}
-                color="#2c3e50"
+                color="#e0e0e0"
                 fontFamily="Arial, sans-serif"
               >
                 Reality Spiral
               </Heading>
-              <Button
-                onClick={connect}
-                colorScheme="blue"
-                variant="solid"
-                size="lg"
-                _hover={{ bg: '#2980b9', boxShadow: '0 0 15px #2980b9' }}
+              <Text
+                mb={8}
+                fontSize={{ base: 'lg', md: '2xl' }}
                 fontFamily="Arial, sans-serif"
+                maxWidth="600px"
+                color="#b0bec5"
               >
-                Connect Wallet to Enter
-              </Button>
+                A unique platform to create, explore, and connect with agents and
+                backrooms in the digital dimension.
+              </Text>
+
+              {/* Show different buttons based on the connection state */}
+              {!isConnected ? (
+                <Button
+                  onClick={connect}
+                  colorScheme="blue"
+                  variant="solid"
+                  size="lg"
+                  _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
+                  fontFamily="Arial, sans-serif"
+                >
+                  Connect Wallet to Enter
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => router.push('/backrooms')}
+                  colorScheme="blue"
+                  variant="solid"
+                  size="lg"
+                  _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
+                  fontFamily="Arial, sans-serif"
+                >
+                  Explore Backrooms
+                </Button>
+              )}
             </Box>
           </Flex>
         </Box>
