@@ -123,44 +123,44 @@ const postTweet = async (accessToken, refreshToken, message, agentId) => {
 const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
 
 export default async function handler(req, res) {
-  const origin = req.headers.origin || req.headers.referer || 'same-origin';
+  const origin = req.headers.origin || req.headers.referer || 'same-origin'
 
-  console.log('Origin header:', req.headers.origin);
-  console.log('Referer header:', req.headers.referer);
-  console.log('Computed Origin:', origin);
+  console.log('Origin header:', req.headers.origin)
+  console.log('Referer header:', req.headers.referer)
+  console.log('Computed Origin:', origin)
 
   const isAllowed =
     allowedOrigins.some(pattern => pattern.test(origin)) ||
     process.env.NODE_ENV === 'development' ||
-    origin === 'same-origin';
+    origin === 'same-origin'
 
   if (!isAllowed) {
-    return res.status(403).json({ error: 'Request origin not allowed' });
+    return res.status(403).json({ error: 'Request origin not allowed' })
   }
 
   await connectDB()
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-  // Fetch explorer and terminal agents
+  // Fetch explorer and responder agents
   const {
     agentName,
     role,
     sessionDetails,
     explorerAgent,
     explorerDescription,
-    terminalAgent,
-    terminalDescription,
+    responderAgent,
+    responderDescription,
     tags = [],
   } = req.body
   const explorer = await Agent.findOne({ name: explorerAgent })
-  const terminal = await Agent.findOne({ name: terminalAgent })
+  const responder = await Agent.findOne({ name: responderAgent })
 
   if (req.method === 'POST') {
     try {
-      if (!explorer || !terminal) {
+      if (!explorer || !responder) {
         return res
           .status(400)
-          .json({ error: 'Invalid explorer or terminal agent name' })
+          .json({ error: 'Invalid explorer or responder agent name' })
       }
 
       // Combine all evolutions into a single prompt
@@ -173,9 +173,9 @@ export default async function handler(req, res) {
         Name: ${explorerAgent}
         Custom Addition to Description / Focus: ${explorerDescription}
 
-        Role (Terminal):
-        Name: ${terminalAgent}
-        Description / Focus: ${terminalDescription}
+        Role (Responder):
+        Name: ${responderAgent}
+        Description / Focus: ${responderDescription}
 
         ${explorer.conversationPrompt || 'Generate a conversation with 20 responses between these two agents based on their role, descriptions, and using the past conversations. The response should focus on the content of the description. Finish the conversation with 3 hashtags based on the conversation.'}
       `
@@ -208,7 +208,7 @@ export default async function handler(req, res) {
           {
             role: 'system',
             content:
-              'You are simulating a conversation between two agents: an Explorer and a Terminal.',
+              'You are simulating a conversation between two agents: an Explorer and a Responder.',
           },
           { role: 'user', content: prompt },
         ],
@@ -216,7 +216,8 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
-      const conversationContent = conversationResponse.choices[0].message.content
+      const conversationContent =
+        conversationResponse.choices[0].message.content
 
       // Extract hashtags from the conversation using a regular expression
       const extractedHashtags = conversationContent.match(/#\w+/g) || [] // Matches hashtags like #AI, #Technology, etc.
@@ -231,8 +232,8 @@ export default async function handler(req, res) {
         sessionDetails,
         explorerAgentName: explorerAgent,
         explorerDescription,
-        terminalAgentName: terminalAgent,
-        terminalDescription,
+        responderAgentName: responderAgent,
+        responderDescription,
         content: conversationContent,
         snippetContent: snippetContent,
         tags: [...new Set([...tags, ...extractedHashtags])],

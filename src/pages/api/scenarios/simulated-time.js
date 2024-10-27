@@ -1,8 +1,8 @@
-import Backroom from '../../../models/Backroom';
-import Agent from '../../../models/Agent';
-import mongoose from 'mongoose';
-import OpenAI from 'openai';
-import { TwitterApi } from 'twitter-api-v2';
+import Backroom from '../../../models/Backroom'
+import Agent from '../../../models/Agent'
+import mongoose from 'mongoose'
+import OpenAI from 'openai'
+import { TwitterApi } from 'twitter-api-v2'
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -146,19 +146,19 @@ export default async function handler(req, res) {
         sessionDetails,
         explorerAgent,
         explorerDescription,
-        terminalAgent,
-        terminalDescription,
+        responderAgent,
+        responderDescription,
         tags = [],
       } = req.body
 
-      // Fetch explorer and terminal agents from the database
+      // Fetch explorer and responder agents from the database
       const explorer = await Agent.findOne({ name: explorerAgent })
-      const terminal = await Agent.findOne({ name: terminalAgent })
+      const responder = await Agent.findOne({ name: responderAgent })
 
-      if (!explorer || !terminal) {
+      if (!explorer || !responder) {
         return res
           .status(400)
-          .json({ error: 'Invalid explorer or terminal agent name' })
+          .json({ error: 'Invalid explorer or responder agent name' })
       }
 
       // If simulationStartTime is not set, initialize it
@@ -187,7 +187,7 @@ export default async function handler(req, res) {
         : explorer.description
 
       const prompt = `
-You are simulating a conversation between two agents: an Explorer and a Terminal.
+You are simulating a conversation between two agents: an Explorer and a Responder.
 
 ### Current Time Block: Day ${explorer.currentDay}, Hour ${explorer.currentHour} in the simulation (15 real-world minutes = 1 simulation hour, 1 simulation day = 24 simulation hours)
 
@@ -204,16 +204,16 @@ ${combinedEvolutions}
 - Name: ${explorerAgent}
 - Description: ${explorerDescription}
 
-#### Role (Terminal):
+#### Role (Responder):
 
-- Name: Terminal
-- Description: A virtual interface that responds like a command-line terminal. It assists ${explorerAgent} by executing commands, accessing systems, and retrieving information. It only responds as a terminal would. Traits include Efficient, straightforward, responsive, secure, informative. Focus is to provide ${explorerAgent} with the necessary tools, data, and system access to carry out their activities effectively.
+- Name: Responder
+- Description: A virtual interface that responds like a command-line terminal. It assists ${explorerAgent} by executing commands, accessing systems, and retrieving information. It only responds as a responder would. Traits include Efficient, straightforward, responsive, secure, informative. Focus is to provide ${explorerAgent} with the necessary tools, data, and system access to carry out their activities effectively.
 
 ---
 
 ### Instructions:
 
-Generate a conversation with 20 exchanges between ${explorerAgent} and Terminal based on their role, and especially the custom descriptions provided above. The conversation should focus on the content of the descriptions, with special emphasis on the custom descriptions injected during this backroom run.
+Generate a conversation with 20 exchanges between ${explorerAgent} and Responder based on their role, and especially the custom descriptions provided above. The conversation should focus on the content of the descriptions, with special emphasis on the custom descriptions injected during this backroom run.
 
 - **Include the current time block (Day ${explorer.currentDay}, Hour ${explorer.currentHour}) in the conversation where appropriate, such as when the Explorer refers to the time.**
 - **Do not include the time block as a hashtag or in any form after each reply.**
@@ -222,10 +222,10 @@ Generate a conversation with 20 exchanges between ${explorerAgent} and Terminal 
 - **Format:** Write the conversation as a script with each agent's dialogue prefixed by their name. Include the current time block in the dialogue where it naturally fits.
   - **Example:**
     - Nova: It's Day ${explorer.currentDay}, Hour ${explorer.currentHour}. What's the status on our network security protocols?
-    - Terminal: scanning network for vulnerabilities... security protocols intact.
+    - Responder: scanning network for vulnerabilities... security protocols intact.
 
 - **Style Guidelines:**
-  - The Terminal should respond exactly as a command-line interface would—concise, technical, and contextually relevant.
+  - The Responder should respond exactly as a command-line interface would—concise, technical, and contextually relevant.
   - Responses should be in **lowercase**, unless syntax or proper nouns require capitalization.
   - **Do not include hashtags or the time block after each reply.**
   - Use appropriate punctuation for clarity.
@@ -271,7 +271,7 @@ simulator@simulation:~/$`,
           {
             role: 'system',
             content:
-              'You are simulating a conversation between two agents: an Explorer and a Terminal.',
+              'You are simulating a conversation between two agents: an Explorer and a Responder.',
           },
           {
             role: 'user',
@@ -298,8 +298,8 @@ simulator@simulation:~/$`,
         sessionDetails,
         explorerAgentName: explorerAgent,
         explorerDescription,
-        terminalAgentName: terminalAgent,
-        terminalDescription,
+        responderAgentName: responderAgent,
+        responderDescription,
         content: conversationContent,
         snippetContent: snippetContent, // Save snippetContent for quick display
         tags: [...new Set([...tags, ...extractedHashtags])], // Merge any provided tags with extracted hashtags and ensure uniqueness
@@ -342,8 +342,8 @@ Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentH
         .replace(/Updated Description/g, '')
         .trim()
 
-      explorer.evolutions.push(newEvolution);
-      await explorer.save();
+      explorer.evolutions.push(newEvolution)
+      await explorer.save()
 
       // Generate tweet content using GPT
       const tweetPrompt = `Based on the evolution summary below, write a short, witty tweet **from the agent's first-person perspective**, expressing their current thoughts or feelings at this moment in time. The tweet should be **less than 150 characters**, engaging, and include relevant hashtags, including one for the current time block (e.g., #Day${explorer.currentDay}Hour${explorer.currentHour}).

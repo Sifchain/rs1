@@ -26,11 +26,11 @@ import SEO from '../components/SEO'
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
   const [explorerDescription, setExplorerDescription] = useState('')
-  const [terminalAgent, setTerminalAgent] = useState('')
-  const [terminalDescription, setTerminalDescription] = useState('')
+  const [responderAgent, setResponderAgent] = useState('')
+  const [responderDescription, setResponderDescription] = useState('')
   const [agents, setAgents] = useState([])
   const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null) // Holds explorer agent details
-  const [selectedTerminalInfo, setSelectedTerminalInfo] = useState(null) // Holds terminal agent details
+  const [selectedResponderInfo, setSelectedResponderInfo] = useState(null) // Holds responder agent details
   const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState(
     []
   )
@@ -81,14 +81,14 @@ function CreateBackroom() {
     }
   }
 
-  const handleTerminalChange = e => {
+  const handleResponderChange = e => {
     const selectedAgentName = e.target.value
-    setTerminalAgent(selectedAgentName)
-    const selectedTerminal = agents.find(ag => ag.name === selectedAgentName)
-    if (selectedTerminal) {
-      setSelectedTerminalInfo(selectedTerminal)
+    setResponderAgent(selectedAgentName)
+    const selectedResponder = agents.find(ag => ag.name === selectedAgentName)
+    if (selectedResponder) {
+      setSelectedResponderInfo(selectedResponder)
     } else {
-      setSelectedTerminalInfo(null)
+      setSelectedResponderInfo(null)
     }
   }
 
@@ -101,14 +101,14 @@ function CreateBackroom() {
       errors.explorerAgent = 'Explorer Agent is required'
       valid = false
     }
-    if (!terminalAgent) {
-      errors.terminalAgent = 'Terminal Agent is required'
+    if (!responderAgent) {
+      errors.responderAgent = 'Responder Agent is required'
       valid = false
     }
-    // Check if the selected explorer and terminal agents are the same
-    if (explorerAgent === terminalAgent) {
-      errors.terminalAgent = 'Explorer and Terminal agents cannot be the same'
-      errors.explorerAgent = 'Explorer and Terminal agents cannot be the same'
+    // Check if the selected explorer and responder agents are the same
+    if (explorerAgent === responderAgent) {
+      errors.responderAgent = 'Explorer and Responder agents cannot be the same'
+      errors.explorerAgent = 'Explorer and Responder agents cannot be the same'
       valid = false
     }
 
@@ -122,11 +122,11 @@ function CreateBackroom() {
     }
 
     if (
-      terminalDescription &&
-      (terminalDescription.length < 10 || terminalDescription.length > 10000)
+      responderDescription &&
+      (responderDescription.length < 10 || responderDescription.length > 10000)
     ) {
-      errors.terminalDescription =
-        'Terminal description should be between 10 and 10000 characters'
+      errors.responderDescription =
+        'Responder description should be between 10 and 10000 characters'
       valid = false
     }
 
@@ -139,7 +139,7 @@ function CreateBackroom() {
 
     setLoading(true)
     try {
-      const res = await fetch('/api/backrooms', {
+      const res = await fetch('/api/backrooms/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,8 +149,8 @@ function CreateBackroom() {
           role: 'Explorer',
           explorerAgent,
           explorerDescription,
-          terminalAgent,
-          terminalDescription,
+          responderAgent,
+          responderDescription,
         }),
       })
 
@@ -281,16 +281,16 @@ function CreateBackroom() {
               </FormControl>
             </Box>
 
-            {/* Terminal Setup */}
+            {/* Responder Setup */}
             <Box width={{ base: '100%', md: '48%' }}>
               <Heading size="md" mb={4} color="#81d4fa">
-                Terminal Setup
+                Responder Setup
               </Heading>
-              <FormControl isInvalid={errors.terminalAgent}>
+              <FormControl isInvalid={errors.responderAgent}>
                 <Select
-                  placeholder="Select Terminal Agent"
-                  value={terminalAgent}
-                  onChange={handleTerminalChange}
+                  placeholder="Select Responder Agent"
+                  value={responderAgent}
+                  onChange={handleResponderChange}
                   bg="#424242"
                   color="#e0e0e0"
                   border="2px solid #757575"
@@ -302,26 +302,26 @@ function CreateBackroom() {
                     </option>
                   ))}
                 </Select>
-                {errors.terminalAgent && (
-                  <FormErrorMessage>{errors.terminalAgent}</FormErrorMessage>
+                {errors.responderAgent && (
+                  <FormErrorMessage>{errors.responderAgent}</FormErrorMessage>
                 )}
               </FormControl>
 
-              {/* Show current terminal agent info if selected */}
-              {selectedTerminalInfo && (
+              {/* Show current responder agent info if selected */}
+              {selectedResponderInfo && (
                 <Box mt={4}>
                   <Text mb={4}>
                     <strong>Description:</strong>{' '}
-                    {selectedTerminalInfo.description}
+                    {selectedResponderInfo.description}
                   </Text>
                 </Box>
               )}
 
-              <FormControl mt={4} isInvalid={errors.terminalDescription}>
+              <FormControl mt={4} isInvalid={errors.responderDescription}>
                 <Textarea
-                  placeholder="Optional: Add to the Terminal Description"
-                  value={terminalDescription}
-                  onChange={e => setTerminalDescription(e.target.value)}
+                  placeholder="Optional: Add to the Responder Description"
+                  value={responderDescription}
+                  onChange={e => setResponderDescription(e.target.value)}
                   bg="#424242"
                   color="#e0e0e0"
                   border="2px solid #757575"
@@ -329,9 +329,9 @@ function CreateBackroom() {
                   p={3}
                   minHeight="100px"
                 />
-                {errors.terminalDescription && (
+                {errors.responderDescription && (
                   <FormErrorMessage>
-                    {errors.terminalDescription}
+                    {errors.responderDescription}
                   </FormErrorMessage>
                 )}
               </FormControl>
