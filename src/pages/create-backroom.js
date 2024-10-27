@@ -356,7 +356,6 @@ function CreateBackroom() {
                   <Tr key={agent._id}>
                     <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
                     <Td fontFamily="Arial, sans-serif">
-                      <strong>Type:</strong> {agent.type ?? 'All'} <br />
                       <strong>Description:</strong> {agent.description} <br />
                       <strong>Backroom Prompt:</strong>{' '}
                       {agent.backroomPrompt || 'No backroom prompt provided'}{' '}
