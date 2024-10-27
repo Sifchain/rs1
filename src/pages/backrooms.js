@@ -281,7 +281,8 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        {backroom.agentName} &rarr; {backroom.terminalAgentName}
+                        {backroom.agentName} &rarr;{' '}
+                        {backroom.responderAgentName}
                       </Text>
                     </Box>
 

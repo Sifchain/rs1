@@ -104,11 +104,11 @@ function Agents() {
       const response = await fetch(`/api/backrooms?agentName=${agent?.name}`)
       const data = await response.json()
 
-      // Filter backrooms where the agent is involved as explorer or terminal
+      // Filter backrooms where the agent is involved as explorer or responder
       const filteredConversations = data.filter(
         backroom =>
           backroom.explorerAgentName === agent?.name ||
-          backroom.terminalAgentName === agent?.name
+          backroom.responderAgentName === agent?.name
       )
       setRecentBackroomConversations(filteredConversations)
 
@@ -272,7 +272,7 @@ function Agents() {
           _hover={{ color: '#29b6f6' }}
           cursor="pointer"
         >
-          {backroom.agentName} &rarr; {backroom.terminalAgentName}
+          {backroom.agentName} &rarr; {backroom.responderAgentName}
         </Text>
         <Text fontSize="sm" color="#b0bec5">
           {new Date(backroom.createdAt).toLocaleDateString()}
