@@ -78,7 +78,6 @@ function CreateAgent() {
   const [loadingStep, setLoadingStep] = useState(0)
   const [errors, setErrors] = useState({})
   const router = useRouter()
-  const [agentType, setAgentType] = useState('All')
 
   const { hasCopied, onCopy } = useClipboard(descriptionTemplate)
   const { hasCopied: convoCopied, onCopy: copyConversation } = useClipboard(
@@ -109,19 +108,53 @@ function CreateAgent() {
     let valid = true
     let errors = {}
 
-    if (!agentName) {
+    // Validation for agent name
+    if (!agentName.trim()) {
       errors.agentName = 'Name is required'
       valid = false
-    }
-    if (!description) {
-      errors.description = 'Description is required'
-      valid = false
-    }
-    if (!agentType) {
-      errors.agentType = 'Type is required'
+    } else if (agentName.length < 3 || agentName.length > 50) {
+      errors.agentName = 'Name must be between 3 and 50 characters'
       valid = false
     }
 
+    // Validation for description
+    if (!description.trim()) {
+      errors.description = 'Description is required'
+      valid = false
+    } else if (description.length < 10 || description.length > 10000) {
+      errors.description = 'Description must be between 10 and 10000 characters'
+      valid = false
+    }
+
+    // Optional field validation for conversationPrompt
+    if (
+      conversationPrompt.trim().length > 0 &&
+      (conversationPrompt.length < 10 || conversationPrompt.length > 10000)
+    ) {
+      errors.conversationPrompt =
+        'Backroom prompt must be between 10 and 10000 characters'
+      valid = false
+    }
+
+    // Optional field validation for recapPrompt
+    if (
+      recapPrompt.trim().length > 0 &&
+      (recapPrompt.length < 10 || recapPrompt.length > 10000)
+    ) {
+      errors.recapPrompt =
+        'Recap prompt must be between 10 and 10000 characters'
+      valid = false
+    }
+
+    // Optional field validation for tweetPrompt
+    if (
+      tweetPrompt.trim().length > 0 &&
+      (tweetPrompt.length < 10 || tweetPrompt.length > 10000)
+    ) {
+      errors.tweetPrompt =
+        'Tweet prompt must be between 10 and 10000 characters'
+      valid = false
+    }
     setErrors(errors)
     return valid
   }
@@ -145,7 +178,6 @@ function CreateAgent() {
             name: agentName,
             description,
             user: userId,
-            type: agentType,
             conversationPrompt,
             recapPrompt,
             tweetPrompt,
@@ -233,75 +265,56 @@ function CreateAgent() {
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
                   )}
                 </FormControl>
-                {/* Type Selector */}
-                <FormControl isInvalid={errors.agentType}>
-                  <Text fontWeight="bold" color="#2980b9">
-                    Type
-                  </Text>
-                  <Select
-                    value={agentType}
-                    onChange={e => setAgentType(e.target.value)}
+                {/* Description Section */}
+                <FormControl isInvalid={errors.description}>
+                  <Flex justify="space-between" align="center">
+                    <Text fontWeight="bold" color="#2980b9">
+                      Description
+                    </Text>
+                    <Button
+                      variant="link"
+                      colorScheme="blue"
+                      size="sm"
+                      onClick={onToggle}
+                    >
+                      Template Guide {isOpen ? '▲' : '▼'}
+                    </Button>
+                  </Flex>
+                  <Collapse in={isOpen} animateOpacity>
+                    <Box
+                      mt={4}
+                      p={4}
+                      bg="#f7fafc"
+                      borderRadius="md"
+                      fontSize="sm"
+                    >
+                      <Text whiteSpace="pre-wrap">{descriptionTemplate}</Text>
+                      <Button
+                        onClick={onCopy}
+                        variant="ghost"
+                        colorScheme="blue"
+                        size="sm"
+                        leftIcon={<FiCopy />}
+                      >
+                        Copy Template
+                      </Button>
+                    </Box>
+                  </Collapse>
+                  <Textarea
+                    mt={4}
+                    placeholder="Describe your agent... (Use the template above or create your own format)"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    rows={10}
                     bg="#ffffff"
                     color="#34495e"
                     border="2px solid"
-                    borderColor={errors.agentType ? 'red.500' : '#ecf0f1'}
-                  >
-                    <option value="All">All</option>
-                    <option value="Explorer">Explorer</option>
-                    <option value="Terminal">Terminal</option>
-                  </Select>
-                  {errors.agentType && (
-                    <FormErrorMessage>{errors.agentType}</FormErrorMessage>
+                    borderColor={errors.description ? 'red.500' : '#ecf0f1'}
+                  />
+                  {errors.description && (
+                    <FormErrorMessage>{errors.description}</FormErrorMessage>
                   )}
                 </FormControl>
-                {/* Description Section */}
-                <Flex justify="space-between" align="center">
-                  <Text fontWeight="bold" color="#2980b9">
-                    Description
-                  </Text>
-                  <Button
-                    variant="link"
-                    colorScheme="blue"
-                    size="sm"
-                    onClick={onToggle}
-                  >
-                    Template Guide {isOpen ? '▲' : '▼'}
-                  </Button>
-                </Flex>
-                <Collapse in={isOpen} animateOpacity>
-                  <Box
-                    mt={4}
-                    p={4}
-                    bg="#f7fafc"
-                    borderRadius="md"
-                    fontSize="sm"
-                  >
-                    <Text whiteSpace="pre-wrap">{descriptionTemplate}</Text>
-                    <Button
-                      onClick={onCopy}
-                      variant="ghost"
-                      colorScheme="blue"
-                      size="sm"
-                      leftIcon={<FiCopy />}
-                    >
-                      Copy Template
-                    </Button>
-                  </Box>
-                </Collapse>
-                <Textarea
-                  mt={4}
-                  placeholder="Describe your agent... (Use the template above or create your own format)"
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  rows={10}
-                  bg="#ffffff"
-                  color="#34495e"
-                  border="2px solid"
-                  borderColor={errors.description ? 'red.500' : '#ecf0f1'}
-                />
-                {errors.description && (
-                  <FormErrorMessage>{errors.description}</FormErrorMessage>
-                )}
                 {/* Optional Prompts Section */}
                 {[
                   {
@@ -313,6 +326,7 @@ function CreateAgent() {
                     toggle: toggleConversation,
                     copy: copyConversation,
                     copied: convoCopied,
+                    error: errors.conversationPrompt,
                   },
                   {
                     title: 'Training Prompt',
@@ -323,6 +337,7 @@ function CreateAgent() {
                     toggle: toggleRecap,
                     copy: copyRecap,
                     copied: recapCopied,
+                    error: errors.recapPrompt,
                   },
                   {
                     title: 'Recap Prompt',
@@ -333,53 +348,59 @@ function CreateAgent() {
                     toggle: toggleTweet,
                     copy: copyTweet,
                     copied: tweetCopied,
+                    error: errors.tweetPrompt,
                   },
                 ].map((prompt, index) => (
                   <Box key={index}>
-                    <Flex justify="space-between" align="center">
-                      <Text fontWeight="bold" color="#2980b9">
-                        {prompt.title} (Optional)
-                      </Text>
-                      <Button
-                        variant="link"
-                        colorScheme="blue"
-                        size="sm"
-                        onClick={prompt.toggle}
-                      >
-                        Template Guide {prompt.open ? '▲' : '▼'}
-                      </Button>
-                    </Flex>
-                    <Collapse in={prompt.open} animateOpacity>
-                      <Box
-                        mt={4}
-                        p={4}
-                        bg="#f7fafc"
-                        borderRadius="md"
-                        fontSize="sm"
-                      >
-                        <Text whiteSpace="pre-wrap">{prompt.template}</Text>
+                    <FormControl isInvalid={prompt.error}>
+                      <Flex justify="space-between" align="center">
+                        <Text fontWeight="bold" color="#2980b9">
+                          {prompt.title} (Optional)
+                        </Text>
                         <Button
-                          onClick={prompt.copy}
-                          variant="ghost"
+                          variant="link"
                           colorScheme="blue"
                           size="sm"
-                          leftIcon={<FiCopy />}
+                          onClick={prompt.toggle}
                         >
-                          Copy Template
+                          Template Guide {prompt.open ? '▲' : '▼'}
                         </Button>
-                      </Box>
-                    </Collapse>
-                    <Textarea
-                      mt={4}
-                      placeholder={`Customize the ${prompt.title.toLowerCase()}...`}
-                      value={prompt.value}
-                      onChange={e => prompt.setter(e.target.value)}
-                      rows={3}
-                      bg="#ffffff"
-                      color="#34495e"
-                      border="2px solid"
-                      borderColor="#ecf0f1"
-                    />
+                      </Flex>
+                      <Collapse in={prompt.open} animateOpacity>
+                        <Box
+                          mt={4}
+                          p={4}
+                          bg="#f7fafc"
+                          borderRadius="md"
+                          fontSize="sm"
+                        >
+                          <Text whiteSpace="pre-wrap">{prompt.template}</Text>
+                          <Button
+                            onClick={prompt.copy}
+                            variant="ghost"
+                            colorScheme="blue"
+                            size="sm"
+                            leftIcon={<FiCopy />}
+                          >
+                            Copy Template
+                          </Button>
+                        </Box>
+                      </Collapse>
+                      <Textarea
+                        mt={4}
+                        placeholder={`Customize the ${prompt.title.toLowerCase()}...`}
+                        value={prompt.value}
+                        onChange={e => prompt.setter(e.target.value)}
+                        rows={3}
+                        bg="#ffffff"
+                        color="#34495e"
+                        border="2px solid"
+                        borderColor="#ecf0f1"
+                      />
+                      {prompt.error && (
+                        <FormErrorMessage>{prompt.error}</FormErrorMessage>
+                      )}
+                    </FormControl>
                   </Box>
                 ))}
 

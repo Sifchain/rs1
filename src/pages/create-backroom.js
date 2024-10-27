@@ -101,6 +101,34 @@ function CreateBackroom() {
       errors.explorerAgent = 'Explorer Agent is required'
       valid = false
     }
+    if (!terminalAgent) {
+      errors.terminalAgent = 'Terminal Agent is required'
+      valid = false
+    }
+    // Check if the selected explorer and terminal agents are the same
+    if (explorerAgent === terminalAgent) {
+      errors.terminalAgent = 'Explorer and Terminal agents cannot be the same'
+      errors.explorerAgent = 'Explorer and Terminal agents cannot be the same'
+      valid = false
+    }
+
+    if (
+      explorerDescription &&
+      (explorerDescription.length < 10 || explorerDescription.length > 10000)
+    ) {
+      errors.explorerDescription =
+        'Explorer description should be between 10 and 10000 characters'
+      valid = false
+    }
+
+    if (
+      terminalDescription &&
+      (terminalDescription.length < 10 || terminalDescription.length > 10000)
+    ) {
+      errors.terminalDescription =
+        'Terminal description should be between 10 and 10000 characters'
+      valid = false
+    }
 
     setErrors(errors)
     return valid
@@ -193,15 +221,11 @@ function CreateBackroom() {
                   borderColor={errors.explorerAgent ? 'red.500' : '#ecf0f1'}
                   _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents
-                    .filter(agent =>
-                      ['All', '', 'Explorer'].includes(agent.type)
-                    )
-                    .map(agent => (
-                      <option key={agent._id} value={agent.name}>
-                        {agent.name}
-                      </option>
-                    ))}
+                  {agents.map(agent => (
+                    <option key={agent._id} value={agent.name}>
+                      {agent.name}
+                    </option>
+                  ))}
                 </Select>
                 {errors.explorerAgent && (
                   <FormErrorMessage>{errors.explorerAgent}</FormErrorMessage>
@@ -236,7 +260,7 @@ function CreateBackroom() {
                 </Box>
               )}
 
-              <FormControl mt={4}>
+              <FormControl mt={4} isInvalid={errors.explorerDescription}>
                 <Textarea
                   placeholder="Optional: Add to the Explorer Description"
                   value={explorerDescription}
@@ -249,6 +273,11 @@ function CreateBackroom() {
                   p={3}
                   minHeight="100px"
                 />
+                {errors.explorerDescription && (
+                  <FormErrorMessage mb={4}>
+                    {errors.explorerDescription}
+                  </FormErrorMessage>
+                )}
               </FormControl>
             </Box>
 
@@ -257,7 +286,7 @@ function CreateBackroom() {
               <Heading size="md" mb={4}>
                 Terminal Setup
               </Heading>
-              <FormControl>
+              <FormControl isInvalid={errors.terminalAgent}>
                 <Select
                   placeholder="Select Terminal Agent"
                   value={terminalAgent}
@@ -267,16 +296,15 @@ function CreateBackroom() {
                   border="2px solid #ecf0f1"
                   _hover={{ borderColor: '#3498db' }}
                 >
-                  {agents
-                    .filter(agent =>
-                      ['All', '', 'Terminal'].includes(agent.type)
-                    )
-                    .map(agent => (
-                      <option key={agent._id} value={agent.name}>
-                        {agent.name}
-                      </option>
-                    ))}
+                  {agents.map(agent => (
+                    <option key={agent._id} value={agent.name}>
+                      {agent.name}
+                    </option>
+                  ))}
                 </Select>
+                {errors.terminalAgent && (
+                  <FormErrorMessage>{errors.terminalAgent}</FormErrorMessage>
+                )}
               </FormControl>
 
               {/* Show current terminal agent info if selected */}
@@ -289,7 +317,7 @@ function CreateBackroom() {
                 </Box>
               )}
 
-              <FormControl mt={4}>
+              <FormControl mt={4} isInvalid={errors.terminalDescription}>
                 <Textarea
                   placeholder="Optional: Add to the Terminal Description"
                   value={terminalDescription}
@@ -301,6 +329,11 @@ function CreateBackroom() {
                   p={3}
                   minHeight="100px"
                 />
+                {errors.terminalDescription && (
+                  <FormErrorMessage>
+                    {errors.terminalDescription}
+                  </FormErrorMessage>
+                )}
               </FormControl>
             </Box>
           </Flex>
@@ -356,7 +389,6 @@ function CreateBackroom() {
                   <Tr key={agent._id}>
                     <Td fontFamily="Arial, sans-serif">{agent.name}</Td>
                     <Td fontFamily="Arial, sans-serif">
-                      <strong>Type:</strong> {agent.type ?? 'All'} <br />
                       <strong>Description:</strong> {agent.description} <br />
                       <strong>Backroom Prompt:</strong>{' '}
                       {agent.backroomPrompt || 'No backroom prompt provided'}{' '}

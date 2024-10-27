@@ -25,7 +25,6 @@ const sanitizeAgent = agent => {
     conversationPrompt,
     recapPrompt,
     tweetPrompt,
-    type, // Include type in the sanitized data
   } = agent
   return {
     _id,
@@ -38,7 +37,6 @@ const sanitizeAgent = agent => {
     conversationPrompt,
     recapPrompt,
     tweetPrompt,
-    type, // Return agent type
   }
 }
 
@@ -54,11 +52,9 @@ export default async function handler(req, res) {
         recapPrompt,
         description,
         tweetPrompt,
-        type, // Add type in request body
       } = req.body
 
-      if (!name || !description || !type) {
-        // Validate type field as well
+      if (!name || !description) {
         return res
           .status(400)
           .json({ error: 'All fields are required: name, description' })
@@ -72,7 +68,6 @@ export default async function handler(req, res) {
         recapPrompt,
         description,
         tweetPrompt,
-        type, // Add type to new agent
       })
       await newAgent.save()
 
@@ -86,7 +81,7 @@ export default async function handler(req, res) {
       // Fetch agents and include only the specified fields
       const agents = await Agent.find(
         {},
-        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt type createdAt updatedAt'
+        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt'
       )
       res.status(200).json(agents)
     } catch (error) {
@@ -102,17 +97,16 @@ export default async function handler(req, res) {
         conversationPrompt = '',
         recapPrompt = '',
         tweetPrompt = '',
-        type, // Add type in request body for update
       } = req.body
-      if (!agentId || !name || !description || !type) {
+      if (!agentId || !name || !description) {
         return res.status(400).json({
-          error: 'All fields are required: id, name, type',
+          error: 'All fields are required: id, name',
         })
       }
       // Ensure the user has permission to modify this agent
       await checkAgentOwnership(agentId, userId)
 
-      // Update the agent with optional prompts and type
+      // Update the agent with optional prompts
       const updatedAgent = await Agent.findByIdAndUpdate(
         agentId,
         {
@@ -121,7 +115,6 @@ export default async function handler(req, res) {
           recapPrompt,
           tweetPrompt,
           description,
-          type, // Update type field
         },
         { new: true } // Return the updated agent
       )

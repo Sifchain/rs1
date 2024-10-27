@@ -40,7 +40,6 @@ function Agents() {
   const [backroomTags, setBackroomTags] = useState([])
   const [editMode, setEditMode] = useState(false)
   const [errors, setErrors] = useState({})
-  const [agentType, setAgentType] = useState('All')
   const router = useRouter()
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
@@ -98,7 +97,6 @@ function Agents() {
     setConversationPrompt(agent?.conversationPrompt || '')
     setRecapPrompt(agent?.recapPrompt || '')
     setTweetPrompt(agent?.tweetPrompt || '')
-    setAgentType(agent?.type || '') // Pre-fill the agentType field
     setEditMode(false) // Initially show agent details, not edit mode
 
     // Fetch recent backroom conversations related to this agent
@@ -131,14 +129,56 @@ function Agents() {
   const handleValidation = () => {
     let valid = true
     let errors = {}
-    if (!agentName) {
+
+    // Agent Name Validation
+    if (!agentName.trim()) {
       errors.agentName = 'Name is required'
       valid = false
-    }
-    if (!agentType) {
-      errors.agentType = 'Type is required' // Ensure agent type is filled
+    } else if (agentName.length < 3 || agentName.length > 50) {
+      errors.agentName = 'Name should be between 3 and 50 characters'
       valid = false
     }
+
+    // Description Validation
+    if (!description.trim()) {
+      errors.description = 'Description is required'
+      valid = false
+    } else if (description.length < 10 || description.length > 10000) {
+      errors.description =
+        'Description should be between 10 and 10000 characters'
+      valid = false
+    }
+
+    // Conversation Prompt Validation (Optional)
+    if (
+      conversationPrompt.trim().length > 0 &&
+      (conversationPrompt.length < 10 || conversationPrompt.length > 1000)
+    ) {
+      errors.conversationPrompt =
+        'Conversation prompt should be between 10 and 1000 characters'
+      valid = false
+    }
+
+    // Recap Prompt Validation (Optional)
+    if (
+      recapPrompt.trim().length > 0 &&
+      (recapPrompt.length < 10 || recapPrompt.length > 10000)
+    ) {
+      errors.recapPrompt =
+        'Recap prompt should be between 10 and 10000 characters'
+      valid = false
+    }
+
+    // Tweet Prompt Validation (Optional)
+    if (
+      tweetPrompt.trim().length > 0 &&
+      (tweetPrompt.length < 10 || tweetPrompt.length > 10000)
+    ) {
+      errors.tweetPrompt =
+        'Tweet prompt should be between 10 and 10000 characters'
+      valid = false
+    }
+
     setErrors(errors)
     return valid
   }
@@ -157,7 +197,6 @@ function Agents() {
           conversationPrompt,
           recapPrompt,
           tweetPrompt,
-          type: agentType, // Add agent type to the update payload
           agentId: selectedAgent._id,
           userId: JSON.parse(localStorage.getItem('user')),
         }),
@@ -173,7 +212,6 @@ function Agents() {
         conversationPrompt,
         recapPrompt,
         tweetPrompt,
-        type: agentType, // Update the agent type
       }
       setSelectedAgent(updatedAgent)
       setAgents(
@@ -267,7 +305,7 @@ function Agents() {
             {/* Dropdown to select agent */}
             <Flex
               direction="row"
-              mb={8}
+              mb={4}
               alignItems="center"
               justifyContent="center"
             >
@@ -337,20 +375,6 @@ function Agents() {
                         {selectedAgent.role || 'Explorer Role'}
                       </TagLabel>
                     </Tag>
-                    {/* Display Type */}
-                    <Box mt={3}>
-                      <Text
-                        fontSize="lg"
-                        fontWeight="bold"
-                        color="#2980b9"
-                        mt={3}
-                      >
-                        Type:
-                      </Text>
-                      <Tag size="md" colorScheme="blue" mr={2}>
-                        {selectedAgent.type ?? 'All'}
-                      </Tag>
-                    </Box>
                     {/* Display Description */}
                     <Box mt={3}>
                       <Text fontSize="lg" fontWeight="bold" color="#2980b9">
@@ -576,36 +600,9 @@ function Agents() {
                     />
                   </Flex>
                   {errors.agentName && (
-                    <FormErrorMessage>{errors.agentName}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Type Selector */}
-                <FormControl isInvalid={errors.agentType}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#2980b9"
-                    >
-                      Type:
-                    </Text>
-                    <Select
-                      value={agentType}
-                      onChange={e => setAgentType(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
-                      border="2px solid"
-                      borderColor={errors.agentType ? 'red.500' : '#ecf0f1'}
-                    >
-                      <option value="All">All</option>
-                      <option value="Explorer">Explorer</option>
-                      <option value="Terminal">Terminal</option>
-                    </Select>
-                  </Flex>
-                  {errors.agentType && (
-                    <FormErrorMessage>{errors.agentType}</FormErrorMessage>
+                    <FormErrorMessage mb={4}>
+                      {errors.agentName}
+                    </FormErrorMessage>
                   )}
                 </FormControl>
                 {/* Description */}
@@ -628,11 +625,14 @@ function Agents() {
                       border="2px solid"
                       borderColor={errors.description ? 'red.500' : '#ecf0f1'}
                       _hover={{ borderColor: '#3498db' }}
+                      minHeight="500px"
                       p={4}
                     />
                   </Flex>
                   {errors.description && (
-                    <FormErrorMessage>{errors.description}</FormErrorMessage>
+                    <FormErrorMessage mb={4}>
+                      {errors.description}
+                    </FormErrorMessage>
                   )}
                 </FormControl>
 
@@ -662,7 +662,7 @@ function Agents() {
                     />
                   </Flex>
                   {errors.conversationPrompt && (
-                    <FormErrorMessage>
+                    <FormErrorMessage mb={4}>
                       {errors.conversationPrompt}
                     </FormErrorMessage>
                   )}
@@ -692,7 +692,9 @@ function Agents() {
                     />
                   </Flex>
                   {errors.recapPrompt && (
-                    <FormErrorMessage>{errors.recapPrompt}</FormErrorMessage>
+                    <FormErrorMessage mb={4}>
+                      {errors.recapPrompt}
+                    </FormErrorMessage>
                   )}
                 </FormControl>
 
@@ -720,7 +722,9 @@ function Agents() {
                     />
                   </Flex>
                   {errors.tweetPrompt && (
-                    <FormErrorMessage>{errors.tweetPrompt}</FormErrorMessage>
+                    <FormErrorMessage mb={4}>
+                      {errors.tweetPrompt}
+                    </FormErrorMessage>
                   )}
                 </FormControl>
                 <Flex justifyContent="flex-end" mt={4}>
