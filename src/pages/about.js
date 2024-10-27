@@ -107,7 +107,7 @@ function About() {
                 colorScheme="blue"
                 variant="solid"
                 size="lg"
-                _hover={{ bg: '#2e7d32', boxShadow: '0 0 15px #2e7d32' }}
+                _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
                 fontFamily="Arial, sans-serif"
               >
                 Explore Backrooms
