@@ -125,6 +125,7 @@ function Navigation() {
             <Link
               onClick={() => router.push('/backrooms')}
               fontFamily="Arial, sans-serif"
+              color="#e0e0e0"
               _hover={{ color: '#81d4fa' }}
             >
               Backrooms
@@ -132,6 +133,7 @@ function Navigation() {
             <Link
               onClick={() => router.push('/agents')}
               fontFamily="Arial, sans-serif"
+              color="#e0e0e0"
               _hover={{ color: '#81d4fa' }}
             >
               Agents
