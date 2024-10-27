@@ -123,13 +123,19 @@ const postTweet = async (accessToken, refreshToken, message, agentId) => {
 const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
 
 export default async function handler(req, res) {
-  const origin = req.headers.origin || req.headers.referer
+  const origin = req.headers.origin || req.headers.referer || 'same-origin';
 
-  if (
-    !allowedOrigins.some(pattern => pattern.test(origin)) &&
-    process.env.NODE_ENV !== 'development'
-  ) {
-    return res.status(403).json({ error: 'Request origin not allowed' })
+  console.log('Origin header:', req.headers.origin);
+  console.log('Referer header:', req.headers.referer);
+  console.log('Computed Origin:', origin);
+
+  const isAllowed =
+    allowedOrigins.some(pattern => pattern.test(origin)) ||
+    process.env.NODE_ENV === 'development' ||
+    origin === 'same-origin';
+
+  if (!isAllowed) {
+    return res.status(403).json({ error: 'Request origin not allowed' });
   }
 
   await connectDB()
