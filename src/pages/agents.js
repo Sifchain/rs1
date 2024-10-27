@@ -51,7 +51,26 @@ function Agents() {
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
   const toast = useToast() // Initialize useToast for notifications
+  const [editTweetId, setEditTweetId] = useState(null) // State to track which tweet is being edited
+  const [editTweetContent, setEditTweetContent] = useState('') // State to hold the edited tweet content
+  const [wordCount, setWordCount] = useState(0)
+  const [wordCountError, setWordCountError] = useState(false)
+  const handleEditTweet = (tweetId, tweetContent) => {
+    setEditTweetId(tweetId)
+    setEditTweetContent(tweetContent)
+    setWordCount(countWords(tweetContent))
+  }
 
+  const countWords = text => {
+    return text.trim().split(/\s+/).length
+  }
+  const handleCancelEdit = () => {
+    setEditTweetId(null) // Clear edit state
+    setEditTweetContent('') // Clear edited tweet content
+    setWordCount(0) // Reset word count
+    setWordCountError(false) // Clear error
+  }
+  // Fetch
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
@@ -93,6 +112,21 @@ function Agents() {
   const handleAgentSelection = async event => {
     const agentId = event.target.value
     const agent = agents.find(agent => agent?._id === agentId)
+    agent.pendingTweets = [
+      {
+        tweetContent:
+          'In a captivating conversation, Explorer and Aion delve into the essence of wellness, exploring challenges and aspirations towards optimized human well-being. A journey of growth, collaboration, and transformation in wellness exploration unfolds, showcasing the power of proactive well-being practices and technological advancements. #WellnessJourney #Collaboration #OptimizedWellBeing 🌟',
+        backroomId: '671e93b5d7ab7081645d6b45',
+        createdAt: '2024-10-27T19:25:45.204Z',
+        _id: '671e93b9d7ab7081645d6b47',
+      },
+      {
+        tweetContent: `"Exploration unveiled a path to personalized wellness mastery, resonating with each user's unique journey. Embracing evolution, we illuminate the way forward. #WellnessEvolution #PersonalizedWellness"`,
+        backroomId: '671ea0a7ffb741a4ae87d5d2',
+        createdAt: '2024-10-27T20:20:58.265Z',
+        _id: '671ea0aaffb741a4ae87d5d5',
+      },
+    ]
     setSelectedAgent(agent)
 
     // Pre-fill the edit form
@@ -382,7 +416,7 @@ function Agents() {
     }
   }
 
-  const handleEditTweet = async (tweetId, promptValue) => {
+  const handleSaveEdit = async (tweetId, promptValue) => {
     try {
       const response = await fetch('/api/twitter/editTweet', {
         method: 'PUT',
@@ -438,61 +472,105 @@ function Agents() {
     }
 
     return (
-      <Box
-        p={4}
-        bg="#424242"
-        borderRadius="lg"
-        border="2px solid #757575"
-        boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-        mb={4}
-      >
-        <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-          Pending Tweets
-        </Text>
-        <VStack spacing={4} align="stretch">
-          {selectedAgent?.pendingTweets?.map(tweet => (
-            <Box
-              key={tweet._id}
-              border="2px solid #757575"
-              p={3}
-              borderRadius="md"
-            >
-              <Flex justifyContent="space-between">
-                <Text color="#e0e0e0" mb={2}>
-                  {tweet.tweetContent}
+      selectedAgent && (
+        <Box
+          p={4}
+          bg="#424242"
+          borderRadius="lg"
+          border="2px solid #757575"
+          boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+          mb={4}
+        >
+          <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+            Pending Tweets
+          </Text>
+          <VStack spacing={4} align="stretch">
+            {selectedAgent?.pendingTweets?.map(tweet => (
+              <Box
+                key={tweet._id}
+                border="2px solid #757575"
+                p={3}
+                borderRadius="md"
+              >
+                {editTweetId === tweet._id ? ( // Check if tweet is being edited
+                  <Flex justifyContent="space-between" mb={2}>
+                    <Textarea
+                      value={editTweetContent}
+                      onChange={e => {
+                        setEditTweetContent(e.target.value)
+                        setWordCount(countWords(e.target.value))
+                        setWordCountError(false)
+                      }}
+                      placeholder="Edit tweet content"
+                      bg="#424242"
+                      color="#e0e0e0"
+                      border="2px solid #757575"
+                      resize="vertical"
+                      minHeight="80px"
+                    />
+                    <Text fontSize="sm" color="#b0bec5" ml={2}>
+                      {wordCount} / 280 words
+                    </Text>
+                    {wordCountError && (
+                      <FormErrorMessage>
+                        Tweet exceeds 280 words
+                      </FormErrorMessage>
+                    )}
+                    <Button
+                      size="sm"
+                      colorScheme="green"
+                      onClick={handleSaveEdit}
+                      mr={2}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="gray"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </Button>
+                  </Flex>
+                ) : (
+                  <Flex justifyContent="space-between" mb={2}>
+                    <Text color="#e0e0e0">{tweet.tweetContent}</Text>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={() =>
+                        handleEditTweet(tweet._id, tweet.tweetContent)
+                      }
+                    >
+                      Edit
+                    </Button>
+                  </Flex>
+                )}
+                <Text fontSize="sm" color="#b0bec5" mb={2}>
+                  Generated on: {new Date(tweet.createdAt).toLocaleString()}
                 </Text>
-                <Button
-                  size="sm"
-                  colorScheme="blue"
-                  onClick={() => handleEditTweet(tweet._id, tweet.tweetContent)} // Pass tweetContent for editing
-                >
-                  Edit
-                </Button>
-              </Flex>
-              <Text fontSize="sm" color="#b0bec5" mb={2}>
-                Generated on: {new Date(tweet.createdAt).toLocaleString()}
-              </Text>
-              <Flex justifyContent="space-between" alignItems="center">
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => handleDiscardTweet(tweet._id)}
-                  leftIcon={<FiTrash2 />}
-                >
-                  Discard
-                </Button>
-                <Button
-                  size="sm"
-                  colorScheme="green"
-                  onClick={() => handleApproveTweet(tweet)}
-                >
-                  Approve and Post
-                </Button>
-              </Flex>
-            </Box>
-          ))}
-        </VStack>
-      </Box>
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    onClick={() => handleDiscardTweet(tweet._id)}
+                    leftIcon={<FiTrash2 />}
+                  >
+                    Discard
+                  </Button>
+                  <Button
+                    size="sm"
+                    colorScheme="green"
+                    onClick={() => handleApproveTweet(tweet)}
+                  >
+                    Approve and Post
+                  </Button>
+                </Flex>
+              </Box>
+            ))}
+          </VStack>
+        </Box>
+      )
     )
   }
   console.log(selectedAgent)
