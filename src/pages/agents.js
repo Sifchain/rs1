@@ -40,7 +40,6 @@ function Agents() {
   const [backroomTags, setBackroomTags] = useState([])
   const [editMode, setEditMode] = useState(false)
   const [errors, setErrors] = useState({})
-  const [agentType, setAgentType] = useState('All')
   const router = useRouter()
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
@@ -98,7 +97,6 @@ function Agents() {
     setConversationPrompt(agent?.conversationPrompt || '')
     setRecapPrompt(agent?.recapPrompt || '')
     setTweetPrompt(agent?.tweetPrompt || '')
-    setAgentType(agent?.type || '') // Pre-fill the agentType field
     setEditMode(false) // Initially show agent details, not edit mode
 
     // Fetch recent backroom conversations related to this agent
@@ -135,8 +133,8 @@ function Agents() {
       errors.agentName = 'Name is required'
       valid = false
     }
-    if (!agentType) {
-      errors.agentType = 'Type is required' // Ensure agent type is filled
+    if (!description) {
+      errors.description = 'Description is required'
       valid = false
     }
     setErrors(errors)
@@ -157,7 +155,6 @@ function Agents() {
           conversationPrompt,
           recapPrompt,
           tweetPrompt,
-          type: agentType, // Add agent type to the update payload
           agentId: selectedAgent._id,
           userId: JSON.parse(localStorage.getItem('user')),
         }),
@@ -173,7 +170,6 @@ function Agents() {
         conversationPrompt,
         recapPrompt,
         tweetPrompt,
-        type: agentType, // Update the agent type
       }
       setSelectedAgent(updatedAgent)
       setAgents(
@@ -337,20 +333,6 @@ function Agents() {
                         {selectedAgent.role || 'Explorer Role'}
                       </TagLabel>
                     </Tag>
-                    {/* Display Type */}
-                    <Box mt={3}>
-                      <Text
-                        fontSize="lg"
-                        fontWeight="bold"
-                        color="#2980b9"
-                        mt={3}
-                      >
-                        Type:
-                      </Text>
-                      <Tag size="md" colorScheme="blue" mr={2}>
-                        {selectedAgent.type ?? 'All'}
-                      </Tag>
-                    </Box>
                     {/* Display Description */}
                     <Box mt={3}>
                       <Text fontSize="lg" fontWeight="bold" color="#2980b9">
@@ -577,35 +559,6 @@ function Agents() {
                   </Flex>
                   {errors.agentName && (
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Type Selector */}
-                <FormControl isInvalid={errors.agentType}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#2980b9"
-                    >
-                      Type:
-                    </Text>
-                    <Select
-                      value={agentType}
-                      onChange={e => setAgentType(e.target.value)}
-                      bg="#ffffff"
-                      color="#34495e"
-                      border="2px solid"
-                      borderColor={errors.agentType ? 'red.500' : '#ecf0f1'}
-                    >
-                      <option value="All">All</option>
-                      <option value="Explorer">Explorer</option>
-                      <option value="Terminal">Terminal</option>
-                    </Select>
-                  </Flex>
-                  {errors.agentType && (
-                    <FormErrorMessage>{errors.agentType}</FormErrorMessage>
                   )}
                 </FormControl>
                 {/* Description */}

@@ -24,7 +24,6 @@ const AgentSchema = new mongoose.Schema({
   conversationPrompt: { type: String, default: '' },
   recapPrompt: { type: String, default: '' },
   tweetPrompt: { type: String, default: '' },
-  type: { type: String, default: 'All' },
 })
 
 // Middleware to auto-update the `updatedAt` field on each save

@@ -78,7 +78,6 @@ function CreateAgent() {
   const [loadingStep, setLoadingStep] = useState(0)
   const [errors, setErrors] = useState({})
   const router = useRouter()
-  const [agentType, setAgentType] = useState('All')
 
   const { hasCopied, onCopy } = useClipboard(descriptionTemplate)
   const { hasCopied: convoCopied, onCopy: copyConversation } = useClipboard(
@@ -117,10 +116,6 @@ function CreateAgent() {
       errors.description = 'Description is required'
       valid = false
     }
-    if (!agentType) {
-      errors.agentType = 'Type is required'
-      valid = false
-    }
 
     setErrors(errors)
     return valid
@@ -145,7 +140,6 @@ function CreateAgent() {
             name: agentName,
             description,
             user: userId,
-            type: agentType,
             conversationPrompt,
             recapPrompt,
             tweetPrompt,
@@ -231,27 +225,6 @@ function CreateAgent() {
                   />
                   {errors.agentName && (
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
-                  )}
-                </FormControl>
-                {/* Type Selector */}
-                <FormControl isInvalid={errors.agentType}>
-                  <Text fontWeight="bold" color="#2980b9">
-                    Type
-                  </Text>
-                  <Select
-                    value={agentType}
-                    onChange={e => setAgentType(e.target.value)}
-                    bg="#ffffff"
-                    color="#34495e"
-                    border="2px solid"
-                    borderColor={errors.agentType ? 'red.500' : '#ecf0f1'}
-                  >
-                    <option value="All">All</option>
-                    <option value="Explorer">Explorer</option>
-                    <option value="Terminal">Terminal</option>
-                  </Select>
-                  {errors.agentType && (
-                    <FormErrorMessage>{errors.agentType}</FormErrorMessage>
                   )}
                 </FormControl>
                 {/* Description Section */}
