@@ -1,5 +1,5 @@
-import Backroom from '../../models/Backroom';
-import Agent from '../../models/Agent';
+import Backroom from '../../../models/Backroom';
+import Agent from '../../../models/Agent';
 import mongoose from 'mongoose';
 import OpenAI from 'openai';
 import { TwitterApi } from 'twitter-api-v2';
