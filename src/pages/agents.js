@@ -457,7 +457,8 @@ function Agents() {
     }
 
     return (
-      selectedAgent && (
+      selectedAgent &&
+      selectedAgent?.pendingTweets?.length > 0 && (
         <Box
           p={4}
           bg="#424242"
