@@ -63,7 +63,7 @@ function Backrooms() {
   useEffect(() => {
     const fetchBackrooms = async () => {
       try {
-        const response = await fetch('/api/backrooms')
+        const response = await fetch('/api/backrooms/get')
         const data = await response.json()
         setBackrooms(data)
 

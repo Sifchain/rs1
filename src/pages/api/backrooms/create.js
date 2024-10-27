@@ -1,0 +1,255 @@
+import Backroom from '../../../models/Backroom';
+import Agent from '../../../models/Agent';
+import mongoose from 'mongoose';
+import OpenAI from 'openai';
+import { TwitterApi } from 'twitter-api-v2';
+import PromptManager from '../../../utils/promptManager';
+
+mongoose.set('strictQuery', false);
+
+const promptManager = new PromptManager();
+await promptManager.loadTemplate('cli');
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
+  return mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+};
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const postTweet = async (accessToken, refreshToken, message, agentId) => {
+  let attempt = 0;
+  const maxRetries = 3;
+  let tweet;
+  let newAccessToken = accessToken;
+  let newRefreshToken = refreshToken;
+
+  while (attempt < maxRetries) {
+    try {
+      const twitterClient = new TwitterApi(newAccessToken);
+      const response = await twitterClient.v2.tweet(message);
+      tweet = response.data;
+
+      if (tweet?.id) {
+        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`;
+        await Agent.findByIdAndUpdate(agentId, { $push: { tweets: tweetUrl } });
+      }
+
+      return tweet;
+    } catch (error) {
+      attempt++;
+      if (['403', '402', '401', '400'].includes(error.code.toString())) {
+        try {
+          const twitterClient = new TwitterApi({
+            clientId: process.env.TWITTER_API_KEY,
+            clientSecret: process.env.TWITTER_API_SECRET_KEY,
+          });
+
+          const { accessToken, refreshToken } = await twitterClient.refreshOAuth2Token(newRefreshToken);
+          newAccessToken = accessToken;
+          newRefreshToken = refreshToken;
+
+          await Agent.findByIdAndUpdate(agentId, {
+            'twitterAuthToken.accessToken': newAccessToken,
+            'twitterAuthToken.refreshToken': newRefreshToken,
+          });
+
+          continue;
+        } catch (refreshError) {
+          throw new Error('Failed to refresh access token');
+        }
+      }
+      if (attempt >= maxRetries) throw new Error('Failed to post tweet after multiple attempts');
+      await delay(2000);
+    }
+  }
+};
+
+const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+
+export default async function handler(req, res) {
+  const origin = req.headers.origin || req.headers.referer || 'same-origin'
+
+  const isAllowed =
+    allowedOrigins.some(pattern => pattern.test(origin)) ||
+    process.env.NODE_ENV === 'development' ||
+    origin === 'same-origin'
+
+  if (!isAllowed) {
+    return res.status(403).json({ error: 'Request origin not allowed' })
+  }
+
+  await connectDB();
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  const {
+    agentName,
+    role,
+    sessionDetails,
+    explorerAgent,
+    explorerDescription,
+    responderAgent,
+    responderDescription,
+    tags = [],
+    templateName = 'cli'
+  } = req.body;
+
+  const explorer = await Agent.findOne({ name: explorerAgent });
+  const responder = await Agent.findOne({ name: responderAgent });
+
+  if (req.method === 'POST') {
+    try {
+      if (!explorer || !responder) {
+        return res.status(400).json({ error: 'Invalid explorer or responder agent name' });
+      }
+
+      await promptManager.loadTemplate(templateName);
+      const template = promptManager.getTemplate(templateName);
+
+      const combinedEvolutions = explorer.evolutions.length
+        ? explorer.evolutions.slice(-20).join('\n\n')
+        : explorer.description;
+
+      const conversationPrompt = explorer.conversationPrompt ||
+        `Generate a conversation between these two agents based on their role, descriptions, and past conversations.`;
+
+      const formattedPrompt = promptManager.formatPrompt(template, {
+        explorerAgent: {
+          name: explorerAgent,
+          description: explorer.description || 'Description not provided.',
+          customPrompt: `${conversationPrompt} ${explorerDescription ? `\n\nAdditional Context: ${explorerDescription}` : ''}`,
+          evolutions: combinedEvolutions,
+        },
+        responderAgent: {
+          name: responderAgent,
+          description: responder.description || 'Description not provided.',
+          customPrompt: `${responderDescription ? `\n\nAdditional Context: ${responderDescription}` : ''}`,
+        },
+      });
+
+      let conversationHistory = [];
+      let lastResponse = null;
+
+      for (let i = 0; i < 5; i++) {
+        const explorerMessages = [
+          { role: 'system', content: 'Assistant is in a CLI mood today.' },
+          { role: 'user', content: 'Role: Explorer\n' + formattedPrompt.context.join('\n\n') },
+          ...conversationHistory.map(entry => ({
+            role: entry.role === 'explorer' ? 'user' : 'assistant',
+            content: `${entry.role === 'explorer' ? 'Explorer' : 'Responder'}: ${entry.content}`
+          })),
+          ...(lastResponse ? [{ role: 'user', content: lastResponse }] : []),
+        ];
+
+        const explorerResponse = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: explorerMessages,
+          max_tokens: 1000,
+          temperature: 0.7,
+        });
+
+        const explorerContent = explorerResponse.choices[0].message.content;
+        conversationHistory.push({ role: 'explorer', content: explorerContent });
+
+        const responderMessages = [
+          { role: 'system', content: 'Assistant is in a CLI mood today.' },
+          { role: 'user', content: 'Role: Responder\n' + formattedPrompt.context.join('\n\n') },
+          ...conversationHistory.map(entry => ({
+            role: entry.role === 'explorer' ? 'user' : 'assistant',
+            content: `${entry.role === 'explorer' ? 'Explorer' : 'Responder'}: ${entry.content}`
+          })),
+        ];
+
+        const responderResponse = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: responderMessages,
+          max_tokens: 1000,
+          temperature: 0.7,
+        });
+
+        lastResponse = responderResponse.choices[0].message.content.replace(/^Responder:\s*/, '');
+        conversationHistory.push({ role: 'responder', content: lastResponse });
+      }
+
+      const conversationContent = conversationHistory
+        .map(entry => `${entry.role === 'explorer' ? 'Explorer' : 'Responder'}: ${entry.content}`)
+        .join('\n');
+
+      const hashtagPrompt = `Based on the following conversation, generate 3 relevant hashtags:\n\n${conversationContent}`;
+      const hashtagResponse = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: hashtagPrompt }],
+        max_tokens: 50,
+        temperature: 0.7,
+      });
+
+      const generatedHashtags = hashtagResponse.choices[0].message.content.match(/#\w+/g) || [];
+      const snippetContent = conversationContent.slice(0, 150) + '...';
+
+      const newBackroom = new Backroom({
+        agentName,
+        role,
+        sessionDetails,
+        explorerAgentName: explorerAgent,
+        responderAgentName: responderAgent,
+        content: conversationContent,
+        snippetContent,
+        tags: [...new Set([...tags, ...generatedHashtags])],
+        createdAt: Date.now(),
+      });
+
+      await newBackroom.save();
+      const recapPrompt = explorer.recapPrompt ||
+        `Please provide a concise evolution description based on recent conversation and the agent's journey.`;
+
+      const recapResponse = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: 'You are summarizing the evolution of an agent.' },
+          { role: 'user', content: `Current Description: ${explorer.description}\nPrevious Memory: ${combinedEvolutions}\n${recapPrompt}` },
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      const newEvolution = recapResponse.choices[0].message.content.trim();
+      explorer.evolutions.push(newEvolution);
+      await explorer.save();
+
+      const tweetPrompt = explorer.tweetPrompt ||
+        `Summarize the following conversation in a tweet format, under 150 characters.`;
+
+      const tweetResponse = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: 'Generate a tweet based on the provided prompt.' },
+          { role: 'user', content: tweetPrompt + `\n\nConversation: ${conversationContent}` },
+        ],
+        max_tokens: 280,
+        temperature: 0.7,
+      });
+
+      const tweetContent = tweetResponse.choices[0].message.content.trim();
+
+      if (explorer.twitterAuthToken?.accessToken) {
+        await postTweet(
+          explorer.twitterAuthToken.accessToken,
+          explorer.twitterAuthToken.refreshToken,
+          tweetContent,
+          explorer._id
+        );
+      }
+
+      res.status(201).json(newBackroom);
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'Failed to create backroom or update agent evolution' });
+    }
+  } else {
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}

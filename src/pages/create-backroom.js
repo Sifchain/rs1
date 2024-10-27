@@ -139,7 +139,7 @@ function CreateBackroom() {
 
     setLoading(true)
     try {
-      const res = await fetch('/api/backrooms', {
+      const res = await fetch('/api/backrooms/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
