@@ -68,6 +68,7 @@ export default async function handler(req, res) {
         recapPrompt,
         description,
         tweetPrompt,
+        originalDescription: description,
       })
       await newAgent.save()
 
@@ -81,7 +82,7 @@ export default async function handler(req, res) {
       // Fetch agents and include only the specified fields
       const agents = await Agent.find(
         {},
-        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt'
+        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
       )
       res.status(200).json(agents)
     } catch (error) {
@@ -115,6 +116,8 @@ export default async function handler(req, res) {
           recapPrompt,
           tweetPrompt,
           description,
+          // should we update the original description?
+          // originalDescription: description,
         },
         { new: true } // Return the updated agent
       )

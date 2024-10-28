@@ -165,8 +165,11 @@ export default async function handler(req, res) {
 
       // Combine all evolutions into a single prompt
       const combinedEvolutions = explorer.evolutions.length
-        ? explorer.evolutions.slice(-20).join('\n\n')
-        : explorerDescription
+        ? explorer.evolutions
+            .slice(-20)
+            .map(evo => evo.description)
+            .join('\n\n')
+        : explorer.description
 
       const prompt = `
         Role (Explorer):
@@ -230,6 +233,8 @@ export default async function handler(req, res) {
         agentName,
         role,
         sessionDetails,
+        explorerId: explorer._id,
+        responderId: responder._id,
         explorerAgentName: explorerAgent,
         explorerDescription,
         responderAgentName: responderAgent,
@@ -270,10 +275,12 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
-      const newEvolution = recapResponse.choices[0].message.content
-        .replace(/Updated Description/g, '')
-        .trim()
-
+      const newEvolution = {
+        backroomId: newBackroom._id,
+        description: recapResponse.choices[0].message.content
+          .replace(/Updated Description/g, '')
+          .trim(),
+      }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
 
