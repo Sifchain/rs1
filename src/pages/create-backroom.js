@@ -15,6 +15,7 @@ import {
   Th,
   Tbody,
   Td,
+  Link,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -359,13 +360,21 @@ function CreateBackroom() {
                 <Thead>
                   <Tr>
                     <Th color="#e0e0e0">Evolution</Th>
+                    <Th color="#e0e0e0">Backroom</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {selectedExplorerEvolutions.map((evolution, index) => (
                     <Tr key={index}>
                       <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
-                        {evolution}
+                        {evolution.description}
+                      </Td>
+                      <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
+                        <Link
+                          href={`/backrooms?expanded=${evolution?.backroomId}`}
+                        >
+                          View Backroom
+                        </Link>
                       </Td>
                     </Tr>
                   ))}

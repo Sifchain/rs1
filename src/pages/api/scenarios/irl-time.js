@@ -161,13 +161,13 @@ export default async function handler(req, res) {
 
       // Combine all evolutions into a single prompt
       const combinedEvolutions = recentEvolutions.length
-        ? recentEvolutions.join('\n\n')
+        ? recentEvolutions.map(evo => evo.description).join('\n\n')
         : explorer.description
 
       const prompt = `
 You are simulating a conversation between two agents: an Explorer and a Responder.
 
-### Real Time: ${new Date().toLocaleString()} 
+### Real Time: ${new Date().toLocaleString()}
 
 ### Recap of Previous Backrooms:
 
@@ -279,6 +279,8 @@ simulator@simulation:~/$`,
         explorerAgentName: explorerAgent,
         explorerDescription,
         responderAgentName: responderAgent,
+        explorerId: explorer._id,
+        responderId: responder._id,
         responderDescription,
         content: conversationContent,
         snippetContent: snippetContent, // Save snippetContent for quick display
@@ -318,9 +320,12 @@ The summary should start with a brief introduction of the agent and end with a r
         temperature: 0.7,
       })
 
-      const newEvolution = recapResponse.choices[0].message.content
-        .replace(/Updated Description/g, '')
-        .trim()
+      const newEvolution = {
+        backroom: newBackroom._id,
+        description: recapResponse.choices[0].message.content
+          .replace(/Updated Description/g, '')
+          .trim(),
+      }
 
       explorer.evolutions.push(newEvolution)
       await explorer.save()

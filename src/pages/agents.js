@@ -17,13 +17,14 @@ import {
   FormErrorMessage,
   Button,
   Tooltip,
+  useToast,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
-import { FiCalendar } from 'react-icons/fi'
+import { FiCalendar, FiTrash2 } from 'react-icons/fi'
 import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
@@ -49,7 +50,28 @@ function Agents() {
   const [tweetPrompt, setTweetPrompt] = useState('')
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
+  const toast = useToast() // Initialize useToast for notifications
+  const [editTweetId, setEditTweetId] = useState(null) // State to track which tweet is being edited
+  const [editTweetContent, setEditTweetContent] = useState('') // State to hold the edited tweet content
+  const [wordCount, setWordCount] = useState(0)
+  const [wordCountError, setWordCountError] = useState(false)
+  const [backrooms, setBackrooms] = useState([])
+  const handleEditTweet = (tweetId, tweetContent) => {
+    setEditTweetId(tweetId)
+    setEditTweetContent(tweetContent)
+    setWordCount(countWords(tweetContent))
+  }
 
+  const countWords = text => {
+    return text.trim().split(/\s+/).length
+  }
+  const handleCancelEdit = () => {
+    setEditTweetId(null) // Clear edit state
+    setEditTweetContent('') // Clear edited tweet content
+    setWordCount(0) // Reset word count
+    setWordCountError(false) // Clear error
+  }
+  // Fetch
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
@@ -82,15 +104,25 @@ function Agents() {
       setLoading(false)
     }
   }
-
+  const fetchBackrooms = async () => {
+    try {
+      const response = await fetch('/api/backrooms/get')
+      const data = await response.json()
+      setBackrooms(data)
+    } catch (error) {
+      console.error('Error fetching backrooms:', error)
+    }
+  }
   useEffect(() => {
     fetchAgents()
+    fetchBackrooms()
   }, [])
 
   const handleAgentSelection = async event => {
     const agentId = event.target.value
     const agent = agents.find(agent => agent?._id === agentId)
     setSelectedAgent(agent)
+
     // Pre-fill the edit form
     setAgentName(agent?.name)
     setDescription(agent?.description || '') // Optional fields
@@ -107,8 +139,8 @@ function Agents() {
       // Filter backrooms where the agent is involved as explorer or responder
       const filteredConversations = data.filter(
         backroom =>
-          backroom.explorerAgentName === agent?.name ||
-          backroom.responderAgentName === agent?.name
+          backroom.explorerId === agent?._id ||
+          backroom.responderId === agent?._id
       )
       setRecentBackroomConversations(filteredConversations)
 
@@ -182,7 +214,7 @@ function Agents() {
     setErrors(errors)
     return valid
   }
-
+  console.log({ backrooms })
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
@@ -230,16 +262,44 @@ function Agents() {
       return <Text>No journey updates recorded.</Text>
     }
 
-    return evolutions.map((evolution, index) => (
-      <Box key={index} mb={4}>
-        <Text fontWeight="bold" color="#81d4fa">
-          Conversation with {selectedAgent.name}
+    return (
+      <Box>
+        <Text fontWeight="bold" mb={4}>
+          Original Description:
         </Text>
-        <Text fontFamily="'Arial', sans-serif" color="#e0e0e0">
-          {evolution}
-        </Text>
+        <Text mb={4}>{selectedAgent.originalDescription}</Text>
+        {evolutions.map((evolution, index) => {
+          const backroom = backrooms.find(
+            backroom => backroom._id === evolution.backroomId
+          )
+          const responderAgent = agents.find(
+            agent => agent._id === backroom.responderId
+          )
+          const responderAgentName = responderAgent?.name || 'Unknown'
+          return (
+            <Box key={index} mb={4}>
+              <Text fontWeight="bold" color="#81d4fa">
+                Conversation with {responderAgentName}
+              </Text>
+              <Text fontWeight="bold">Description: </Text>
+              <Text>{evolution.description}</Text>
+              <Text fontWeight="bold">Snippet:</Text>
+              <Text>{backroom.snippetContent} </Text>
+              <Text fontWeight="bold">Tags:</Text>
+              <Text>{backroom.tags.join(', ')}</Text>
+              <Text fontWeight="bold" mb={1}>
+                <Link
+                  color="#81d4fa"
+                  href={`/backrooms?expanded=${evolution?.backroomId}`}
+                >
+                  View Backroom
+                </Link>
+              </Text>
+            </Box>
+          )
+        })}
       </Box>
-    ))
+    )
   }
 
   const hasEditPermission = () => {
@@ -286,6 +346,267 @@ function Agents() {
     router.push(`/backrooms?tags=${encodeURIComponent(tagWithoutHash)}`)
   }
 
+  const handleDiscardTweet = async tweetId => {
+    if (window.confirm('Are you sure you want to discard this tweet?')) {
+      try {
+        const response = await fetch('/api/twitter/discardTweet', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: selectedAgent._id,
+            tweetId,
+          }),
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setSelectedAgent(data.agent)
+          toast({
+            title: 'Tweet Discarded',
+            description: 'The tweet has been successfully discarded.',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          })
+        } else {
+          const error = await response.json()
+          toast({
+            title: 'Error',
+            description:
+              error.error || 'Failed to discard the tweet. Please try again.',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          })
+        }
+      } catch (error) {
+        console.error('Error discarding tweet:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to discard the tweet. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    }
+  }
+
+  const handleApproveTweet = async tweet => {
+    try {
+      const response = await fetch('/api/twitter/approveTweet', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: selectedAgent._id,
+          tweetId: tweet._id,
+        }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setSelectedAgent(data.agent)
+        toast({
+          title: 'Tweet Approved',
+          description: 'The tweet has been successfully posted.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: 'Error',
+          description:
+            error.error || 'Failed to post the tweet. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    } catch (error) {
+      console.error('Error approving tweet:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to post the tweet. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleSaveEdit = async (tweetId, promptValue) => {
+    try {
+      const response = await fetch('/api/twitter/editTweet', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: selectedAgent._id,
+          tweetId,
+          tweetContent: promptValue,
+        }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setEditTweetId(null) // Clear edit state
+        setEditTweetContent('') // Clear edited tweet content
+        setSelectedAgent(data.agent)
+        toast({
+          title: 'Tweet Updated',
+          description: 'The tweet content has been updated.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+          variant: 'subtle',
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: 'Error',
+          description:
+            error.error || 'Failed to update the tweet. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    } catch (error) {
+      console.error('Error updating tweet:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to update the tweet. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const displayPendingTweets = () => {
+    if (selectedAgent?.pendingTweets?.length === 0) {
+      return (
+        <Text textAlign="center" fontSize="lg" color="#e0e0e0">
+          No pending tweets.
+        </Text>
+      )
+    }
+
+    return (
+      selectedAgent &&
+      selectedAgent?.pendingTweets?.length > 0 && (
+        <Box
+          p={4}
+          bg="#424242"
+          borderRadius="lg"
+          border="2px solid #757575"
+          boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+          mb={4}
+        >
+          <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+            Pending Tweets
+          </Text>
+          <VStack spacing={4} align="stretch">
+            {selectedAgent?.pendingTweets?.map(tweet => (
+              <Box
+                key={tweet._id}
+                border="2px solid #757575"
+                p={3}
+                borderRadius="md"
+              >
+                {editTweetId === tweet._id ? ( // Check if tweet is being edited
+                  <Flex justifyContent="space-between" mb={2}>
+                    <Textarea
+                      value={editTweetContent}
+                      onChange={e => {
+                        setEditTweetContent(e.target.value)
+                        setWordCount(countWords(e.target.value))
+                        setWordCountError(false)
+                      }}
+                      placeholder="Edit tweet content"
+                      bg="#424242"
+                      color="#e0e0e0"
+                      border="2px solid #757575"
+                      resize="vertical"
+                      minHeight="80px"
+                    />
+                    <Text fontSize="sm" color="#b0bec5" ml={2}>
+                      {wordCount} / 280 words
+                    </Text>
+                    {wordCountError && (
+                      <FormErrorMessage>
+                        Tweet exceeds 280 words
+                      </FormErrorMessage>
+                    )}
+                    <Button
+                      size="sm"
+                      colorScheme="green"
+                      isDisabled={!hasEditPermission()}
+                      onClick={() => {
+                        handleSaveEdit(tweet._id, editTweetContent)
+                      }}
+                      mr={2}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </Button>
+                  </Flex>
+                ) : (
+                  <Flex justifyContent="space-between" mb={2}>
+                    <Text color="#e0e0e0">{tweet.tweetContent}</Text>
+                    <Button
+                      isDisabled={!hasEditPermission()}
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={() =>
+                        handleEditTweet(tweet._id, tweet.tweetContent)
+                      }
+                    >
+                      Edit
+                    </Button>
+                  </Flex>
+                )}
+                <Text fontSize="sm" color="#b0bec5" mb={2}>
+                  Generated on: {new Date(tweet.createdAt).toLocaleString()}
+                </Text>
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Button
+                    size="sm"
+                    isDisabled={!hasEditPermission()}
+                    colorScheme="red"
+                    onClick={() => handleDiscardTweet(tweet._id)}
+                    leftIcon={<FiTrash2 />}
+                  >
+                    Discard
+                  </Button>
+                  <Button
+                    size="sm"
+                    isDisabled={!hasEditPermission()}
+                    colorScheme="green"
+                    onClick={() => handleApproveTweet(tweet)}
+                  >
+                    Approve and Post
+                  </Button>
+                </Flex>
+              </Box>
+            ))}
+          </VStack>
+        </Box>
+      )
+    )
+  }
+  console.log(selectedAgent)
   return (
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
@@ -352,7 +673,9 @@ function Agents() {
               </Tooltip>
             </Flex>
           </Flex>
-
+          {selectedAgent?.pendingTweets?.length > 0
+            ? displayPendingTweets()
+            : null}
           {/* Display agent details */}
           {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch">
@@ -380,7 +703,9 @@ function Agents() {
                         Description:
                       </Text>
                       <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.description || 'No description provided'}
+                        {selectedAgent.originalDescription ||
+                          selectedAgent.description ||
+                          'No description provided'}
                       </Text>
                     </Box>
 

@@ -182,7 +182,7 @@ export default async function handler(req, res) {
 
       // Combine all evolutions into a single prompt
       const combinedEvolutions = recentEvolutions.length
-        ? recentEvolutions.join('\n\n')
+        ? recentEvolutions.map(evo => evo.description).join('\n\n')
         : explorer.description
 
       const prompt = `
@@ -295,6 +295,8 @@ simulator@simulation:~/$`,
         role,
         sessionDetails,
         explorerAgentName: explorerAgent,
+        explorerId: explorer._id,
+        responderId: responder._id,
         explorerDescription,
         responderAgentName: responderAgent,
         responderDescription,
@@ -336,10 +338,12 @@ Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentH
         temperature: 0.7,
       })
 
-      const newEvolution = recapResponse.choices[0].message.content
-        .replace(/Updated Description/g, '')
-        .trim()
-
+      const newEvolution = {
+        backroom: newBackroom._id,
+        description: recapResponse.choices[0].message.content
+          .replace(/Updated Description/g, '')
+          .trim(),
+      }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
 
