@@ -328,7 +328,7 @@ function Agents() {
           _hover={{ color: '#29b6f6' }}
           cursor="pointer"
         >
-          {backroom.explorerAgentName} &rarr; {backroom.responderAgentName}
+          {backroom.agentName} &rarr; {backroom.responderAgentName}
         </Text>
         <Text fontSize="sm" color="#b0bec5">
           {new Date(backroom.createdAt).toLocaleDateString()}
@@ -402,8 +402,8 @@ function Agents() {
         }),
       })
       if (response.ok) {
-        const updatedAgent = await response.json()
-        setSelectedAgent(updatedAgent)
+        const data = await response.json()
+        setSelectedAgent(data.agent)
         toast({
           title: 'Tweet Approved',
           description: 'The tweet has been successfully posted.',

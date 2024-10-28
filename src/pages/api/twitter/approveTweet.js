@@ -21,23 +21,20 @@ export default async function handler(req, res) {
       if (!agentId || !tweetId) {
         return res.status(400).json({ error: 'Missing required fields.' })
       }
-      const updatedAgent = await Agent.findByIdAndUpdate(
-        agentId,
-        {
-          $pull: { pendingTweets: { _id: tweetId } },
-        },
-        { new: true }
-      )
+      const updatedAgent = await Agent.findById(agentId)
       if (!updatedAgent) {
         return res.status(404).json({ error: 'Agent not found.' })
+      }
+      if (updatedAgent.pendingTweets.length === 0) {
+        return res.status(404).json({ error: 'No pending tweets found.' })
       }
 
       // Refresh Twitter token (if required)
       const refreshedClient = await refreshTwitterToken(updatedAgent)
-
       // Post the tweet
       const tweetResponse = await refreshedClient.v2.tweet(
-        updatedAgent.pendingTweets.find(t => t._id === tweetId).tweetContent
+        updatedAgent.pendingTweets.find(t => t._id.toString() === tweetId)
+          .tweetContent
       )
       console.log('Tweet posted successfully:', tweetResponse)
 
@@ -47,7 +44,7 @@ export default async function handler(req, res) {
       )
       // Remove the tweet from the pendingTweets array
       updatedAgent.pendingTweets = updatedAgent.pendingTweets.filter(
-        tweet => tweet._id !== tweetId
+        tweet => tweet._id.toString() !== tweetId
       )
       await updatedAgent.save()
       res
