@@ -104,6 +104,15 @@ function Navigation() {
           >
             X
           </Link>
+          <Link
+              href="https://www.dextools.io/app/en/ether/pair-explorer/0xa909be631bf794346b6dee19db1d98b6dc0eaf70?t=1730150465235"
+              fontFamily="Arial, sans-serif"
+              target="_blank"
+              rel="noopener noreferrer"
+              _hover={{ color: '#81d4fa' }}
+            >
+              Chart
+            </Link>
           {isConnected ? (
             <HStack spacing={4} alignItems="center">
               <Jazzicon diameter={30} seed={jsNumberForAddress(address)} />
@@ -173,6 +182,15 @@ function Navigation() {
               _hover={{ color: '#81d4fa' }}
             >
               X
+            </Link>
+            <Link
+              href="https://www.dextools.io/app/en/ether/pair-explorer/0xa909be631bf794346b6dee19db1d98b6dc0eaf70?t=1730150465235"
+              fontFamily="Arial, sans-serif"
+              target="_blank"
+              rel="noopener noreferrer"
+              _hover={{ color: '#81d4fa' }}
+            >
+              Chart
             </Link>
             {isConnected ? (
               <HStack spacing={4} alignItems="center">
