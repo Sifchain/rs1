@@ -5,6 +5,7 @@ import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
 import PromptManager from '../../../utils/promptManager'
 import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
+import { getFullURL, shortenURL } from '@/utils/urls'
 
 mongoose.set('strictQuery', false)
 
@@ -314,8 +315,15 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
+      const fullBackroomURL = getFullURL(
+        `/backrooms?expanded=${newBackroom._id}`,
+        `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`
+      )
+      const shortenedUrl = await shortenURL(fullBackroomURL)
+
       const tweetContent = tweetResponse.choices[0].message.content
         .replace(/"/g, '')
+        .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
         .trim()
       console.log('Posting tweet:', tweetContent)
       // Store the tweet in the agent's pendingTweets array
