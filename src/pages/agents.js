@@ -133,7 +133,9 @@ function Agents() {
 
     // Fetch recent backroom conversations related to this agent
     try {
-      const response = await fetch(`/api/backrooms?agentName=${agent?.name}`)
+      const response = await fetch(
+        `/api/backrooms?explorerAgentName=${agent?.name}`
+      )
       const data = await response.json()
 
       // Filter backrooms where the agent is involved as explorer or responder
