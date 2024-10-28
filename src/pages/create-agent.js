@@ -29,6 +29,13 @@ import { useRouter } from 'next/router'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import SEO from '../components/SEO'
 import { FiCopy } from 'react-icons/fi'
+import { genIsBalanceEnough } from '../utils/balance'
+import {
+  MINIMUM_TOKENS_TO_CREATE_AGENT,
+  MINIMUM_TOKENS_TO_CREATE_BACKROOM,
+  TOKEN_CONTRACT_ADDRESS,
+} from '../constants/constants'
+import { useAccount } from '../hooks/useMetaMask'
 
 function CreateAgent() {
   const descriptionTemplate = `Agent description:
@@ -77,6 +84,9 @@ function CreateAgent() {
   const [agentId, setAgentId] = useState(null)
   const [loadingStep, setLoadingStep] = useState(0)
   const [errors, setErrors] = useState({})
+  const [enoughFunds, setEnoughFunds] = useState(true)
+  const { address } = useAccount()
+
   const router = useRouter()
 
   const { hasCopied, onCopy } = useClipboard(descriptionTemplate)
@@ -104,6 +114,25 @@ function CreateAgent() {
     }
   }, [router.query])
 
+  useEffect(() => {
+    if (address) {
+      const fetchHasEnoughFunds = async () => {
+        return true
+        // return await genIsBalanceEnough(
+        //   address,
+        //   TOKEN_CONTRACT_ADDRESS,
+        //   MINIMUM_TOKENS_TO_CREATE_AGENT
+        // )
+      }
+      fetchHasEnoughFunds()
+        .then(hasEnoughFunds => {
+          setEnoughFunds(hasEnoughFunds)
+        })
+        .catch(error => {
+          console.error('Error checking balance:', error)
+        })
+    }
+  }, [address, loadingStep])
   const handleValidation = () => {
     let valid = true
     let errors = {}
@@ -403,15 +432,30 @@ function CreateAgent() {
                     </FormControl>
                   </Box>
                 ))}
-
-                <Button
-                  onClick={handleSubmit}
-                  colorScheme="blue"
-                  width="100%"
-                  mt={4}
+                <Tooltip
+                  label={
+                    !enoughFunds
+                      ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`
+                      : ''
+                  }
+                  hasArrow
+                  placement="top"
                 >
-                  {agentId ? 'Agent Created' : 'Create Agent'}
-                </Button>
+                  <Box
+                    as="span"
+                    cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
+                  >
+                    <Button
+                      isDisabled={!enoughFunds}
+                      onClick={handleSubmit}
+                      colorScheme="blue"
+                      width="100%"
+                      mt={4}
+                    >
+                      {agentId ? 'Agent Created' : 'Create Agent'}
+                    </Button>
+                  </Box>
+                </Tooltip>
               </VStack>
             </Flex>
           )}
@@ -478,14 +522,30 @@ function CreateAgent() {
                   ? 'Twitter Account Linked'
                   : 'Link Twitter Account'}
               </Button>
-              <Button
-                onClick={handleCreateBackroom}
-                colorScheme="green"
-                width="100%"
-                mt={4}
+              <Tooltip
+                label={
+                  !enoughFunds
+                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RS to create a new backroom.`
+                    : ''
+                }
+                hasArrow
+                placement="top"
               >
-                Create Backroom
-              </Button>
+                <Box
+                  as="span"
+                  cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
+                >
+                  <Button
+                    onClick={handleCreateBackroom}
+                    isDisabled={!enoughFunds}
+                    colorScheme="green"
+                    width="100%"
+                    mt={4}
+                  >
+                    Create Backroom
+                  </Button>
+                </Box>
+              </Tooltip>
             </Box>
           )}
         </Box>
