@@ -334,7 +334,7 @@ function Agents() {
           _hover={{ color: '#29b6f6' }}
           cursor="pointer"
         >
-          {backroom.agentName} &rarr; {backroom.responderAgentName}
+          {backroom.explorerAgentName} &rarr; {backroom.responderAgentName}
         </Text>
         <Text fontSize="sm" color="#b0bec5">
           {new Date(backroom.createdAt).toLocaleDateString()}
