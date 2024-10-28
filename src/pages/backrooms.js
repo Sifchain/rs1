@@ -125,7 +125,7 @@ function Backrooms() {
 
   const filteredBackrooms = backrooms.filter(backroom => {
     const agentMatch =
-      selectedAgent === 'All' || backroom.agentName === selectedAgent
+      selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
     const tagMatch =
       selectedTags.length === 0 ||
       selectedTags.every(tag => backroom.tags?.includes(tag))
@@ -229,7 +229,7 @@ function Backrooms() {
               {/* The default option for 'All Agents' */}
               {/* Dynamically populate the dropdown with agent names */}
               {Array.from(
-                new Set(backrooms.map(backroom => backroom.agentName))
+                new Set(backrooms.map(backroom => backroom.explorerAgentName))
               )
                 .filter(agent => agent !== 'All') // Ensure no duplicate "All" option
                 .map((agent, index) => (
@@ -281,7 +281,7 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        {backroom.agentName} &rarr;{' '}
+                        {backroom.explorerAgentName} &rarr;
                         {backroom.responderAgentName}
                       </Text>
                     </Box>

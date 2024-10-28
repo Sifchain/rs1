@@ -141,7 +141,6 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const {
-        agentName,
         role,
         sessionDetails,
         explorerAgent,
@@ -293,7 +292,6 @@ simulator@simulation:~/$`,
 
       // Create a new backroom with the extracted hashtags and snippet content
       const newBackroom = new Backroom({
-        agentName,
         role,
         sessionDetails,
         explorerAgentName: explorerAgent,

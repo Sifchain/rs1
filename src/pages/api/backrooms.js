@@ -143,7 +143,6 @@ export default async function handler(req, res) {
 
   // Fetch explorer and responder agents
   const {
-    agentName,
     role,
     sessionDetails,
     explorerAgent,
@@ -227,7 +226,6 @@ export default async function handler(req, res) {
 
       // Create a new backroom with the extracted hashtags and snippet content
       const newBackroom = new Backroom({
-        agentName,
         role,
         sessionDetails,
         explorerAgentName: explorerAgent,

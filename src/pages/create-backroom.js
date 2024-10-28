@@ -145,7 +145,6 @@ function CreateBackroom() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          agentName: explorerAgent,
           role: 'Explorer',
           explorerAgent,
           explorerDescription,
