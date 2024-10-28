@@ -356,8 +356,8 @@ function Agents() {
           }),
         })
         if (response.ok) {
-          const updatedAgent = await response.json()
-          setSelectedAgent(updatedAgent)
+          const data = await response.json()
+          setSelectedAgent(data.agent)
           toast({
             title: 'Tweet Discarded',
             description: 'The tweet has been successfully discarded.',
@@ -542,6 +542,7 @@ function Agents() {
                     <Button
                       size="sm"
                       colorScheme="green"
+                      isDisabled={!hasEditPermission()}
                       onClick={() => {
                         handleSaveEdit(tweet._id, editTweetContent)
                       }}
@@ -561,6 +562,7 @@ function Agents() {
                   <Flex justifyContent="space-between" mb={2}>
                     <Text color="#e0e0e0">{tweet.tweetContent}</Text>
                     <Button
+                      isDisabled={!hasEditPermission()}
                       size="sm"
                       colorScheme="blue"
                       onClick={() =>
@@ -577,6 +579,7 @@ function Agents() {
                 <Flex justifyContent="space-between" alignItems="center">
                   <Button
                     size="sm"
+                    isDisabled={!hasEditPermission()}
                     colorScheme="red"
                     onClick={() => handleDiscardTweet(tweet._id)}
                     leftIcon={<FiTrash2 />}
@@ -585,6 +588,7 @@ function Agents() {
                   </Button>
                   <Button
                     size="sm"
+                    isDisabled={!hasEditPermission()}
                     colorScheme="green"
                     onClick={() => handleApproveTweet(tweet)}
                   >
