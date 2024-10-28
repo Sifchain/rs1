@@ -31,7 +31,9 @@ export default async function handler(req, res) {
       if (!updatedAgent) {
         return res.status(404).json({ error: 'Agent not found.' })
       }
-      res.status(200).json({ message: 'Tweet successfully updated.' })
+      res
+        .status(200)
+        .json({ message: 'Tweet successfully updated.', agent: updatedAgent })
       console.log({
         title: 'Tweet Updated',
         description: 'The tweet content has been updated.',

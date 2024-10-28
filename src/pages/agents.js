@@ -448,14 +448,18 @@ function Agents() {
         }),
       })
       if (response.ok) {
-        const updatedAgent = await response.json()
-        setSelectedAgent(updatedAgent)
+        const data = await response.json()
+        setEditTweetId(null) // Clear edit state
+        setEditTweetContent('') // Clear edited tweet content
+        setSelectedAgent(data.agent)
         toast({
           title: 'Tweet Updated',
           description: 'The tweet content has been updated.',
           status: 'success',
           duration: 3000,
           isClosable: true,
+          position: 'top-right',
+          variant: 'subtle',
         })
       } else {
         const error = await response.json()
@@ -538,7 +542,9 @@ function Agents() {
                     <Button
                       size="sm"
                       colorScheme="green"
-                      onClick={handleSaveEdit}
+                      onClick={() => {
+                        handleSaveEdit(tweet._id, editTweetContent)
+                      }}
                       mr={2}
                     >
                       Save
@@ -592,7 +598,7 @@ function Agents() {
       )
     )
   }
-
+  console.log(selectedAgent)
   return (
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
@@ -659,7 +665,9 @@ function Agents() {
               </Tooltip>
             </Flex>
           </Flex>
-          {displayPendingTweets()}
+          {selectedAgent?.pendingTweets?.length > 0
+            ? displayPendingTweets()
+            : null}
           {/* Display agent details */}
           {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch">

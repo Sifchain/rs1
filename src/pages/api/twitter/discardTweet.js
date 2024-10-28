@@ -29,7 +29,9 @@ export default async function handler(req, res) {
       if (!updatedAgent) {
         return res.status(404).json({ error: 'Agent not found.' })
       }
-      res.status(200).json({ message: 'Tweet successfully discarded.' })
+      res
+        .status(200)
+        .json({ message: 'Tweet successfully discarded.', agent: updatedAgent })
       console.log({
         title: 'Tweet Discarded',
         description: 'The tweet has been successfully discarded.',

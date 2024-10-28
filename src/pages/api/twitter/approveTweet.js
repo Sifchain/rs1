@@ -50,7 +50,9 @@ export default async function handler(req, res) {
         tweet => tweet._id !== tweetId
       )
       await updatedAgent.save()
-      res.status(200).json({ message: 'Tweet successfully posted.' })
+      res
+        .status(200)
+        .json({ message: 'Tweet successfully posted.', agent: updatedAgent })
     } catch (error) {
       console.error('Error posting tweet:', error)
       res.status(500).json({ error: 'Failed to post tweet.' })

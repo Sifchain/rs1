@@ -316,7 +316,9 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim()
+      const tweetContent = tweetResponse.choices[0].message.content
+        .replace(/"/g, '')
+        .trim()
       console.log('Posting tweet:', tweetContent)
       // Store the tweet in the agent's pendingTweets array
       explorer.pendingTweets.push({

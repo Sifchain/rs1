@@ -82,7 +82,7 @@ export default async function handler(req, res) {
       // Fetch agents and include only the specified fields
       const agents = await Agent.find(
         {},
-        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets'
+        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
       )
       res.status(200).json(agents)
     } catch (error) {
