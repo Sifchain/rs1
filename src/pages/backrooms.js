@@ -43,11 +43,12 @@ function Backrooms() {
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
-        return await genIsBalanceEnough(
-          address,
-          TOKEN_CONTRACT_ADDRESS,
-          MINIMUM_TOKENS_TO_CREATE_BACKROOM
-        )
+        if (!address)
+          return await genIsBalanceEnough(
+            address,
+            TOKEN_CONTRACT_ADDRESS,
+            MINIMUM_TOKENS_TO_CREATE_AGENT
+          )
       }
       fetchHasEnoughFunds()
         .then(hasEnoughFunds => {
@@ -57,7 +58,7 @@ function Backrooms() {
           console.error('Error checking balance:', error)
         })
     }
-  }, [address, loading])
+  }, [address])
 
   useEffect(() => {
     const fetchBackrooms = async () => {
@@ -192,26 +193,20 @@ function Backrooms() {
               Backrooms
             </Heading>
             <Tooltip
-              label={
-                !enoughFunds
-                  ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RS to create a new agent.`
-                  : ''
-              }
+              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} to create a new agent.`}
+              // isDisabled={!enoughFunds}
               hasArrow
               placement="top"
             >
-              <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
-                <Button
-                  onClick={() => router.push('/create-backroom')}
-                  colorScheme="blue"
-                  ms={10}
-                  size="md"
-                  fontWeight="bold"
-                  isDisabled={!enoughFunds}
-                >
-                  + New Backroom
-                </Button>
-              </Box>
+              <Button
+                // disabled={!enoughFunds}
+                colorScheme="blue"
+                onClick={() => router.push('/create-backroom')} // Redirect to create a backroom page
+                size="md"
+                fontWeight="bold"
+              >
+                + New Backroom
+              </Button>
             </Tooltip>
           </Flex>
 

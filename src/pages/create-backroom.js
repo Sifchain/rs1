@@ -16,7 +16,6 @@ import {
   Tbody,
   Td,
   Link,
-  Tooltip,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -24,12 +23,6 @@ import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
 import SEO from '../components/SEO'
-import { useAccount } from '../hooks/useMetaMask'
-import {
-  MINIMUM_TOKENS_TO_CREATE_BACKROOM,
-  TOKEN_CONTRACT_ADDRESS,
-} from '../constants/constants'
-import { genIsBalanceEnough } from '../utils/balance'
 
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
@@ -45,8 +38,6 @@ function CreateBackroom() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const router = useRouter()
-  const [enoughFunds, setEnoughFunds] = useState(false)
-  const { address } = useAccount()
   const fetchAgents = async () => {
     try {
       const response = await fetch('/api/agents')
@@ -59,24 +50,7 @@ function CreateBackroom() {
   useEffect(() => {
     fetchAgents()
   }, [])
-  useEffect(() => {
-    if (address) {
-      const fetchHasEnoughFunds = async () => {
-        return await genIsBalanceEnough(
-          address,
-          TOKEN_CONTRACT_ADDRESS,
-          MINIMUM_TOKENS_TO_CREATE_BACKROOM
-        )
-      }
-      fetchHasEnoughFunds()
-        .then(hasEnoughFunds => {
-          setEnoughFunds(hasEnoughFunds)
-        })
-        .catch(error => {
-          console.error('Error checking balance:', error)
-        })
-    }
-  }, [address, loading])
+
   useEffect(() => {
     const { agent, agentId } = router.query
 
@@ -363,30 +337,18 @@ function CreateBackroom() {
               </FormControl>
             </Box>
           </Flex>
-          <Tooltip
-            label={
-              !enoughFunds
-                ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RS to create a new backroom.`
-                : ''
-            }
-            hasArrow
-            placement="top"
+
+          <Button
+            isLoading={loading}
+            loadingText="Creating..."
+            colorScheme="blue"
+            variant="solid"
+            onClick={handleSubmit}
+            _hover={{ bg: '#64b5f6', boxShadow: '0 0 15px #64b5f6' }}
+            width="100%"
           >
-            <Box as="span" cursor={!enoughFunds ? 'pointer' : 'not-allowed'}>
-              <Button
-                isLoading={loading}
-                isDisabled={!enoughFunds}
-                loadingText="Creating..."
-                colorScheme="blue"
-                variant="solid"
-                onClick={handleSubmit}
-                _hover={{ bg: '#64b5f6', boxShadow: '0 0 15px #64b5f6' }}
-                width="100%"
-              >
-                Create Backroom
-              </Button>
-            </Box>
-          </Tooltip>
+            Create Backroom
+          </Button>
 
           {/* Display agent's evolutions */}
           {selectedExplorerEvolutions.length > 0 && (
