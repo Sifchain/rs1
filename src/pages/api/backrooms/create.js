@@ -115,7 +115,7 @@ export default async function handler(req, res) {
       const template = promptManager.getTemplate(templateName)
 
       const combinedEvolutions = explorer.evolutions.length
-        ? explorer.evolutions.slice(-20).join('\n\n')
+        ? explorer.evolutions.slice(-20).map(evo => evo.description)
         : explorer.description
 
       const conversationPrompt =
@@ -212,6 +212,8 @@ export default async function handler(req, res) {
         agentName,
         role,
         sessionDetails,
+        explorerAgentId: explorer._id,
+        responderAgentId: responder._id,
         explorerAgentName: explorerAgent,
         responderAgentName: responderAgent,
         content: conversationContent,
@@ -264,7 +266,10 @@ export default async function handler(req, res) {
         temperature: 0.7,
       })
 
-      const newEvolution = recapResponse.choices[0].message.content.trim()
+      const newEvolution = {
+        backroomId: newBackroom._id,
+        description: recapResponse.choices[0].message.content.trim(),
+      }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
 

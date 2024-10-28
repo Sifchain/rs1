@@ -68,6 +68,7 @@ export default async function handler(req, res) {
         recapPrompt,
         description,
         tweetPrompt,
+        originalDescription: description,
       })
       await newAgent.save()
 
@@ -115,6 +116,8 @@ export default async function handler(req, res) {
           recapPrompt,
           tweetPrompt,
           description,
+          // should we update the original description?
+          // originalDescription: description,
         },
         { new: true } // Return the updated agent
       )

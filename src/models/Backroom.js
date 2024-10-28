@@ -12,6 +12,16 @@ const BackroomSchema = new mongoose.Schema({
   sessionDetails: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  explorerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agent', // Reference the Agent model
+    default: null,
+  },
+  responderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agent', // Reference the Agent model
+    default: null,
+  },
 })
 
 // Middleware to auto-update the `updatedAt` field on each save

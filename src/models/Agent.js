@@ -2,7 +2,18 @@ import mongoose from 'mongoose'
 
 const AgentSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  evolutions: { type: [String], default: [] },
+  evolutions: {
+    type: [
+      {
+        backroomId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Backroom', // Reference the Backroom model
+        },
+        description: String,
+      },
+    ],
+    default: [],
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -37,6 +48,7 @@ const AgentSchema = new mongoose.Schema({
     default: [],
   },
   description: { type: String, default: '' },
+  originalDescription: { type: String, default: '' },
   conversationPrompt: { type: String, default: '' },
   recapPrompt: { type: String, default: '' },
   tweetPrompt: { type: String, default: '' },

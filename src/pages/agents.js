@@ -55,6 +55,7 @@ function Agents() {
   const [editTweetContent, setEditTweetContent] = useState('') // State to hold the edited tweet content
   const [wordCount, setWordCount] = useState(0)
   const [wordCountError, setWordCountError] = useState(false)
+  const [backrooms, setBackrooms] = useState([])
   const handleEditTweet = (tweetId, tweetContent) => {
     setEditTweetId(tweetId)
     setEditTweetContent(tweetContent)
@@ -103,9 +104,18 @@ function Agents() {
       setLoading(false)
     }
   }
-
+  const fetchBackrooms = async () => {
+    try {
+      const response = await fetch('/api/backrooms/get')
+      const data = await response.json()
+      setBackrooms(data)
+    } catch (error) {
+      console.error('Error fetching backrooms:', error)
+    }
+  }
   useEffect(() => {
     fetchAgents()
+    fetchBackrooms()
   }, [])
 
   const handleAgentSelection = async event => {
@@ -129,8 +139,8 @@ function Agents() {
       // Filter backrooms where the agent is involved as explorer or responder
       const filteredConversations = data.filter(
         backroom =>
-          backroom.explorerAgentName === agent?.name ||
-          backroom.responderAgentName === agent?.name
+          backroom.explorerAgentId === agent?._id ||
+          backroom.responderAgentId === agent?._id
       )
       setRecentBackroomConversations(filteredConversations)
 
@@ -251,17 +261,41 @@ function Agents() {
     if (!evolutions || evolutions.length === 0) {
       return <Text>No journey updates recorded.</Text>
     }
-
-    return evolutions.map((evolution, index) => (
-      <Box key={index} mb={4}>
-        <Text fontWeight="bold" color="#81d4fa">
+    return (
+      <Box>
+        <Text fontWeight="bold" color="#81d4fa" mb={4}>
           Conversation with {selectedAgent.name}
         </Text>
-        <Text fontFamily="'Arial', sans-serif" color="#e0e0e0">
-          {evolution}
+        <Text fontWeight="bold" color="#81d4fa" mb={4}>
+          Description: {selectedAgent.originalDescription}
         </Text>
+        {evolutions.map((evolution, index) => {
+          // get backroom from backroomID
+          const backroom = backrooms.find(
+            backroom => backroom._id === evolution.backroomId
+          )
+          // get responderAgent name from responderAgentId
+          const responderAgent = agents.find(
+            agent => agent._id === backroom.responderAgentId
+          )
+          const responderAgentName = responderAgent?.name || 'Unknown'
+          return (
+            <Box key={index} mb={4}>
+              <Text fontWeight="bold" color="#81d4fa">
+                Conversation with {responderAgentName}
+              </Text>
+              <Text fontFamily="'Arial', sans-serif" color="#e0e0e0">
+                {evolution.description}
+              </Text>
+              <Text>{backroom.snippetContent}</Text>
+              <Link href={`/backrooms?expanded=${evolution?.backroomId}`}>
+                View Backroom
+              </Link>
+            </Box>
+          )
+        })}
       </Box>
-    ))
+    )
   }
 
   const hasEditPermission = () => {
@@ -294,7 +328,7 @@ function Agents() {
           _hover={{ color: '#29b6f6' }}
           cursor="pointer"
         >
-          {backroom.agentName} &rarr; {backroom.responderAgentName}
+          {backroom.explorerAgentName} &rarr; {backroom.responderAgentName}
         </Text>
         <Text fontSize="sm" color="#b0bec5">
           {new Date(backroom.createdAt).toLocaleDateString()}
@@ -653,7 +687,9 @@ function Agents() {
                         Description:
                       </Text>
                       <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.description || 'No description provided'}
+                        {selectedAgent.originalDescription ||
+                          selectedAgent.description ||
+                          'No description provided'}
                       </Text>
                     </Box>
 
