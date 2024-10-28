@@ -139,8 +139,8 @@ function Agents() {
       // Filter backrooms where the agent is involved as explorer or responder
       const filteredConversations = data.filter(
         backroom =>
-          backroom.explorerAgentId === agent?._id ||
-          backroom.responderAgentId === agent?._id
+          backroom.explorerId === agent?._id ||
+          backroom.responderId === agent?._id
       )
       setRecentBackroomConversations(filteredConversations)
 
@@ -214,7 +214,7 @@ function Agents() {
     setErrors(errors)
     return valid
   }
-
+  console.log({ backrooms })
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
@@ -261,22 +261,19 @@ function Agents() {
     if (!evolutions || evolutions.length === 0) {
       return <Text>No journey updates recorded.</Text>
     }
+
     return (
       <Box>
-        <Text fontWeight="bold" color="#81d4fa" mb={4}>
-          Conversation with {selectedAgent.name}
+        <Text fontWeight="bold" mb={4}>
+          Original Description:
         </Text>
-        <Text fontWeight="bold" color="#81d4fa" mb={4}>
-          Description: {selectedAgent.originalDescription}
-        </Text>
+        <Text mb={4}>{selectedAgent.originalDescription}</Text>
         {evolutions.map((evolution, index) => {
-          // get backroom from backroomID
           const backroom = backrooms.find(
             backroom => backroom._id === evolution.backroomId
           )
-          // get responderAgent name from responderAgentId
           const responderAgent = agents.find(
-            agent => agent._id === backroom.responderAgentId
+            agent => agent._id === backroom.responderId
           )
           const responderAgentName = responderAgent?.name || 'Unknown'
           return (
@@ -284,13 +281,20 @@ function Agents() {
               <Text fontWeight="bold" color="#81d4fa">
                 Conversation with {responderAgentName}
               </Text>
-              <Text fontFamily="'Arial', sans-serif" color="#e0e0e0">
-                {evolution.description}
+              <Text fontWeight="bold">Description: </Text>
+              <Text>{evolution.description}</Text>
+              <Text fontWeight="bold">Snippet:</Text>
+              <Text>{backroom.snippetContent} </Text>
+              <Text fontWeight="bold">Tags:</Text>
+              <Text>{backroom.tags.join(', ')}</Text>
+              <Text fontWeight="bold" mb={1}>
+                <Link
+                  color="#81d4fa"
+                  href={`/backrooms?expanded=${evolution?.backroomId}`}
+                >
+                  View Backroom
+                </Link>
               </Text>
-              <Text>{backroom.snippetContent}</Text>
-              <Link href={`/backrooms?expanded=${evolution?.backroomId}`}>
-                View Backroom
-              </Link>
             </Box>
           )
         })}
