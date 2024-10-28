@@ -86,6 +86,24 @@ function Navigation() {
           >
             Agents
           </Link>
+          <Link
+            href="https://t.me/reality_spiral"
+            fontFamily="Arial, sans-serif"
+            target="_blank"
+            rel="noopener noreferrer"
+            _hover={{ color: '#81d4fa' }}
+          >
+            TG
+          </Link>
+          <Link
+            href="https://x.com/reality_spiral"
+            fontFamily="Arial, sans-serif"
+            target="_blank"
+            rel="noopener noreferrer"
+            _hover={{ color: '#81d4fa' }}
+          >
+            X
+          </Link>
           {isConnected ? (
             <HStack spacing={4} alignItems="center">
               <Jazzicon diameter={30} seed={jsNumberForAddress(address)} />
@@ -137,6 +155,24 @@ function Navigation() {
               _hover={{ color: '#81d4fa' }}
             >
               Agents
+            </Link>
+            <Link
+              href="https://t.me/reality_spiral"
+              fontFamily="Arial, sans-serif"
+              target="_blank"
+              rel="noopener noreferrer"
+              _hover={{ color: '#81d4fa' }}
+            >
+              TG
+            </Link>
+            <Link
+              href="https://x.com/reality_spiral"
+              fontFamily="Arial, sans-serif"
+              target="_blank"
+              rel="noopener noreferrer"
+              _hover={{ color: '#81d4fa' }}
+            >
+              X
             </Link>
             {isConnected ? (
               <HStack spacing={4} alignItems="center">
