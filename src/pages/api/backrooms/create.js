@@ -272,6 +272,12 @@ export default async function handler(req, res) {
       explorer.evolutions.push(newEvolution)
       await explorer.save()
 
+      const fullBackroomURL = getFullURL(
+        `/backrooms?expanded=${newBackroom._id}`,
+        `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`
+      )
+      const shortenedUrl = await shortenURL(fullBackroomURL)
+
       const tweetPrompt = explorer.tweetPrompt
         ? `
         Recent Backroom Conversation Summary:
@@ -311,15 +317,9 @@ export default async function handler(req, res) {
           },
           { role: 'user', content: tweetPrompt },
         ],
-        max_tokens: 280,
+        max_tokens: 280 - shortenedUrl.length, // max 280 in total with url
         temperature: 0.7,
       })
-
-      const fullBackroomURL = getFullURL(
-        `/backrooms?expanded=${newBackroom._id}`,
-        `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`
-      )
-      const shortenedUrl = await shortenURL(fullBackroomURL)
 
       const tweetContent = tweetResponse.choices[0].message.content
         .replace(/"/g, '')
