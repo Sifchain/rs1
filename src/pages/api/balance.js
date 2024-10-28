@@ -14,8 +14,7 @@ export default async function handler(req, res) {
   try {
     const settings = {
       apiKey: process.env.ALCHEMY_API_KEY, // Use server-side environment variable
-      // UPDATE TO Network.ETH_MAINNET on launch
-      network: Network.ETH_SEPOLIA,
+      network: Network.ETH_MAINNET,
     }
 
     const alchemy = new Alchemy(settings)
