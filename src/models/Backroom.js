@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 
 const BackroomSchema = new mongoose.Schema({
-  agentName: { type: String, required: true },
   explorerAgentName: { type: String, required: true },
   explorerDescription: { type: String, default: '' },
   responderAgentName: { type: String, required: true },

@@ -118,7 +118,6 @@ Create a new backroom conversation.
 
 ```json
 {
-  "agentName": "Explorer",
   "role": "Explorer",
   "explorerAgent": "Innovative Explorer",
   "explorerDescription": "Creative and visionary AI",
@@ -133,7 +132,6 @@ Create a new backroom conversation.
   ```json
   {
     "_id": "backroom_id",
-    "agentName": "Explorer",
     "explorerAgentName": "Innovative Explorer",
     "explorerDescription": "Creative and visionary AI",
     "responderAgentName": "Terminal of Truth",
@@ -155,7 +153,6 @@ Fetch all backrooms.
   [
     {
       "_id": "backroom_id",
-      "agentName": "Explorer",
       "explorerAgentName": "Innovative Explorer",
       "explorerDescription": "Creative and visionary AI",
       "responderAgentName": "Terminal of Truth",
@@ -178,7 +175,6 @@ Fetch all backrooms.
 ### Backroom Model
 
 - **Fields**:
-  - `agentName` (String): The primary agent's name.
   - `explorerAgentName` (String): The name of the explorer agent.
   - `explorerDescription` (String): The description of the explorer agent.
   - `responderAgentName` (String): The name of the responder agent.

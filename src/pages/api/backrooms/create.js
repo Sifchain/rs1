@@ -89,7 +89,6 @@ export default async function handler(req, res) {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
   const {
-    agentName,
     role,
     sessionDetails,
     explorerAgent,
@@ -209,7 +208,6 @@ export default async function handler(req, res) {
       const snippetContent = conversationContent.slice(0, 150) + '...'
 
       const newBackroom = new Backroom({
-        agentName,
         role,
         sessionDetails,
         explorerId: explorer._id,
