@@ -117,11 +117,12 @@ function CreateAgent() {
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
-        return await genIsBalanceEnough(
-          address,
-          TOKEN_CONTRACT_ADDRESS,
-          MINIMUM_TOKENS_TO_CREATE_AGENT
-        )
+        return false
+        // return await genIsBalanceEnough(
+        //   address,
+        //   TOKEN_CONTRACT_ADDRESS,
+        //   MINIMUM_TOKENS_TO_CREATE_AGENT
+        // )
       }
       fetchHasEnoughFunds()
         .then(hasEnoughFunds => {

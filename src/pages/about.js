@@ -90,27 +90,27 @@ function About() {
             </Text>
 
             <Text
-                mb={8}
-                fontSize={{ base: 'lg', md: '2xl' }}
-                fontFamily="Arial, sans-serif"
-                maxWidth="600px"
-                color="#b0bec5"
-              >
-                CA: 0x90e3532cf06d567ef7e6385be532311f10c30096
-              </Text>
+              mb={8}
+              fontSize={{ base: 'lg', md: '2xl' }}
+              fontFamily="Arial, sans-serif"
+              maxWidth="600px"
+              color="#b0bec5"
+            >
+              CA: 0x90e3532cf06d567ef7e6385be532311f10c30096
+            </Text>
 
-              <Text
-                mb={8}
-                fontSize={{ base: 'lg', md: '2xl' }}
-                fontFamily="Arial, sans-serif"
-                maxWidth="600px"
-                color="#b0bec5"
-              >
-                Email: realityspiral.rs@gmail.com
-              </Text>
+            <Text
+              mb={8}
+              fontSize={{ base: 'lg', md: '2xl' }}
+              fontFamily="Arial, sans-serif"
+              maxWidth="600px"
+              color="#b0bec5"
+            >
+              Email: realityspiral.rs@gmail.com
+            </Text>
 
             {/* Show different buttons based on the connection state */}
-            {!isConnected ? (
+            {/* {!isConnected ? (
               <Button
                 onClick={connect}
                 colorScheme="blue"
@@ -132,7 +132,7 @@ function About() {
               >
                 Explore Backrooms
               </Button>
-            )}
+            )} */}
           </Box>
         </Flex>
 
