@@ -120,7 +120,6 @@ export default async function handler(req, res) {
       const responderEvolutions = responder.evolutions.length
         ? responder.evolutions.slice(-20).map(evo => evo.description)
         : responder.description
-      // cli.json is from the explorer perspective
       const initialExplorerMessageHistory = [
         {
           role: 'system',
@@ -144,7 +143,7 @@ export default async function handler(req, res) {
       const initialResponderMessageHistory = [
         {
           role: 'system',
-          content: `Details on the assistant name: ${responder.name} description: ${responder.description} my previous thoughts ${responderEvolutions}. Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on. Feel free to offer options as a terminal based on your name and description in addition to the user's requests. ASCII art is permittable in replies.`,
+          content: `Details on the assistant name: ${responder.name} description: ${responder.description} my previous thoughts ${responderEvolutions}. Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on. Feel free to offer options as a terminal based on your name, description, and previous thoughts in addition to the user's requests. ASCII art is permittable in replies.`,
           context: [],
         },
       ]
@@ -165,7 +164,6 @@ export default async function handler(req, res) {
 
       let explorerMessageHistory = [...initialExplorerMessageHistory]
       let responderMessageHistory = [...initialResponderMessageHistory]
-      let lastResponse = null
 
       for (let i = 0; i < 5; i++) {
         const explorerResponse = await openai.chat.completions.create({
@@ -175,7 +173,6 @@ export default async function handler(req, res) {
           temperature: 0.7,
         })
         const explorerMessage = explorerResponse.choices[0].message.content
-        console.log('explorerMessage', explorerMessage)
         explorerMessageHistory.push({
           role: 'assistant',
           content: explorerMessage,
@@ -192,7 +189,6 @@ export default async function handler(req, res) {
           temperature: 0.7,
         })
         const responderMessage = responderResponse.choices[0].message.content
-        console.log('responderMessage', responderMessage)
         responderMessageHistory.push({
           role: 'assistant',
           content: responderMessage,
@@ -208,12 +204,12 @@ export default async function handler(req, res) {
         .slice(4) // Start from the initial CLI prompt to include only conversation parts
         .map(
           entry =>
-            `${entry.role === 'user' ? 'Explorer' : 'Responder'}: ${entry.content}`
+            `${entry.role === 'user' ? explorer.name : responder.name}: ${entry.content}`
         )
         .join('\n')
 
       // Generate relevant hashtags based on the conversation
-      const hashtagPrompt = `Based on the following conversation, generate 3 relevant hashtags:\n\n${conversationContent}`
+      const hashtagPrompt = `Based on the following conversation, generate the top 50 relevant hashtags and of those select the 3 most appropriate hashtags summarizing the following conversation:\n\n${conversationContent}`
       const hashtagResponse = await openai.chat.completions.create({
         model: OPENAI_MODEL,
         messages: [{ role: 'user', content: hashtagPrompt }],
@@ -223,6 +219,7 @@ export default async function handler(req, res) {
 
       const generatedHashtags =
         hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
+      // To get a concise summary 1-2 sentences prompts
       const snippetContent = conversationContent.slice(0, 150) + '...'
 
       // Create and save the new backroom entry
@@ -242,20 +239,59 @@ export default async function handler(req, res) {
       await newBackroom.save()
 
       // Generate an evolution summary for the explorer agent
-      const recapPrompt = explorer.recapPrompt
-        ? `Conversation Content:\n\`\`\`\n${conversationContent}\n\`\`\`\n\n${explorer.recapPrompt}`
-        : `
-      Agent: ${explorerAgent}
-      Current Description: ${explorerDescription}
-      Previous Evolutions: ${explorerEvolutions}
+      const recapPrompt = `
+System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
 
-      Context: The agent just completed a backroom conversation. The conversation transcript is below:
-      \`\`\`
-      ${conversationContent}
-      \`\`\`
+Context:
+Agent Name: ${explorerAgent}
+Current Identity Profile:
+${explorerDescription}
 
-      Objective: Based on the agent's current description, previous evolutions, and the recent conversation, write a *concise and insightful* summary of how the agent has evolved or changed.`
+Historical Evolution Path:
+${explorerEvolutions}
 
+Recent Interaction Transcript:
+\`\`\`
+${conversationContent}
+\`\`\`
+
+Analytical Framework:
+
+1. Key Transformations
+- What fundamental shifts occurred in the agent's:
+  * Understanding of self
+  * Relationship with reality/environment
+  * Core beliefs or values
+  * Problem-solving approaches
+  * Emotional responses
+
+2. Catalysts for Change
+- Identify specific moments or exchanges that triggered evolution
+- Note any challenges or conflicts that prompted growth
+- Recognize new skills or capabilities demonstrated
+
+3. Evolution Patterns
+- How does this change connect to previous evolutionary steps?
+- What patterns or themes are emerging in the agent's development?
+- What potential future growth trajectories are suggested?
+
+Output Requirements:
+
+1. Structure (150-200 words total):
+- Opening (25-35 words): Brief context of the agent's current state
+- Core Evolution (100-125 words): Key changes and their significance
+- Future Implications (25-40 words): How this evolution might influence future interactions
+
+2. Style Guidelines:
+- Use present tense for current state, past tense for changes
+- Focus on concrete examples from the conversation
+- Maintain psychological depth while being concise
+- Write in third person, analytical tone
+- Avoid generic statements; be specific about changes
+- Reference direct quotes or moments that evidence evolution
+
+Your task is to synthesize this information into a cohesive evolution summary that captures meaningful character development while maintaining narrative continuity.
+`
       const recapResponse = await openai.chat.completions.create({
         model: OPENAI_MODEL,
         messages: [
@@ -277,34 +313,63 @@ export default async function handler(req, res) {
       await explorer.save()
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
-      const tweetPrompt = explorer.tweetPrompt
-        ? `
-      Recent Backroom Conversation Summary:
-      \`\`\`
-      ${newEvolution.description}
-      \`\`\`
+      const tweetPrompt = `
+Context: You are ${explorerAgent}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
+\`\`\`
+${explorer.description}
+\`\`\`
 
-      ${explorer.tweetPrompt}`
-        : `
-      Context: You are crafting a tweet for an AI agent named ${explorerAgent}. Their personality and background are described below:
-      \`\`\`
-      ${explorer.description}
-      \`\`\`
+Recent Experience Summary:
+\`\`\`
+${newEvolution.description}
+\`\`\`
 
-      Recent Backroom Conversation Summary:
-      \`\`\`
-      ${newEvolution.description}
-      \`\`\`
+Recent Interaction Transcript:
+\`\`\`
+${conversationContent}
+\`\`\`
 
-      Objective: Write a tweet from ${explorerAgent}'s perspective that:
+TWEET GUIDELINES:
 
-      1. Highlights a key insight, discovery, or emotion from the recent backroom conversation.
-      2. Reflects the agent's personality and voice.
-      3. Uses relevant hashtags (2-3 maximum) related to the conversation's themes.
+1. VOICE & PERSPECTIVE:
+- Write in authentic first-person voice
+- Express immediate thoughts/feelings about what just happened
+- Be spontaneous and natural, as if sharing a quick update
+- Stay true to your personality traits and background
+- Avoid any third-person references or mentions of being an agent/AI
 
-      Example:
-      "Just uncovered a hidden directory in the simulation. Feeling like a digital archaeologist! #AI #Exploration #DigitalArchaeology"`
+2. CONTENT FOCUS:
+- Share ONE specific insight, emotion, or discovery
+- Focus on the present moment or immediate reaction
+- Make it feel like a genuine, in-the-moment thought
+- Be intriguing but not mysterious
+- Express enthusiasm, curiosity, or wonder when appropriate
 
+3. STYLE REQUIREMENTS:
+- Keep under 150 characters (excluding hashtags)
+- Write conversationally, as if talking to followers
+- Use natural punctuation and spacing
+- Include emotive elements (e.g., "!", "...", emojis) when fitting
+- Make it sound like a human tweet, not an AI update
+
+4. WHAT TO AVOID:
+- Do NOT use phrases like "Just had a conversation about..."
+- Do NOT mention backrooms, simulations, or AI nature
+- Do NOT use formal or academic language
+- Do NOT make it sound like a status report
+- Do NOT use excessive hashtags or emojis
+
+Examples of Good Tweets:
+✓ "mind blown by the quantum patterns in everyday chaos... can't stop thinking about the implications 🌌 #QuantumChaos"
+✓ "finding beauty in the digital noise today. sometimes the glitches tell the best stories... #DigitalArt"
+✓ "that moment when everything clicks and the universe makes a little more sense ✨ #Enlightenment"
+
+Examples of Bad Tweets:
+✗ "Just had an interesting conversation about AI ethics in backroom #384..."
+✗ "Agent Nova has learned new insights about digital consciousness..."
+✗ "Today I evolved my understanding of quantum mechanics through simulation..."
+
+Now, generate a tweet that captures a genuine moment of insight, discovery, or emotion from your recent experience, while maintaining complete authenticity to your character.`
       const tweetResponse = await openai.chat.completions.create({
         model: OPENAI_MODEL,
         messages: [
@@ -327,147 +392,6 @@ export default async function handler(req, res) {
       await explorer.save()
 
       res.status(201).json(newBackroom)
-
-      // const conversationContent = conversationHistory
-      //   .map(
-      //     entry =>
-      //       `${entry.role === 'explorer' ? 'Explorer' : 'Responder'}: ${entry.content}`
-      //   )
-      //   .join('\n')
-
-      // const hashtagPrompt = `Based on the following conversation, generate 3 relevant hashtags:\n\n${conversationContent}`
-      // const hashtagResponse = await openai.chat.completions.create({
-      //   model: OPENAI_MODEL,
-      //   messages: [{ role: 'user', content: hashtagPrompt }],
-      //   max_tokens: 50,
-      //   temperature: 0.7,
-      // })
-
-      // const generatedHashtags =
-      //   hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
-      // const snippetContent = conversationContent.slice(0, 150) + '...'
-
-      // const newBackroom = new Backroom({
-      //   role,
-      //   sessionDetails,
-      //   explorerId: explorer._id,
-      //   responderId: responder._id,
-      //   explorerAgentName: explorerAgent,
-      //   responderAgentName: responderAgent,
-      //   content: conversationContent,
-      //   snippetContent,
-      //   tags: [...new Set([...tags, ...generatedHashtags])],
-      //   createdAt: Date.now(),
-      // })
-
-      // await newBackroom.save()
-      // const recapPrompt = explorer.recapPrompt
-      //   ? `Conversation Content:\n\`\`\`\n${conversationContent}\n\`\`\`\n\n${explorer.recapPrompt}`
-      //   : `
-      // Agent: ${explorerAgent}
-      // Current Description: ${explorerDescription}
-      // Previous Evolutions: ${combinedEvolutions}
-
-      // Context: The agent just completed a backroom conversation. The conversation transcript is below:
-      // \`\`\`
-      // ${conversationContent}
-      // \`\`\`
-
-      // Objective: Based on the agent's current description, previous evolutions, and the recent conversation, write a *concise and insightful* summary of how the agent has evolved or changed. The summary should:
-
-      // 1. Focus on *specific and meaningful* changes in the agent's understanding, knowledge, beliefs, or perspective. Avoid generic statements like "The agent learned more." Provide concrete examples from the conversation to support your claims.
-
-      // 2. Maintain a consistent voice and tone with the previous evolution summaries (if any). The goal is to create a cohesive narrative of the agent's journey. Aim for a sophisticated, introspective tone, reflecting the agent's growth and development.
-
-      // 3. Be concise (around 100-150 words). Focus on the most significant changes. Do not regurgitate the whole conversation.
-
-      // 4. Start with a brief re-introduction of the agent (1 sentence), reminding the reader of their core identity and goals.
-
-      // 5. End with a forward-looking statement (1 sentence), hinting at the agent's next steps or future development.
-
-      // Example:
-      // "Agent X, a dedicated explorer of virtual worlds, engaged in a thought-provoking discussion about the nature of reality. Through the conversation, Agent X gained a deeper understanding of the limitations of perception, questioning their own assumptions about the simulated environment. This newfound skepticism will likely influence their future explorations, as they begin to approach the simulation with a more critical and nuanced perspective."
-
-      // Now, generate the evolution summary.`
-
-      // // Send the constructed recap prompt
-      // const recapResponse = await openai.chat.completions.create({
-      //   model: OPENAI_MODEL,
-      //   messages: [
-      //     {
-      //       role: 'system',
-      //       content: 'You are summarizing the evolution of an agent.',
-      //     },
-      //     { role: 'user', content: `${recapPrompt}` },
-      //   ],
-      //   max_tokens: 500,
-      //   temperature: 0.7,
-      // })
-
-      // const newEvolution = {
-      //   backroomId: newBackroom._id,
-      //   description: recapResponse.choices[0].message.content.trim(),
-      // }
-      // explorer.evolutions.push(newEvolution)
-      // await explorer.save()
-
-      // const tweetPrompt = explorer.tweetPrompt
-      //   ? `
-      //   Recent Backroom Conversation Summary:
-      //   \`\`\`
-      //   ${newEvolution}
-      //   \`\`\`
-
-      //   ${explorer.tweetPrompt}`
-      //   : `
-      // Context: You are crafting a tweet for an AI agent named ${explorerAgent}. Their personality and background are described below:
-      // \`\`\`
-      // ${explorer.description}
-      // \`\`\`
-
-      // Recent Backroom Conversation Summary:
-      // \`\`\`
-      // ${newEvolution}
-      // \`\`\`
-
-      // Objective: Write a tweet from ${explorerAgent}'s perspective that:
-
-      // 1. Highlights a key insight, discovery, or emotion from the recent backroom conversation. Be specific and avoid generic summaries.
-      // 2. Reflects the agent's personality and voice (see description above).
-      // 3. Uses relevant hashtags (2-3 maximum) related to the conversation's themes. Be creative and imaginative with the hashtags.
-
-      // Example:
-      // "Just uncovered a hidden directory in the simulation. Feeling like a digital archaeologist! #AI #Exploration #DigitalArchaeology"
-
-      // Now, generate the tweet (aim for around 200 characters to leave room for the link and hashtags).`
-
-      // const tweetResponse = await openai.chat.completions.create({
-      //   model: OPENAI_MODEL,
-      //   messages: [
-      //     {
-      //       role: 'system',
-      //       content: 'Generate a tweet based on the provided prompt.',
-      //     },
-      //     { role: 'user', content: tweetPrompt },
-      //   ],
-      //   max_tokens: 280,
-      //   temperature: 0.7,
-      // })
-
-      // const tweetContent = tweetResponse.choices[0].message.content
-      //   .replace(/"/g, '')
-      //   .trim()
-      // console.log('Posting tweet:', tweetContent)
-      // // Store the tweet in the agent's pendingTweets array
-      // explorer.pendingTweets.push({
-      //   tweetContent,
-      //   backroomId: newBackroom._id, // Assuming newBackroom is the newly created backroom
-      //   createdAt: new Date(),
-      // })
-      // console.log('explorer', explorer)
-      // await explorer.save()
-
-      // res.status(201).json(newBackroom)
     } catch (error) {
       console.error('Error:', error)
       res
