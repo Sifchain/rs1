@@ -208,7 +208,7 @@ export default async function handler(req, res) {
       // Gather the entire conversation content from explorerMessageHistory
       const conversationContent = explorerMessageHistory
       .slice(4) // Start from the initial CLI prompt to include only conversation parts
-      .map(entry => entry.content)
+      .map(entry => `${entry.role === 'user' ? 'Explorer' : 'Responder'}: ${entry.content}`)
       .join('\n');
 
       // Generate relevant hashtags based on the conversation
