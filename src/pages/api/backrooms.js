@@ -3,6 +3,7 @@ import Agent from '../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
+import { OPENAI_MODEL } from '../../constants/constants'
 
 mongoose.set('strictQuery', false)
 
@@ -183,7 +184,7 @@ export default async function handler(req, res) {
       `
       // Generate conversation between the two agents
       const conversationResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: OPENAI_MODEL,
         messages: [
           {
             role: 'system',
@@ -260,7 +261,7 @@ export default async function handler(req, res) {
       `
 
       const recapResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: OPENAI_MODEL,
         messages: [
           {
             role: 'system',
@@ -295,7 +296,7 @@ export default async function handler(req, res) {
       Conversation to recap with rules above: ${conversationContent}`
 
       const tweetResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: OPENAI_MODEL,
         messages: [
           {
             role: 'system',

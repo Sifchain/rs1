@@ -3,6 +3,7 @@ import Agent from '../../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
+import { OPENAI_MODEL } from '../../../constants/constants'
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -241,7 +242,7 @@ Generate a conversation with 20 exchanges between ${explorerAgent} and Responder
 
       // Generate conversation between the two agents
       const conversationResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: OPENAI_MODEL,
         messages: [
           {
             role: 'system',
@@ -325,7 +326,7 @@ Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentH
 `
 
       const recapResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: OPENAI_MODEL,
         messages: [
           {
             role: 'system',
@@ -367,7 +368,7 @@ ${newEvolution}
 Now, please generate the tweet.`
 
       const tweetResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: OPENAI_MODEL,
         messages: [
           {
             role: 'system',
