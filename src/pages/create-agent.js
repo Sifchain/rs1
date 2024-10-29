@@ -155,35 +155,6 @@ function CreateAgent() {
       valid = false
     }
 
-    // Optional field validation for conversationPrompt
-    if (
-      conversationPrompt.trim().length > 0 &&
-      (conversationPrompt.length < 10 || conversationPrompt.length > 10000)
-    ) {
-      errors.conversationPrompt =
-        'Backroom prompt must be between 10 and 10000 characters'
-      valid = false
-    }
-
-    // Optional field validation for recapPrompt
-    if (
-      recapPrompt.trim().length > 0 &&
-      (recapPrompt.length < 10 || recapPrompt.length > 10000)
-    ) {
-      errors.recapPrompt =
-        'Recap prompt must be between 10 and 10000 characters'
-      valid = false
-    }
-
-    // Optional field validation for tweetPrompt
-    if (
-      tweetPrompt.trim().length > 0 &&
-      (tweetPrompt.length < 10 || tweetPrompt.length > 10000)
-    ) {
-      errors.tweetPrompt =
-        'Tweet prompt must be between 10 and 10000 characters'
-      valid = false
-    }
     setErrors(errors)
     return valid
   }
@@ -255,25 +226,27 @@ function CreateAgent() {
   return (
     <ChakraProvider>
       <SEO
-        title="Create an Agent"
+        title="Create Agent"
         description="Create and link an agent with Twitter"
       />
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="800px" mx="auto">
-          {/* Back Button */}
-          <Button
-            leftIcon={<ArrowBackIcon />}
-            colorScheme="blue"
-            onClick={() => router.back()}
-            alignSelf="flex-start"
-          >
-            Back
-          </Button>
-          <Heading textAlign="center" mb={10} fontSize="4xl" color="#81d4fa">
-            Create an Agent
-          </Heading>
-
+        <Box py={10} px={6} maxW="2000px" mx="auto">
+          <Flex justifyContent="space-between" alignItems="center" mb={5}>
+            {/* Back Button */}
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              colorScheme="blue"
+              onClick={() => router.back()}
+              alignSelf="flex-start"
+            >
+              Back
+            </Button>
+            <Heading textAlign="center" mb={10} fontSize="4xl" color="#81d4fa">
+              Create Agent
+            </Heading>
+            <Box width="60px" />
+          </Flex>
           {loadingStep === 0 && (
             <Flex direction="column" gap={6}>
               <VStack spacing={4} align="stretch">
@@ -344,94 +317,6 @@ function CreateAgent() {
                     <FormErrorMessage>{errors.description}</FormErrorMessage>
                   )}
                 </FormControl>
-                {/* Optional Prompts Section */}
-                {[
-                  {
-                    title: 'Backroom Prompt',
-                    template: conversationPromptTemplate,
-                    value: conversationPrompt,
-                    setter: setConversationPrompt,
-                    open: convoOpen,
-                    toggle: toggleConversation,
-                    copy: copyConversation,
-                    copied: convoCopied,
-                    error: errors.conversationPrompt,
-                  },
-                  {
-                    title: 'Training Prompt',
-                    template: recapPromptTemplate,
-                    value: recapPrompt,
-                    setter: setRecapPrompt,
-                    open: recapOpen,
-                    toggle: toggleRecap,
-                    copy: copyRecap,
-                    copied: recapCopied,
-                    error: errors.recapPrompt,
-                  },
-                  {
-                    title: 'Recap Prompt',
-                    template: tweetPromptTemplate,
-                    value: tweetPrompt,
-                    setter: setTweetPrompt,
-                    open: tweetOpen,
-                    toggle: toggleTweet,
-                    copy: copyTweet,
-                    copied: tweetCopied,
-                    error: errors.tweetPrompt,
-                  },
-                ].map((prompt, index) => (
-                  <Box key={index}>
-                    <FormControl isInvalid={prompt.error}>
-                      <Flex justify="space-between" align="center">
-                        <Text fontWeight="bold" color="#81d4fa">
-                          {prompt.title} (Optional)
-                        </Text>
-                        <Button
-                          variant="link"
-                          colorScheme="blue"
-                          size="sm"
-                          onClick={prompt.toggle}
-                        >
-                          Template Guide {prompt.open ? '▲' : '▼'}
-                        </Button>
-                      </Flex>
-                      <Collapse in={prompt.open} animateOpacity>
-                        <Box
-                          mt={4}
-                          p={4}
-                          bg="#424242"
-                          borderRadius="md"
-                          fontSize="sm"
-                        >
-                          <Text whiteSpace="pre-wrap">{prompt.template}</Text>
-                          <Button
-                            onClick={prompt.copy}
-                            variant="ghost"
-                            colorScheme="blue"
-                            size="sm"
-                            leftIcon={<FiCopy />}
-                          >
-                            Copy Template
-                          </Button>
-                        </Box>
-                      </Collapse>
-                      <Textarea
-                        mt={4}
-                        placeholder={`Customize the ${prompt.title.toLowerCase()}...`}
-                        value={prompt.value}
-                        onChange={e => prompt.setter(e.target.value)}
-                        rows={3}
-                        bg="#424242"
-                        color="#e0e0e0"
-                        border="2px solid"
-                        borderColor="#757575"
-                      />
-                      {prompt.error && (
-                        <FormErrorMessage>{prompt.error}</FormErrorMessage>
-                      )}
-                    </FormControl>
-                  </Box>
-                ))}
                 <Tooltip
                   label={
                     !enoughFunds

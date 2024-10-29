@@ -201,7 +201,7 @@ function CreateBackroom() {
       />
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="1000px" mx="auto">
+        <Box py={10} px={6} maxW="2000px" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={5}>
             {/* Back Button */}
             <Button
@@ -271,41 +271,9 @@ function CreateBackroom() {
                     {selectedExplorerInfo.backroomPrompt ||
                       'No backroom prompt provided'}{' '}
                     <br />
-                    <strong>Conversation Prompt:</strong>{' '}
-                    {selectedExplorerInfo.conversationPrompt ||
-                      'No conversation prompt provided'}{' '}
-                    <br />
-                    <strong>Recap Prompt:</strong>{' '}
-                    {selectedExplorerInfo.recapPrompt ||
-                      'No recap prompt provided'}{' '}
-                    <br />
-                    <strong>Tweet Prompt:</strong>{' '}
-                    {selectedExplorerInfo.tweetPrompt ||
-                      'No tweet prompt provided'}{' '}
-                    <br />
                   </Text>
                 </Box>
               )}
-
-              <FormControl mt={4} isInvalid={errors.explorerDescription}>
-                <Textarea
-                  placeholder="Optional: Add to the Explorer Description"
-                  value={explorerDescription}
-                  onChange={e => setExplorerDescription(e.target.value)}
-                  bg="#424242"
-                  color="#e0e0e0"
-                  border="2px solid"
-                  borderColor="#757575"
-                  _hover={{ borderColor: '#64b5f6' }}
-                  p={3}
-                  minHeight="100px"
-                />
-                {errors.explorerDescription && (
-                  <FormErrorMessage mb={4}>
-                    {errors.explorerDescription}
-                  </FormErrorMessage>
-                )}
-              </FormControl>
             </Box>
 
             {/* Responder Setup */}
@@ -343,25 +311,6 @@ function CreateBackroom() {
                   </Text>
                 </Box>
               )}
-
-              <FormControl mt={4} isInvalid={errors.responderDescription}>
-                <Textarea
-                  placeholder="Optional: Add to the Responder Description"
-                  value={responderDescription}
-                  onChange={e => setResponderDescription(e.target.value)}
-                  bg="#424242"
-                  color="#e0e0e0"
-                  border="2px solid #757575"
-                  _hover={{ borderColor: '#64b5f6' }}
-                  p={3}
-                  minHeight="100px"
-                />
-                {errors.responderDescription && (
-                  <FormErrorMessage>
-                    {errors.responderDescription}
-                  </FormErrorMessage>
-                )}
-              </FormControl>
             </Box>
           </Flex>
           <Tooltip
@@ -421,43 +370,6 @@ function CreateBackroom() {
               </Table>
             </Box>
           )}
-
-          <Box mt={8}>
-            <Heading size="lg" mb={4} color="#81d4fa">
-              Agents
-            </Heading>
-            <Table variant="simple" size="lg" colorScheme="blue">
-              <Thead>
-                <Tr>
-                  <Th color="#e0e0e0">Name</Th>
-                  <Th color="#e0e0e0">Description</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {agents.map(agent => (
-                  <Tr key={agent._id}>
-                    <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
-                      {agent.name}
-                    </Td>
-                    <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
-                      <strong>Description:</strong> {agent.description} <br />
-                      <strong>Backroom Prompt:</strong>{' '}
-                      {agent.backroomPrompt || 'No backroom prompt provided'}{' '}
-                      <br />
-                      <strong>Conversation Prompt:</strong>{' '}
-                      {agent.conversationPrompt ||
-                        'No conversation prompt provided'}{' '}
-                      <br />
-                      <strong>Recap Prompt:</strong>{' '}
-                      {agent.recapPrompt || 'No recap prompt provided'} <br />
-                      <strong>Tweet Prompt:</strong>{' '}
-                      {agent.tweetPrompt || 'No tweet prompt provided'}
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
         </Box>
       </Box>
     </ChakraProvider>

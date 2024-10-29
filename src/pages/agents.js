@@ -183,36 +183,6 @@ function Agents() {
       valid = false
     }
 
-    // Conversation Prompt Validation (Optional)
-    if (
-      conversationPrompt.trim().length > 0 &&
-      (conversationPrompt.length < 10 || conversationPrompt.length > 1000)
-    ) {
-      errors.conversationPrompt =
-        'Conversation prompt should be between 10 and 1000 characters'
-      valid = false
-    }
-
-    // Recap Prompt Validation (Optional)
-    if (
-      recapPrompt.trim().length > 0 &&
-      (recapPrompt.length < 10 || recapPrompt.length > 10000)
-    ) {
-      errors.recapPrompt =
-        'Recap prompt should be between 10 and 10000 characters'
-      valid = false
-    }
-
-    // Tweet Prompt Validation (Optional)
-    if (
-      tweetPrompt.trim().length > 0 &&
-      (tweetPrompt.length < 10 || tweetPrompt.length > 10000)
-    ) {
-      errors.tweetPrompt =
-        'Tweet prompt should be between 10 and 10000 characters'
-      valid = false
-    }
-
     setErrors(errors)
     return valid
   }
@@ -285,8 +255,6 @@ function Agents() {
               </Text>
               <Text fontWeight="bold">Description: </Text>
               <Text>{evolution.description}</Text>
-              <Text fontWeight="bold">Snippet:</Text>
-              <Text>{backroom.snippetContent} </Text>
               <Text fontWeight="bold">Tags:</Text>
               <Text>{backroom.tags.join(', ')}</Text>
               <Text fontWeight="bold" mb={1}>
@@ -510,7 +478,7 @@ function Agents() {
           boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
           mb={4}
         >
-          <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+          <Text fontSize="lg" fontWeight="bold" color="#81d4fa" mb={2}>
             Pending Tweets
           </Text>
           <VStack spacing={4} align="stretch">
@@ -689,7 +657,7 @@ function Agents() {
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="1000px" mx="auto">
+        <Box py={10} px={6} maxW="2000px" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={1}>
             <Heading
               textAlign="center"
@@ -769,11 +737,6 @@ function Agents() {
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
-                    <Tag size="lg" colorScheme="blue" mt={2}>
-                      <TagLabel>
-                        {selectedAgent.role || 'Explorer Role'}
-                      </TagLabel>
-                    </Tag>
                     {/* Display Description */}
                     <Box mt={3}>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
@@ -786,38 +749,6 @@ function Agents() {
                       </Text>
                     </Box>
 
-                    {/* Display Conversation Prompt */}
-                    <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        Conversation Prompt:
-                      </Text>
-                      <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.conversationPrompt ||
-                          'No conversation prompt provided'}
-                      </Text>
-                    </Box>
-
-                    {/* Display Recap Prompt */}
-                    <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        Recap Prompt:
-                      </Text>
-                      <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.recapPrompt ||
-                          'No recap prompt provided'}
-                      </Text>
-                    </Box>
-
-                    {/* Display Tweet Prompt */}
-                    <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        Tweet Prompt:
-                      </Text>
-                      <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.tweetPrompt ||
-                          'No tweet prompt provided'}
-                      </Text>
-                    </Box>
                     {/* Display All Tags */}
                     <Box mt={3}>
                       <Text
@@ -828,14 +759,15 @@ function Agents() {
                       >
                         Backroom Tags:
                       </Text>
-                      <Box mt={2}>
+                      <Box mt={2} mb={3}>
                         {backroomTags.length > 0 ? (
-                          backroomTags.map((tag, index) => (
+                          backroomTags.slice(-10).map((tag, index) => (
                             <Tag
                               size="md"
                               colorScheme="blue"
                               key={index}
                               mr={2}
+                              mb={2}
                               cursor="pointer"
                               onClick={() => handleTagClick(tag)}
                             >
@@ -1033,98 +965,6 @@ function Agents() {
                   {errors.description && (
                     <FormErrorMessage mb={4}>
                       {errors.description}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Conversation Prompt */}
-                <FormControl isInvalid={errors.conversationPrompt}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Conversation Prompt:
-                    </Text>
-                    <Textarea
-                      placeholder="Conversation Prompt"
-                      value={conversationPrompt}
-                      onChange={e => setConversationPrompt(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={
-                        errors.conversationPrompt ? 'red.500' : '#757575'
-                      }
-                      _hover={{ borderColor: '#81d4fa' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.conversationPrompt && (
-                    <FormErrorMessage mb={4}>
-                      {errors.conversationPrompt}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Recap Prompt */}
-                <FormControl isInvalid={errors.recapPrompt}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Recap Prompt:
-                    </Text>
-                    <Textarea
-                      placeholder="Recap Prompt"
-                      value={recapPrompt}
-                      onChange={e => setRecapPrompt(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.recapPrompt ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.recapPrompt && (
-                    <FormErrorMessage mb={4}>
-                      {errors.recapPrompt}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Tweet Prompt */}
-                <FormControl isInvalid={errors.tweetPrompt}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Tweet Prompt:
-                    </Text>
-                    <Textarea
-                      placeholder="Tweet Prompt"
-                      value={tweetPrompt}
-                      onChange={e => setTweetPrompt(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.tweetPrompt ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.tweetPrompt && (
-                    <FormErrorMessage mb={4}>
-                      {errors.tweetPrompt}
                     </FormErrorMessage>
                   )}
                 </FormControl>

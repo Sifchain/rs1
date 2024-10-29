@@ -14,6 +14,7 @@ import {
   Collapse,
   IconButton,
   Tooltip,
+  Link,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -287,8 +288,11 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        {backroom.explorerAgentName} &rarr;
-                        {backroom.responderAgentName}
+                        <Link href="/agents">{backroom.explorerAgentName}</Link>{' '}
+                        &rarr;{' '}
+                        <Link href="/agents">
+                          {backroom.responderAgentName}
+                        </Link>
                       </Text>
                     </Box>
 
@@ -337,9 +341,6 @@ function Backrooms() {
                   <Text fontSize="sm" color="#b0bec5" mb={2}>
                     {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
                     {new Date(backroom.createdAt).toLocaleTimeString()}
-                  </Text>
-                  <Text color="#e0e0e0" mb={4}>
-                    {backroom.snippetContent}
                   </Text>
 
                   {/* Tags are now clickable here as well */}
