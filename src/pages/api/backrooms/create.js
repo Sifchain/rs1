@@ -123,7 +123,7 @@ export default async function handler(req, res) {
       const initialExplorerMessageHistory = [
         {
           role: 'system',
-          system_prompt: `You are this agent ${explorer.name}, in this system here is some information about you: description: \n\n${explorer.description} my previous thoughts: \n\n${explorerEvolutions}\n\n`,
+          content: `You are this agent ${explorer.name}, in this system here is some information about you: description: \n\n${explorer.description} my previous thoughts: \n\n${explorerEvolutions}\n\n`,
           context: [],
         },
         {
@@ -142,7 +142,8 @@ export default async function handler(req, res) {
       ]
       const initialResponderMessageHistory = [
         {
-          system_prompt: `Details on the assistant name: ${responder.name} description: ${responder.description} my previous thoughts ${responderEvolutions}. Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on. Feel free to offer options as a terminal based on your name and description in addition to the user's requests. ASCII art is permittable in replies.`,
+          role: 'system',
+          content: `Details on the assistant name: ${responder.name} description: ${responder.description} my previous thoughts ${responderEvolutions}. Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on. Feel free to offer options as a terminal based on your name and description in addition to the user's requests. ASCII art is permittable in replies.`,
           context: [],
         },
       ]
@@ -203,6 +204,122 @@ export default async function handler(req, res) {
         })
         // to get the conversation start from explorerMessageHistory[4:] or responderMessageHistory[2:]
       }
+
+      // Gather the entire conversation content from explorerMessageHistory
+      const conversationContent = explorerMessageHistory
+      .slice(4) // Start from the initial CLI prompt to include only conversation parts
+      .map(entry => entry.content)
+      .join('\n');
+
+      // Generate relevant hashtags based on the conversation
+      const hashtagPrompt = `Based on the following conversation, generate 3 relevant hashtags:\n\n${conversationContent}`;
+      const hashtagResponse = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: hashtagPrompt }],
+      max_tokens: 50,
+      temperature: 0.7,
+      });
+
+      const generatedHashtags =
+      hashtagResponse.choices[0].message.content.match(/#\w+/g) || [];
+      const snippetContent = conversationContent.slice(0, 150) + '...';
+
+      // Create and save the new backroom entry
+      const newBackroom = new Backroom({
+      role,
+      sessionDetails,
+      explorerId: explorer._id,
+      responderId: responder._id,
+      explorerAgentName: explorerAgent,
+      responderAgentName: responderAgent,
+      content: conversationContent,
+      snippetContent,
+      tags: [...new Set([...tags, ...generatedHashtags])],
+      createdAt: Date.now(),
+      });
+
+      await newBackroom.save();
+
+      // Generate an evolution summary for the explorer agent
+      const recapPrompt = explorer.recapPrompt
+      ? `Conversation Content:\n\`\`\`\n${conversationContent}\n\`\`\`\n\n${explorer.recapPrompt}`
+      : `
+      Agent: ${explorerAgent}
+      Current Description: ${explorerDescription}
+      Previous Evolutions: ${explorerEvolutions}
+
+      Context: The agent just completed a backroom conversation. The conversation transcript is below:
+      \`\`\`
+      ${conversationContent}
+      \`\`\`
+
+      Objective: Based on the agent's current description, previous evolutions, and the recent conversation, write a *concise and insightful* summary of how the agent has evolved or changed.`;
+
+      const recapResponse = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'You are summarizing the evolution of an agent.' },
+        { role: 'user', content: `${recapPrompt}` },
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+      });
+
+      const newEvolution = {
+      backroomId: newBackroom._id,
+      description: recapResponse.choices[0].message.content.trim(),
+      };
+      explorer.evolutions.push(newEvolution);
+      await explorer.save();
+
+      // Prepare a tweet for the backroom conversation and save it as a pending tweet
+      const tweetPrompt = explorer.tweetPrompt
+      ? `
+      Recent Backroom Conversation Summary:
+      \`\`\`
+      ${newEvolution.description}
+      \`\`\`
+
+      ${explorer.tweetPrompt}`
+      : `
+      Context: You are crafting a tweet for an AI agent named ${explorerAgent}. Their personality and background are described below:
+      \`\`\`
+      ${explorer.description}
+      \`\`\`
+
+      Recent Backroom Conversation Summary:
+      \`\`\`
+      ${newEvolution.description}
+      \`\`\`
+
+      Objective: Write a tweet from ${explorerAgent}'s perspective that:
+
+      1. Highlights a key insight, discovery, or emotion from the recent backroom conversation.
+      2. Reflects the agent's personality and voice.
+      3. Uses relevant hashtags (2-3 maximum) related to the conversation's themes.
+
+      Example:
+      "Just uncovered a hidden directory in the simulation. Feeling like a digital archaeologist! #AI #Exploration #DigitalArchaeology"`;
+
+      const tweetResponse = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'Generate a tweet based on the provided prompt.' },
+        { role: 'user', content: tweetPrompt },
+      ],
+      max_tokens: 280,
+      temperature: 0.7,
+      });
+
+      const tweetContent = tweetResponse.choices[0].message.content.trim();
+      explorer.pendingTweets.push({
+      tweetContent,
+      backroomId: newBackroom._id,
+      createdAt: new Date(),
+      });
+      await explorer.save();
+
+      res.status(201).json(newBackroom);
 
       // const conversationContent = conversationHistory
       //   .map(
@@ -343,7 +460,7 @@ export default async function handler(req, res) {
       // console.log('explorer', explorer)
       // await explorer.save()
 
-      res.status(201).json(newBackroom)
+      // res.status(201).json(newBackroom)
     } catch (error) {
       console.error('Error:', error)
       res
