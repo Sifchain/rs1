@@ -342,9 +342,6 @@ function Backrooms() {
                     {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
                     {new Date(backroom.createdAt).toLocaleTimeString()}
                   </Text>
-                  <Text color="#e0e0e0" mb={4}>
-                    {backroom.snippetContent}
-                  </Text>
 
                   {/* Tags are now clickable here as well */}
                   <Flex wrap="wrap">

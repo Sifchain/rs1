@@ -255,8 +255,6 @@ function Agents() {
               </Text>
               <Text fontWeight="bold">Description: </Text>
               <Text>{evolution.description}</Text>
-              <Text fontWeight="bold">Snippet:</Text>
-              <Text>{backroom.snippetContent} </Text>
               <Text fontWeight="bold">Tags:</Text>
               <Text>{backroom.tags.join(', ')}</Text>
               <Text fontWeight="bold" mb={1}>
