@@ -5,6 +5,7 @@ import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
 import PromptManager from '../../../utils/promptManager'
 import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
+import { getFullURL, shortenURL } from '@/utils/urls'
 import { OPENAI_MODEL } from '../../../constants/constants'
 
 mongoose.set('strictQuery', false)
@@ -312,6 +313,12 @@ Your task is to synthesize this information into a cohesive evolution summary th
       explorer.evolutions.push(newEvolution)
       await explorer.save()
 
+      const fullBackroomURL = getFullURL(
+        `/backrooms?expanded=${newBackroom._id}`,
+        `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`
+      )
+      const shortenedUrl = await shortenURL(fullBackroomURL)
+
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
 Context: You are ${explorerAgent}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
@@ -383,7 +390,9 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         temperature: 0.7,
       })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim()
+      const tweetContent = tweetResponse.choices[0].message.content
+        .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
+        .trim()
       explorer.pendingTweets.push({
         tweetContent,
         backroomId: newBackroom._id,
