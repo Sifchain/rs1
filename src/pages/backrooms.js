@@ -14,6 +14,7 @@ import {
   Collapse,
   IconButton,
   Tooltip,
+  Link,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -287,8 +288,11 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        {backroom.explorerAgentName} &rarr;
-                        {backroom.responderAgentName}
+                        <Link href="/agents">{backroom.explorerAgentName}</Link>{' '}
+                        &rarr;{' '}
+                        <Link href="/agents">
+                          {backroom.responderAgentName}
+                        </Link>
                       </Text>
                     </Box>
 
