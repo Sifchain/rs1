@@ -386,7 +386,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
           },
           { role: 'user', content: tweetPrompt },
         ],
-        max_tokens: 280 - shortenedUrl.length, // max 280 in total with url
+        max_tokens: 280,
         temperature: 0.7,
       })
 
