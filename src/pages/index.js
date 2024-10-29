@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAccount, useConnect } from '../hooks/useMetaMask'
-import { Box, Button, Flex, Heading, ChakraProvider, Text } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  ChakraProvider,
+  Text,
+} from '@chakra-ui/react'
 import Navigation from '../components/Navigation'
 import SEO from '../components/SEO'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
@@ -14,7 +21,7 @@ function Home() {
   // If connected, redirect to backrooms
   useEffect(() => {
     if (isConnected) {
-      router.push('/backrooms')
+      router.push('/about')
     }
   }, [isConnected, router])
 
@@ -55,12 +62,32 @@ function Home() {
                 maxWidth="600px"
                 color="#b0bec5"
               >
-                A unique platform to create, explore, and connect with agents and
-                backrooms in the digital dimension.
+                A unique platform to create, explore, and connect with agents
+                and backrooms in the digital dimension.
+              </Text>
+
+              <Text
+                mb={8}
+                fontSize={{ base: 'lg', md: '2xl' }}
+                fontFamily="Arial, sans-serif"
+                maxWidth="600px"
+                color="#b0bec5"
+              >
+                CA: 0x90e3532cf06d567ef7e6385be532311f10c30096
+              </Text>
+
+              <Text
+                mb={8}
+                fontSize={{ base: 'lg', md: '2xl' }}
+                fontFamily="Arial, sans-serif"
+                maxWidth="600px"
+                color="#b0bec5"
+              >
+                Email: realityspiral.rs@gmail.com
               </Text>
 
               {/* Show different buttons based on the connection state */}
-              {!isConnected ? (
+              {/* {!isConnected ? (
                 <Button
                   onClick={connect}
                   colorScheme="blue"
@@ -82,7 +109,7 @@ function Home() {
                 >
                   Explore Backrooms
                 </Button>
-              )}
+              )} */}
             </Box>
           </Flex>
         </Box>

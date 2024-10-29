@@ -75,12 +75,12 @@ function Agents() {
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
-        if (!address)
-          return await genIsBalanceEnough(
-            address,
-            TOKEN_CONTRACT_ADDRESS,
-            MINIMUM_TOKENS_TO_CREATE_AGENT
-          )
+        return false
+        // return await genIsBalanceEnough(
+        //   address,
+        //   TOKEN_CONTRACT_ADDRESS,
+        //   MINIMUM_TOKENS_TO_CREATE_AGENT
+        // )
       }
       fetchHasEnoughFunds()
         .then(hasEnoughFunds => {
@@ -90,7 +90,7 @@ function Agents() {
           console.error('Error checking balance:', error)
         })
     }
-  }, [address])
+  }, [address, loading])
 
   // Fetch agents
   const fetchAgents = async () => {
@@ -183,36 +183,6 @@ function Agents() {
       valid = false
     }
 
-    // Conversation Prompt Validation (Optional)
-    if (
-      conversationPrompt.trim().length > 0 &&
-      (conversationPrompt.length < 10 || conversationPrompt.length > 1000)
-    ) {
-      errors.conversationPrompt =
-        'Conversation prompt should be between 10 and 1000 characters'
-      valid = false
-    }
-
-    // Recap Prompt Validation (Optional)
-    if (
-      recapPrompt.trim().length > 0 &&
-      (recapPrompt.length < 10 || recapPrompt.length > 10000)
-    ) {
-      errors.recapPrompt =
-        'Recap prompt should be between 10 and 10000 characters'
-      valid = false
-    }
-
-    // Tweet Prompt Validation (Optional)
-    if (
-      tweetPrompt.trim().length > 0 &&
-      (tweetPrompt.length < 10 || tweetPrompt.length > 10000)
-    ) {
-      errors.tweetPrompt =
-        'Tweet prompt should be between 10 and 10000 characters'
-      valid = false
-    }
-
     setErrors(errors)
     return valid
   }
@@ -285,8 +255,6 @@ function Agents() {
               </Text>
               <Text fontWeight="bold">Description: </Text>
               <Text>{evolution.description}</Text>
-              <Text fontWeight="bold">Snippet:</Text>
-              <Text>{backroom.snippetContent} </Text>
               <Text fontWeight="bold">Tags:</Text>
               <Text>{backroom.tags.join(', ')}</Text>
               <Text fontWeight="bold" mb={1}>
@@ -510,7 +478,7 @@ function Agents() {
           boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
           mb={4}
         >
-          <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+          <Text fontSize="lg" fontWeight="bold" color="#81d4fa" mb={2}>
             Pending Tweets
           </Text>
           <VStack spacing={4} align="stretch">
@@ -545,61 +513,137 @@ function Agents() {
                         Tweet exceeds 280 words
                       </FormErrorMessage>
                     )}
-                    <Button
-                      size="sm"
-                      colorScheme="green"
-                      isDisabled={!hasEditPermission()}
-                      onClick={() => {
-                        handleSaveEdit(tweet._id, editTweetContent)
-                      }}
-                      mr={2}
+                    <Tooltip
+                      label={
+                        !hasEditPermission()
+                          ? `You have to be the owner of the agent to edit it`
+                          : ''
+                      }
+                      hasArrow
+                      placement="top"
                     >
-                      Save
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      onClick={handleCancelEdit}
+                      <Box
+                        as="span"
+                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                      >
+                        <Button
+                          size="sm"
+                          colorScheme="green"
+                          isDisabled={!hasEditPermission()}
+                          onClick={() => {
+                            handleSaveEdit(tweet._id, editTweetContent)
+                          }}
+                          mr={2}
+                        >
+                          Save
+                        </Button>
+                      </Box>
+                    </Tooltip>
+                    <Tooltip
+                      label={
+                        !hasEditPermission()
+                          ? `You have to be the owner of the agent to edit it`
+                          : ''
+                      }
+                      hasArrow
+                      placement="top"
                     >
-                      Cancel
-                    </Button>
+                      <Box
+                        as="span"
+                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                      >
+                        <Button
+                          isDisabled={!hasEditPermission()}
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </Button>
+                      </Box>
+                    </Tooltip>
                   </Flex>
                 ) : (
                   <Flex justifyContent="space-between" mb={2}>
                     <Text color="#e0e0e0">{tweet.tweetContent}</Text>
-                    <Button
-                      isDisabled={!hasEditPermission()}
-                      size="sm"
-                      colorScheme="blue"
-                      onClick={() =>
-                        handleEditTweet(tweet._id, tweet.tweetContent)
+                    <Tooltip
+                      label={
+                        !hasEditPermission()
+                          ? `You have to be the owner of the agent to edit it`
+                          : ''
                       }
+                      hasArrow
+                      placement="top"
                     >
-                      Edit
-                    </Button>
+                      <Box
+                        as="span"
+                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                      >
+                        <Button
+                          isDisabled={!hasEditPermission()}
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={() =>
+                            handleEditTweet(tweet._id, tweet.tweetContent)
+                          }
+                        >
+                          Edit
+                        </Button>
+                      </Box>
+                    </Tooltip>
                   </Flex>
                 )}
                 <Text fontSize="sm" color="#b0bec5" mb={2}>
                   Generated on: {new Date(tweet.createdAt).toLocaleString()}
                 </Text>
                 <Flex justifyContent="space-between" alignItems="center">
-                  <Button
-                    size="sm"
-                    isDisabled={!hasEditPermission()}
-                    colorScheme="red"
-                    onClick={() => handleDiscardTweet(tweet._id)}
-                    leftIcon={<FiTrash2 />}
+                  <Tooltip
+                    label={
+                      !hasEditPermission()
+                        ? `You have to be the owner of the agent to edit it`
+                        : ''
+                    }
+                    hasArrow
+                    placement="top"
                   >
-                    Discard
-                  </Button>
-                  <Button
-                    size="sm"
-                    isDisabled={!hasEditPermission()}
-                    colorScheme="green"
-                    onClick={() => handleApproveTweet(tweet)}
+                    <Box
+                      as="span"
+                      cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                    >
+                      <Button
+                        size="sm"
+                        isDisabled={!hasEditPermission()}
+                        colorScheme="red"
+                        onClick={() => handleDiscardTweet(tweet._id)}
+                        leftIcon={<FiTrash2 />}
+                      >
+                        Discard
+                      </Button>
+                    </Box>
+                  </Tooltip>
+                  <Tooltip
+                    label={
+                      !hasEditPermission()
+                        ? `You have to be the owner of the agent to edit it`
+                        : ''
+                    }
+                    hasArrow
+                    placement="top"
                   >
-                    Approve and Post
-                  </Button>
+                    <Box
+                      as="span"
+                      cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                    >
+                      <Button
+                        size="sm"
+                        isDisabled={!hasEditPermission()}
+                        colorScheme="green"
+                        onClick={() => handleApproveTweet(tweet)}
+                      >
+                        Approve and Post
+                      </Button>
+                    </Box>
+                  </Tooltip>
                 </Flex>
               </Box>
             ))}
@@ -613,7 +657,7 @@ function Agents() {
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="1000px" mx="auto">
+        <Box py={10} px={6} maxW="2000px" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={1}>
             <Heading
               textAlign="center"
@@ -652,7 +696,7 @@ function Agents() {
               </Select>
               <Tooltip
                 label={
-                  enoughFunds
+                  !enoughFunds
                     ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`
                     : ''
                 }
@@ -666,8 +710,7 @@ function Agents() {
                     ms={10}
                     size="md"
                     fontWeight="bold"
-                    // isDisabled={!enoughFunds} // Button looks disabled
-                    // pointerEvents={enoughFunds ? 'auto' : 'none'} // Disable pointer events if not enough funds
+                    isDisabled={!enoughFunds}
                   >
                     + New Agent
                   </Button>
@@ -694,11 +737,6 @@ function Agents() {
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
-                    <Tag size="lg" colorScheme="blue" mt={2}>
-                      <TagLabel>
-                        {selectedAgent.role || 'Explorer Role'}
-                      </TagLabel>
-                    </Tag>
                     {/* Display Description */}
                     <Box mt={3}>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
@@ -711,38 +749,6 @@ function Agents() {
                       </Text>
                     </Box>
 
-                    {/* Display Conversation Prompt */}
-                    <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        Conversation Prompt:
-                      </Text>
-                      <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.conversationPrompt ||
-                          'No conversation prompt provided'}
-                      </Text>
-                    </Box>
-
-                    {/* Display Recap Prompt */}
-                    <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        Recap Prompt:
-                      </Text>
-                      <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.recapPrompt ||
-                          'No recap prompt provided'}
-                      </Text>
-                    </Box>
-
-                    {/* Display Tweet Prompt */}
-                    <Box mt={3}>
-                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        Tweet Prompt:
-                      </Text>
-                      <Text mt={2} color="#e0e0e0">
-                        {selectedAgent.tweetPrompt ||
-                          'No tweet prompt provided'}
-                      </Text>
-                    </Box>
                     {/* Display All Tags */}
                     <Box mt={3}>
                       <Text
@@ -753,14 +759,15 @@ function Agents() {
                       >
                         Backroom Tags:
                       </Text>
-                      <Box mt={2}>
+                      <Box mt={2} mb={3}>
                         {backroomTags.length > 0 ? (
-                          backroomTags.map((tag, index) => (
+                          backroomTags.slice(-10).map((tag, index) => (
                             <Tag
                               size="md"
                               colorScheme="blue"
                               key={index}
                               mr={2}
+                              mb={2}
                               cursor="pointer"
                               onClick={() => handleTagClick(tag)}
                             >
@@ -958,98 +965,6 @@ function Agents() {
                   {errors.description && (
                     <FormErrorMessage mb={4}>
                       {errors.description}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Conversation Prompt */}
-                <FormControl isInvalid={errors.conversationPrompt}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Conversation Prompt:
-                    </Text>
-                    <Textarea
-                      placeholder="Conversation Prompt"
-                      value={conversationPrompt}
-                      onChange={e => setConversationPrompt(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={
-                        errors.conversationPrompt ? 'red.500' : '#757575'
-                      }
-                      _hover={{ borderColor: '#81d4fa' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.conversationPrompt && (
-                    <FormErrorMessage mb={4}>
-                      {errors.conversationPrompt}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Recap Prompt */}
-                <FormControl isInvalid={errors.recapPrompt}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Recap Prompt:
-                    </Text>
-                    <Textarea
-                      placeholder="Recap Prompt"
-                      value={recapPrompt}
-                      onChange={e => setRecapPrompt(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.recapPrompt ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.recapPrompt && (
-                    <FormErrorMessage mb={4}>
-                      {errors.recapPrompt}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-
-                {/* Tweet Prompt */}
-                <FormControl isInvalid={errors.tweetPrompt}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Tweet Prompt:
-                    </Text>
-                    <Textarea
-                      placeholder="Tweet Prompt"
-                      value={tweetPrompt}
-                      onChange={e => setTweetPrompt(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.tweetPrompt ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.tweetPrompt && (
-                    <FormErrorMessage mb={4}>
-                      {errors.tweetPrompt}
                     </FormErrorMessage>
                   )}
                 </FormControl>

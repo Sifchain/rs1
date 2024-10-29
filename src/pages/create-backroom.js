@@ -16,6 +16,7 @@ import {
   Tbody,
   Td,
   Link,
+  Tooltip,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -23,6 +24,12 @@ import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
 import SEO from '../components/SEO'
+import { useAccount } from '../hooks/useMetaMask'
+import {
+  MINIMUM_TOKENS_TO_CREATE_BACKROOM,
+  TOKEN_CONTRACT_ADDRESS,
+} from '../constants/constants'
+import { genIsBalanceEnough } from '../utils/balance'
 
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
@@ -38,6 +45,8 @@ function CreateBackroom() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const router = useRouter()
+  const [enoughFunds, setEnoughFunds] = useState(false)
+  const { address } = useAccount()
   const fetchAgents = async () => {
     try {
       const response = await fetch('/api/agents')
@@ -50,7 +59,25 @@ function CreateBackroom() {
   useEffect(() => {
     fetchAgents()
   }, [])
-
+  useEffect(() => {
+    if (address) {
+      const fetchHasEnoughFunds = async () => {
+        return false
+        // return await genIsBalanceEnough(
+        //   address,
+        //   TOKEN_CONTRACT_ADDRESS,
+        //   MINIMUM_TOKENS_TO_CREATE_BACKROOM
+        // )
+      }
+      fetchHasEnoughFunds()
+        .then(hasEnoughFunds => {
+          setEnoughFunds(hasEnoughFunds)
+        })
+        .catch(error => {
+          console.error('Error checking balance:', error)
+        })
+    }
+  }, [address, loading])
   useEffect(() => {
     const { agent, agentId } = router.query
 
@@ -174,7 +201,7 @@ function CreateBackroom() {
       />
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="1000px" mx="auto">
+        <Box py={10} px={6} maxW="2000px" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={5}>
             {/* Back Button */}
             <Button
@@ -244,41 +271,9 @@ function CreateBackroom() {
                     {selectedExplorerInfo.backroomPrompt ||
                       'No backroom prompt provided'}{' '}
                     <br />
-                    <strong>Conversation Prompt:</strong>{' '}
-                    {selectedExplorerInfo.conversationPrompt ||
-                      'No conversation prompt provided'}{' '}
-                    <br />
-                    <strong>Recap Prompt:</strong>{' '}
-                    {selectedExplorerInfo.recapPrompt ||
-                      'No recap prompt provided'}{' '}
-                    <br />
-                    <strong>Tweet Prompt:</strong>{' '}
-                    {selectedExplorerInfo.tweetPrompt ||
-                      'No tweet prompt provided'}{' '}
-                    <br />
                   </Text>
                 </Box>
               )}
-
-              <FormControl mt={4} isInvalid={errors.explorerDescription}>
-                <Textarea
-                  placeholder="Optional: Add to the Explorer Description"
-                  value={explorerDescription}
-                  onChange={e => setExplorerDescription(e.target.value)}
-                  bg="#424242"
-                  color="#e0e0e0"
-                  border="2px solid"
-                  borderColor="#757575"
-                  _hover={{ borderColor: '#64b5f6' }}
-                  p={3}
-                  minHeight="100px"
-                />
-                {errors.explorerDescription && (
-                  <FormErrorMessage mb={4}>
-                    {errors.explorerDescription}
-                  </FormErrorMessage>
-                )}
-              </FormControl>
             </Box>
 
             {/* Responder Setup */}
@@ -316,39 +311,32 @@ function CreateBackroom() {
                   </Text>
                 </Box>
               )}
-
-              <FormControl mt={4} isInvalid={errors.responderDescription}>
-                <Textarea
-                  placeholder="Optional: Add to the Responder Description"
-                  value={responderDescription}
-                  onChange={e => setResponderDescription(e.target.value)}
-                  bg="#424242"
-                  color="#e0e0e0"
-                  border="2px solid #757575"
-                  _hover={{ borderColor: '#64b5f6' }}
-                  p={3}
-                  minHeight="100px"
-                />
-                {errors.responderDescription && (
-                  <FormErrorMessage>
-                    {errors.responderDescription}
-                  </FormErrorMessage>
-                )}
-              </FormControl>
             </Box>
           </Flex>
-
-          <Button
-            isLoading={loading}
-            loadingText="Creating..."
-            colorScheme="blue"
-            variant="solid"
-            onClick={handleSubmit}
-            _hover={{ bg: '#64b5f6', boxShadow: '0 0 15px #64b5f6' }}
-            width="100%"
+          <Tooltip
+            label={
+              !enoughFunds
+                ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RS to create a new backroom.`
+                : ''
+            }
+            hasArrow
+            placement="top"
           >
-            Create Backroom
-          </Button>
+            <Box as="span" cursor={!enoughFunds ? 'pointer' : 'not-allowed'}>
+              <Button
+                isLoading={loading}
+                isDisabled={!enoughFunds}
+                loadingText="Creating..."
+                colorScheme="blue"
+                variant="solid"
+                onClick={handleSubmit}
+                _hover={{ bg: '#64b5f6', boxShadow: '0 0 15px #64b5f6' }}
+                width="100%"
+              >
+                Create Backroom
+              </Button>
+            </Box>
+          </Tooltip>
 
           {/* Display agent's evolutions */}
           {selectedExplorerEvolutions.length > 0 && (
@@ -382,43 +370,6 @@ function CreateBackroom() {
               </Table>
             </Box>
           )}
-
-          <Box mt={8}>
-            <Heading size="lg" mb={4} color="#81d4fa">
-              Agents
-            </Heading>
-            <Table variant="simple" size="lg" colorScheme="blue">
-              <Thead>
-                <Tr>
-                  <Th color="#e0e0e0">Name</Th>
-                  <Th color="#e0e0e0">Description</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {agents.map(agent => (
-                  <Tr key={agent._id}>
-                    <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
-                      {agent.name}
-                    </Td>
-                    <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
-                      <strong>Description:</strong> {agent.description} <br />
-                      <strong>Backroom Prompt:</strong>{' '}
-                      {agent.backroomPrompt || 'No backroom prompt provided'}{' '}
-                      <br />
-                      <strong>Conversation Prompt:</strong>{' '}
-                      {agent.conversationPrompt ||
-                        'No conversation prompt provided'}{' '}
-                      <br />
-                      <strong>Recap Prompt:</strong>{' '}
-                      {agent.recapPrompt || 'No recap prompt provided'} <br />
-                      <strong>Tweet Prompt:</strong>{' '}
-                      {agent.tweetPrompt || 'No tweet prompt provided'}
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
         </Box>
       </Box>
     </ChakraProvider>

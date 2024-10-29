@@ -14,6 +14,7 @@ import {
   Collapse,
   IconButton,
   Tooltip,
+  Link,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -43,12 +44,12 @@ function Backrooms() {
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
-        if (!address)
-          return await genIsBalanceEnough(
-            address,
-            TOKEN_CONTRACT_ADDRESS,
-            MINIMUM_TOKENS_TO_CREATE_AGENT
-          )
+        return false
+        // return await genIsBalanceEnough(
+        //   address,
+        //   TOKEN_CONTRACT_ADDRESS,
+        //   MINIMUM_TOKENS_TO_CREATE_BACKROOM
+        // )
       }
       fetchHasEnoughFunds()
         .then(hasEnoughFunds => {
@@ -58,7 +59,7 @@ function Backrooms() {
           console.error('Error checking balance:', error)
         })
     }
-  }, [address])
+  }, [address, loading])
 
   useEffect(() => {
     const fetchBackrooms = async () => {
@@ -193,20 +194,26 @@ function Backrooms() {
               Backrooms
             </Heading>
             <Tooltip
-              label={`You need atleast ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} to create a new agent.`}
-              // isDisabled={!enoughFunds}
+              label={
+                !enoughFunds
+                  ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RS to create a new agent.`
+                  : ''
+              }
               hasArrow
               placement="top"
             >
-              <Button
-                // disabled={!enoughFunds}
-                colorScheme="blue"
-                onClick={() => router.push('/create-backroom')} // Redirect to create a backroom page
-                size="md"
-                fontWeight="bold"
-              >
-                + New Backroom
-              </Button>
+              <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
+                <Button
+                  onClick={() => router.push('/create-backroom')}
+                  colorScheme="blue"
+                  ms={10}
+                  size="md"
+                  fontWeight="bold"
+                  isDisabled={!enoughFunds}
+                >
+                  + New Backroom
+                </Button>
+              </Box>
             </Tooltip>
           </Flex>
 
@@ -281,8 +288,11 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        {backroom.explorerAgentName} &rarr;
-                        {backroom.responderAgentName}
+                        <Link href="/agents">{backroom.explorerAgentName}</Link>{' '}
+                        &rarr;{' '}
+                        <Link href="/agents">
+                          {backroom.responderAgentName}
+                        </Link>
                       </Text>
                     </Box>
 
@@ -331,9 +341,6 @@ function Backrooms() {
                   <Text fontSize="sm" color="#b0bec5" mb={2}>
                     {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
                     {new Date(backroom.createdAt).toLocaleTimeString()}
-                  </Text>
-                  <Text color="#e0e0e0" mb={4}>
-                    {backroom.snippetContent}
                   </Text>
 
                   {/* Tags are now clickable here as well */}
