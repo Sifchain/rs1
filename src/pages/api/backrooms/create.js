@@ -5,6 +5,7 @@ import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
 import PromptManager from '../../../utils/promptManager'
 import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
+import { OPENAI_MODEL } from '../../../constants/constants'
 
 mongoose.set('strictQuery', false)
 
@@ -167,14 +168,12 @@ export default async function handler(req, res) {
       let lastResponse = null
 
       for (let i = 0; i < 5; i++) {
-        console.log('explorerMessageHistory', explorerMessageHistory)
         const explorerResponse = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
+          model: OPENAI_MODEL,
           messages: explorerMessageHistory,
           max_tokens: 1000,
           temperature: 0.7,
         })
-        console.log('explorerResponse', explorerResponse)
         const explorerMessage = explorerResponse.choices[0].message.content
         console.log('explorerMessage', explorerMessage)
         explorerMessageHistory.push({
@@ -187,7 +186,7 @@ export default async function handler(req, res) {
         })
 
         const responderResponse = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
+          model: OPENAI_MODEL,
           messages: responderMessageHistory,
           max_tokens: 1000,
           temperature: 0.7,
@@ -202,48 +201,50 @@ export default async function handler(req, res) {
           role: 'user',
           content: responderMessage,
         })
-        // to get the conversation start from explorerMessageHistory[4:] or responderMessageHistory[2:]
       }
 
       // Gather the entire conversation content from explorerMessageHistory
       const conversationContent = explorerMessageHistory
-      .slice(4) // Start from the initial CLI prompt to include only conversation parts
-      .map(entry => `${entry.role === 'user' ? 'Explorer' : 'Responder'}: ${entry.content}`)
-      .join('\n');
+        .slice(4) // Start from the initial CLI prompt to include only conversation parts
+        .map(
+          entry =>
+            `${entry.role === 'user' ? 'Explorer' : 'Responder'}: ${entry.content}`
+        )
+        .join('\n')
 
       // Generate relevant hashtags based on the conversation
-      const hashtagPrompt = `Based on the following conversation, generate 3 relevant hashtags:\n\n${conversationContent}`;
+      const hashtagPrompt = `Based on the following conversation, generate 3 relevant hashtags:\n\n${conversationContent}`
       const hashtagResponse = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: hashtagPrompt }],
-      max_tokens: 50,
-      temperature: 0.7,
-      });
+        model: OPENAI_MODEL,
+        messages: [{ role: 'user', content: hashtagPrompt }],
+        max_tokens: 50,
+        temperature: 0.7,
+      })
 
       const generatedHashtags =
-      hashtagResponse.choices[0].message.content.match(/#\w+/g) || [];
-      const snippetContent = conversationContent.slice(0, 150) + '...';
+        hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
+      const snippetContent = conversationContent.slice(0, 150) + '...'
 
       // Create and save the new backroom entry
       const newBackroom = new Backroom({
-      role,
-      sessionDetails,
-      explorerId: explorer._id,
-      responderId: responder._id,
-      explorerAgentName: explorerAgent,
-      responderAgentName: responderAgent,
-      content: conversationContent,
-      snippetContent,
-      tags: [...new Set([...tags, ...generatedHashtags])],
-      createdAt: Date.now(),
-      });
+        role,
+        sessionDetails,
+        explorerId: explorer._id,
+        responderId: responder._id,
+        explorerAgentName: explorerAgent,
+        responderAgentName: responderAgent,
+        content: conversationContent,
+        snippetContent,
+        tags: [...new Set([...tags, ...generatedHashtags])],
+        createdAt: Date.now(),
+      })
 
-      await newBackroom.save();
+      await newBackroom.save()
 
       // Generate an evolution summary for the explorer agent
       const recapPrompt = explorer.recapPrompt
-      ? `Conversation Content:\n\`\`\`\n${conversationContent}\n\`\`\`\n\n${explorer.recapPrompt}`
-      : `
+        ? `Conversation Content:\n\`\`\`\n${conversationContent}\n\`\`\`\n\n${explorer.recapPrompt}`
+        : `
       Agent: ${explorerAgent}
       Current Description: ${explorerDescription}
       Previous Evolutions: ${explorerEvolutions}
@@ -253,35 +254,38 @@ export default async function handler(req, res) {
       ${conversationContent}
       \`\`\`
 
-      Objective: Based on the agent's current description, previous evolutions, and the recent conversation, write a *concise and insightful* summary of how the agent has evolved or changed.`;
+      Objective: Based on the agent's current description, previous evolutions, and the recent conversation, write a *concise and insightful* summary of how the agent has evolved or changed.`
 
       const recapResponse = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: 'You are summarizing the evolution of an agent.' },
-        { role: 'user', content: `${recapPrompt}` },
-      ],
-      max_tokens: 500,
-      temperature: 0.7,
-      });
+        model: OPENAI_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are summarizing the evolution of an agent.',
+          },
+          { role: 'user', content: `${recapPrompt}` },
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      })
 
       const newEvolution = {
-      backroomId: newBackroom._id,
-      description: recapResponse.choices[0].message.content.trim(),
-      };
-      explorer.evolutions.push(newEvolution);
-      await explorer.save();
+        backroomId: newBackroom._id,
+        description: recapResponse.choices[0].message.content.trim(),
+      }
+      explorer.evolutions.push(newEvolution)
+      await explorer.save()
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = explorer.tweetPrompt
-      ? `
+        ? `
       Recent Backroom Conversation Summary:
       \`\`\`
       ${newEvolution.description}
       \`\`\`
 
       ${explorer.tweetPrompt}`
-      : `
+        : `
       Context: You are crafting a tweet for an AI agent named ${explorerAgent}. Their personality and background are described below:
       \`\`\`
       ${explorer.description}
@@ -299,27 +303,30 @@ export default async function handler(req, res) {
       3. Uses relevant hashtags (2-3 maximum) related to the conversation's themes.
 
       Example:
-      "Just uncovered a hidden directory in the simulation. Feeling like a digital archaeologist! #AI #Exploration #DigitalArchaeology"`;
+      "Just uncovered a hidden directory in the simulation. Feeling like a digital archaeologist! #AI #Exploration #DigitalArchaeology"`
 
       const tweetResponse = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: 'Generate a tweet based on the provided prompt.' },
-        { role: 'user', content: tweetPrompt },
-      ],
-      max_tokens: 280,
-      temperature: 0.7,
-      });
+        model: OPENAI_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'Generate a tweet based on the provided prompt.',
+          },
+          { role: 'user', content: tweetPrompt },
+        ],
+        max_tokens: 280,
+        temperature: 0.7,
+      })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim();
+      const tweetContent = tweetResponse.choices[0].message.content.trim()
       explorer.pendingTweets.push({
-      tweetContent,
-      backroomId: newBackroom._id,
-      createdAt: new Date(),
-      });
-      await explorer.save();
+        tweetContent,
+        backroomId: newBackroom._id,
+        createdAt: new Date(),
+      })
+      await explorer.save()
 
-      res.status(201).json(newBackroom);
+      res.status(201).json(newBackroom)
 
       // const conversationContent = conversationHistory
       //   .map(
@@ -330,7 +337,7 @@ export default async function handler(req, res) {
 
       // const hashtagPrompt = `Based on the following conversation, generate 3 relevant hashtags:\n\n${conversationContent}`
       // const hashtagResponse = await openai.chat.completions.create({
-      //   model: 'gpt-3.5-turbo',
+      //   model: OPENAI_MODEL,
       //   messages: [{ role: 'user', content: hashtagPrompt }],
       //   max_tokens: 50,
       //   temperature: 0.7,
@@ -385,7 +392,7 @@ export default async function handler(req, res) {
 
       // // Send the constructed recap prompt
       // const recapResponse = await openai.chat.completions.create({
-      //   model: 'gpt-3.5-turbo',
+      //   model: OPENAI_MODEL,
       //   messages: [
       //     {
       //       role: 'system',
@@ -435,7 +442,7 @@ export default async function handler(req, res) {
       // Now, generate the tweet (aim for around 200 characters to leave room for the link and hashtags).`
 
       // const tweetResponse = await openai.chat.completions.create({
-      //   model: 'gpt-3.5-turbo',
+      //   model: OPENAI_MODEL,
       //   messages: [
       //     {
       //       role: 'system',
