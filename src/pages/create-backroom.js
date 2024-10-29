@@ -318,7 +318,7 @@ function CreateBackroom() {
             <Box as="span" cursor={!enoughFunds ? 'pointer' : 'not-allowed'}>
               <Button
                 isLoading={loading}
-                isDisabled={!enoughFunds}
+                isDisabled={enoughFunds}
                 loadingText="Creating..."
                 colorScheme="blue"
                 variant="solid"

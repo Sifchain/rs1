@@ -34,8 +34,6 @@ export const genIsBalanceEnough = async (
 ) => {
   try {
     const tokenBalance = await getTokenBalance(address, contractAddress)
-    console.log(`Token Balance: ${tokenBalance}`)
-    console.log(`Required Amount: ${requiredAmount}`)
 
     return parseFloat(tokenBalance) >= parseFloat(requiredAmount)
   } catch (error) {

@@ -6,7 +6,7 @@ import { TwitterApi } from 'twitter-api-v2'
 import PromptManager from '../../../utils/promptManager'
 import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
 import { getFullURL, shortenURL } from '@/utils/urls'
-import { OPENAI_MODEL } from '../../../constants/constants'
+import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
 
 mongoose.set('strictQuery', false)
 
@@ -336,6 +336,10 @@ Recent Interaction Transcript:
 ${conversationContent}
 \`\`\`
 
+Some relevant hashtags from the conversation to consider (please feel free to use these or your own hashtags whatever you think is best):
+\`\`\`
+${generatedHashtags.join(', ')}
+\`\`\`
 TWEET GUIDELINES:
 
 1. VOICE & PERSPECTIVE:
@@ -391,6 +395,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
       })
 
       const tweetContent = tweetResponse.choices[0].message.content
+        .concat(` ${DEFAULT_HASHTAGS.join(' ')} `)
         .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
         .trim()
       explorer.pendingTweets.push({
