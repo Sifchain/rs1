@@ -21,7 +21,7 @@ function Home() {
   // If connected, redirect to backrooms
   useEffect(() => {
     if (isConnected) {
-      router.push('/about')
+      router.push('/backrooms')
     }
   }, [isConnected, router])
 
@@ -87,7 +87,7 @@ function Home() {
               </Text>
 
               {/* Show different buttons based on the connection state */}
-              {/* {!isConnected ? (
+              {!isConnected ? (
                 <Button
                   onClick={connect}
                   colorScheme="blue"
@@ -109,7 +109,7 @@ function Home() {
                 >
                   Explore Backrooms
                 </Button>
-              )} */}
+              )}
             </Box>
           </Flex>
         </Box>
