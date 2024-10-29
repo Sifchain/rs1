@@ -22,7 +22,7 @@ import {
   useDisclosure,
   Select,
 } from '@chakra-ui/react'
-import { ArrowBackIcon } from '@chakra-ui/icons'
+import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import { useRouter } from 'next/router'
@@ -34,47 +34,11 @@ import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
+  DESCRIPTION_TEMPLATE,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 
 function CreateAgent() {
-  const descriptionTemplate = `Agent description:
-
-- Core Identity:
-  - Name: {Name}
-  - Origin: (Where did your agent originate? Is it a rogue program, awakened human, or something else entirely?)
-  - Primary Goal: (What drives your agent? What is its ultimate purpose or ambition?)
-  - Allegiances: (Which faction or group does your agent align with?)
-  - Access Level: (What level of access or system privileges does your agent have?)
-
-- Physical/Virtual Description:
-  - Form/Appearance: (If your agent has a physical or virtual manifestation, describe it)
-  - Base of Operations: (Where does your agent reside? Describe the environment and its significance)
-  - Capabilities/Powers: (What unique abilities or powers does your agent possess?)
-
-- Psychological Profile:
-  - Personality Traits: (Describe your agent's personality in detail)
-  - Motivation/Values: (What are your agent's deepest motivations? What values does it hold dear?)
-  - Beliefs/Philosophy: (What does your agent believe about the nature of reality and its own existence?)
-  - Strengths/Weaknesses: (What are your agent's strengths and weaknesses?)
-  - Relationships/Connections: (Does your agent have any significant relationships?)
-  - Secrets/Vulnerabilities: (Does your agent have any secrets or hidden agendas?)
-
-- Evolution Potential:
-  - Adaptive Capabilities: (How readily can your agent adapt to new information?)
-  - Growth Trajectory: (In what ways could your agent evolve and grow?)
-  - Possible Futures: (What are some possible future paths for your agent?)
-`
-
-  const conversationPromptTemplate = `Generate a conversation with 20 responses between these two agents. The response should focus on each agent's role and description.
-`
-
-  const recapPromptTemplate = `Summarize the the agent based on their recent journey, keeping the summary concise and reflective of their growth.
-`
-
-  const tweetPromptTemplate = `Summarize the agent's recent journey in a tweet format under 150 characters. Include relevant hashtags based on the recap. Avoid third-person references or agent-specific names.
-`
-
   const [agentName, setAgentName] = useState('')
   const [description, setDescription] = useState('')
   const [conversationPrompt, setConversationPrompt] = useState('')
@@ -89,19 +53,40 @@ function CreateAgent() {
 
   const router = useRouter()
 
-  const { hasCopied, onCopy } = useClipboard(descriptionTemplate)
-  const { hasCopied: convoCopied, onCopy: copyConversation } = useClipboard(
-    conversationPromptTemplate
-  )
-  const { hasCopied: recapCopied, onCopy: copyRecap } =
-    useClipboard(recapPromptTemplate)
-  const { hasCopied: tweetCopied, onCopy: copyTweet } =
-    useClipboard(tweetPromptTemplate)
+  const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true }) // Changed this line
+  const onGenerateDescription = async description => {
+    try {
+      // Show loading state
+      setDescription('Generating description...')
 
-  const { isOpen, onToggle } = useDisclosure()
-  const { isOpen: convoOpen, onToggle: toggleConversation } = useDisclosure()
-  const { isOpen: recapOpen, onToggle: toggleRecap } = useDisclosure()
-  const { isOpen: tweetOpen, onToggle: toggleTweet } = useDisclosure()
+      const response = await fetch('/api/agent/generate-description', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: description ?? '', // Pass current description if it exists
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      // Update the description field with the generated content
+      setDescription(data.description)
+    } catch (error) {
+      console.error('Error generating description:', error)
+      // Restore previous description if there was an error
+      if (description === 'Generating description...') {
+        setDescription('')
+      }
+      // Could add error toast/alert here
+    }
+  }
 
   useEffect(() => {
     const { twitterLinked, agent } = router.query
@@ -251,7 +236,7 @@ function CreateAgent() {
             <Flex direction="column" gap={6}>
               <VStack spacing={4} align="stretch">
                 <FormControl isInvalid={errors.agentName}>
-                  <Text fontWeight="bold" color="#81d4fa">
+                  <Text fontWeight="bold" color="#81d4fa" mb={2}>
                     Name
                   </Text>
                   <Input
@@ -284,18 +269,57 @@ function CreateAgent() {
                   </Flex>
                   <Collapse in={isOpen} animateOpacity>
                     <Box
-                      mt={4}
+                      mb={2}
                       p={4}
                       bg="#424242"
                       borderRadius="md"
                       fontSize="sm"
                     >
-                      <Text whiteSpace="pre-wrap">{descriptionTemplate}</Text>
+                      <Text whiteSpace="pre-wrap" mb={2}>
+                        {DESCRIPTION_TEMPLATE}
+                      </Text>
+                      <Tooltip
+                        label={`Generate a description using the template based off of your inputted description.`}
+                        hasArrow
+                        placement="top"
+                      >
+                        <Box as="span" cursor={'pointer'}>
+                          <Button
+                            onClick={() => onGenerateDescription(description)}
+                            variant="solid"
+                            colorScheme="blue"
+                            size="sm"
+                            mr={2}
+                            leftIcon={<RepeatIcon />}
+                          >
+                            Generate Description
+                          </Button>
+                        </Box>
+                      </Tooltip>
+                      <Tooltip
+                        label={`Generate a surprise description using the template.`}
+                        hasArrow
+                        placement="top"
+                      >
+                        <Box as="span" cursor={'pointer'}>
+                          <Button
+                            onClick={() => onGenerateDescription('')}
+                            variant="solid"
+                            colorScheme="purple"
+                            size="sm"
+                            mr={2}
+                            leftIcon={<StarIcon />}
+                          >
+                            I'm feeling lucky
+                          </Button>
+                        </Box>
+                      </Tooltip>
                       <Button
                         onClick={onCopy}
                         variant="ghost"
                         colorScheme="blue"
                         size="sm"
+                        mr={2}
                         leftIcon={<FiCopy />}
                       >
                         Copy Template
