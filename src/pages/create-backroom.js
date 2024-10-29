@@ -265,12 +265,6 @@ function CreateBackroom() {
                     <strong>Description:</strong>{' '}
                     {selectedExplorerInfo.description}
                   </Text>
-                  <Text mb={4}>
-                    <strong>Backroom Prompt:</strong>{' '}
-                    {selectedExplorerInfo.backroomPrompt ||
-                      'No backroom prompt provided'}{' '}
-                    <br />
-                  </Text>
                 </Box>
               )}
             </Box>

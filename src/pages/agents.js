@@ -185,7 +185,10 @@ function Agents() {
     setErrors(errors)
     return valid
   }
+<<<<<<< HEAD
   // console.log({ backrooms })
+=======
+>>>>>>> 05d35c8b5e1a0792b3747bea82261863eadff092
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
@@ -651,7 +654,6 @@ function Agents() {
       )
     )
   }
-  // console.log(selectedAgent)
   return (
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
