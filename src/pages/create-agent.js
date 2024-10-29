@@ -151,7 +151,6 @@ function CreateAgent() {
     try {
       setTimeout(async () => {
         setLoadingStep(2)
-        // console.log(conversationPrompt, recapPrompt, tweetPrompt)
 
         const user = JSON.parse(localStorage.getItem('user'))
         const userId = user ? user._id : null

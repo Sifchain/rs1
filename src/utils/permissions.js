@@ -3,7 +3,6 @@ import Agent from '../models/Agent'
 // Check if the authenticated user owns the agent
 export const checkAgentOwnership = async (agentId, userId) => {
   if (!userId) {
-    console.log('No user ID provided')
     throw new Error('UserID not found')
   }
   const agent = await Agent.findById(agentId)
@@ -12,7 +11,6 @@ export const checkAgentOwnership = async (agentId, userId) => {
   }
   // Check if the userId matches the agent's owner
   if (agent.user._id.toString() !== userId._id) {
-    console.log('You do not have permission to modify this agent')
     throw new Error('You do not have permission to modify this agent')
   }
 

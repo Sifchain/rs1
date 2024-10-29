@@ -32,3 +32,4 @@ export const DESCRIPTION_TEMPLATE = `Agent description:
   - Growth Trajectory: (In what ways could your agent evolve and grow?)
   - Possible Futures: (What are some possible future paths for your agent?)
 `
+export const DEFAULT_HASHTAGS = ['#RealitySpiral', '#$RSP']
