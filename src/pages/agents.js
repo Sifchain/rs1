@@ -75,12 +75,11 @@ function Agents() {
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
-        return false
-        // return await genIsBalanceEnough(
-        //   address,
-        //   TOKEN_CONTRACT_ADDRESS,
-        //   MINIMUM_TOKENS_TO_CREATE_AGENT
-        // )
+        return await genIsBalanceEnough(
+          address,
+          TOKEN_CONTRACT_ADDRESS,
+          MINIMUM_TOKENS_TO_CREATE_AGENT
+        )
       }
       fetchHasEnoughFunds()
         .then(hasEnoughFunds => {
@@ -697,7 +696,7 @@ function Agents() {
               <Tooltip
                 label={
                   !enoughFunds
-                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RS to create a new agent.`
+                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RSP to create a new agent.`
                     : ''
                 }
                 hasArrow
