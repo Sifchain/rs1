@@ -62,7 +62,7 @@ function CreateBackroom() {
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
-        return true
+        return false
         // return await genIsBalanceEnough(
         //   address,
         //   TOKEN_CONTRACT_ADDRESS,
