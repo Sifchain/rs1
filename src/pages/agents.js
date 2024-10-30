@@ -31,6 +31,7 @@ import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
   TOKEN_CONTRACT_ADDRESS,
+  MINIMUM_TOKENS_TO_CREATE_BACKROOM
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 
@@ -179,14 +180,14 @@ const handleAgentSelection = useCallback(async (event) => {
       // Filter relevant conversations
       const filteredConversations = data.filter(
         backroom =>
-          backroom.explorerId === agent?._id ||
-          backroom.responderId === agent?._id
+          backroom?.explorerId === agent?._id ||
+          backroom?.responderId === agent?._id
       )
       setRecentBackroomConversations(filteredConversations)
 
       // Process and set unique tags
       const tagsFromConversations = filteredConversations.flatMap(
-        backroom => backroom.tags || []
+        backroom => backroom?.tags || []
       )
       setBackroomTags(Array.from(new Set(tagsFromConversations)))
     } catch (error) {
@@ -298,10 +299,10 @@ const handleAgentSelection = useCallback(async (event) => {
         <Text mb={4}>{selectedAgent.originalDescription}</Text>
         {evolutions.map((evolution, index) => {
           const backroom = backrooms.find(
-            backroom => backroom._id === evolution.backroomId
+            backroom => backroom?._id === evolution.backroomId
           )
           const responderAgent = agents.find(
-            agent => agent._id === backroom.responderId
+            agent => agent._id === backroom?.responderId
           )
           const responderAgentName = responderAgent?.name || 'Unknown'
           return (
@@ -312,7 +313,7 @@ const handleAgentSelection = useCallback(async (event) => {
               <Text fontWeight="bold">Description: </Text>
               <Text>{evolution.description}</Text>
               <Text fontWeight="bold">Tags:</Text>
-              <Text>{backroom.tags.join(', ')}</Text>
+              <Text>{backroom?.tags.join(', ')}</Text>
               <Text fontWeight="bold" mb={1}>
                 <Link
                   color="#81d4fa"
@@ -332,7 +333,9 @@ const handleAgentSelection = useCallback(async (event) => {
     const user = JSON.parse(localStorage.getItem('user'))
     return user && selectedAgent && user?._id === selectedAgent?.user
   }, [selectedAgent])
-
+    const handleCreateBackroom = () => {
+    router.push(`/create-backroom${agentId != null ? `?agentId=${agentId}` : ''}`)
+  }
   const displayRecentBackrooms = () => {
     if (recentBackroomConversations.length === 0) {
       return <Text>No recent backroom conversations available.</Text>
@@ -349,7 +352,7 @@ const handleAgentSelection = useCallback(async (event) => {
         boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
         mb={3}
         cursor="pointer"
-        onClick={() => router.push(`/backrooms?expanded=${backroom._id}`)}
+        onClick={() => router.push(`/backrooms?expanded=${backroom?._id}`)}
       >
         <Text
           as="a"
@@ -358,10 +361,10 @@ const handleAgentSelection = useCallback(async (event) => {
           _hover={{ color: '#29b6f6' }}
           cursor="pointer"
         >
-          {backroom.explorerAgentName} &rarr; {backroom.responderAgentName}
+          {backroom?.explorerAgentName} &rarr; {backroom?.responderAgentName}
         </Text>
         <Text fontSize="sm" color="#b0bec5">
-          {new Date(backroom.createdAt).toLocaleDateString()}
+          {new Date(backroom?.createdAt).toLocaleDateString()}
         </Text>
       </Flex>
     ))
@@ -770,6 +773,30 @@ const handleAgentSelection = useCallback(async (event) => {
                     isDisabled={!enoughFunds}
                   >
                     + New Agent
+                  </Button>
+                </Box>
+              </Tooltip>
+              <Tooltip
+                label={
+                  !enoughFunds
+                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
+                    : ''
+                }
+                hasArrow
+                placement="top"
+              >
+                <Box
+                  as="span"
+                  cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
+                >
+                  <Button
+                    onClick={handleCreateBackroom}
+                    isDisabled={!enoughFunds}
+                    colorScheme="green"
+                    width="100%"
+                    ms={2}
+                  >
+                    Create Backroom
                   </Button>
                 </Box>
               </Tooltip>
