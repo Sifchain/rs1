@@ -31,7 +31,7 @@ import { useAccount } from '../hooks/useMetaMask'
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Define regex to match each agent's messages
   const agentRegex = new RegExp(`(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`, 'g')
-  
+
   const parsedContent = []
   let match
 
@@ -44,7 +44,7 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
   while ((match = agentRegex.exec(content)) !== null) {
     const username = match[1].trim() // Captures either agentOne or agentTwo
     let message = cleanMessage(match[2].trim()) // Clean up the message
-    
+
     parsedContent.push({ username, message })
   }
 
@@ -143,15 +143,15 @@ function Backrooms() {
       try {
         const response = await fetch('/api/backrooms/get')
         const data = await response.json()
-    
+
         // Ensure each backroom has a snippet if not, generate from the content
         const updatedBackrooms = data.map(backroom => ({
           ...backroom,
           snippet: backroom.snippet || backroom.content.slice(0, 100) + '...', // Trim content if no snippet is available
         }))
-        
+
         setBackrooms(updatedBackrooms)
-    
+
         // Handle tags and expanded states as before
         const tagCounts = updatedBackrooms
           .flatMap(backroom => backroom.tags || [])
@@ -159,18 +159,18 @@ function Backrooms() {
             counts[tag] = (counts[tag] || 0) + 1
             return counts
           }, {})
-    
+
         const sortedTags = Object.keys(tagCounts)
           .sort((a, b) => tagCounts[b] - tagCounts[a])
           .slice(0, 10)
-        
+
         setTags(sortedTags)
-    
+
         if (expanded) {
           const index = updatedBackrooms.findIndex(backroom => backroom._id === expanded)
           if (index !== -1) setExpandedIndex(index)
         }
-    
+
         if (queryTags) {
           const queryTagArray = queryTags
             .split(',')
@@ -183,7 +183,7 @@ function Backrooms() {
         setLoading(false)
       }
     }
-    
+
 
     fetchBackrooms()
   }, [expanded, queryTags])
@@ -352,108 +352,108 @@ function Backrooms() {
           </Flex>
 
           <VStack spacing={6} align="stretch">
-  {filteredBackrooms.length > 0 ? (
-    filteredBackrooms.map((backroom, index) => (
-      <Box
-        key={index}
-        p={4}
-        bg="#424242"
-        borderRadius="lg"
-        border="2px solid #757575"
-        boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-      >
-        <Flex justifyContent="space-between" alignItems="center">
-          <Box>
-            <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-              <Link href={`/agents?agentId=${backroom.responderId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
-                {backroom.responderAgentName}
-              </Link>
-              {' → '}
-              <Link href={`/agents?agentId=${backroom.explorerId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
-                {backroom.explorerAgentName}
-              </Link>
-            </Text>
-          </Box>
+            {filteredBackrooms.length > 0 ? (
+              filteredBackrooms.map((backroom, index) => (
+                <Box
+                  key={index}
+                  p={4}
+                  bg="#424242"
+                  borderRadius="lg"
+                  border="2px solid #757575"
+                  boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+                >
+                  <Flex justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+                        <Link href={`/agents?agentId=${backroom.responderId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
+                          {backroom.responderAgentName}
+                        </Link>
+                        {' → '}
+                        <Link href={`/agents?agentId=${backroom.explorerId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
+                          {backroom.explorerAgentName}
+                        </Link>
+                      </Text>
+                    </Box>
 
-          <Flex>
-            <Tooltip label="Share" hasArrow>
-              <IconButton
-                aria-label="Share Backroom"
-                icon={<FiShare2 />}
-                onClick={() => handleShare(backroom._id)}
-                colorScheme="blue"
-                variant="outline"
-                size="sm"
-                mr={2}
-              />
-            </Tooltip>
-            <Tooltip label="Copy Link" hasArrow>
-              <IconButton
-                aria-label="Copy Link"
-                icon={<FiClipboard />}
-                onClick={() => handleCopyToClipboard(backroom._id)}
-                colorScheme="blue"
-                variant="outline"
-                size="sm"
-                mr={2}
-              />
-            </Tooltip>
-            <Button
-              size="sm"
-              colorScheme="blue"
-              variant="outline"
-              onClick={() =>
-                setExpandedIndex(
-                  expandedIndex === index ? null : index
-                )
-              }
-            >
-              {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
-            </Button>
-          </Flex>
-        </Flex>
+                    <Flex>
+                      <Tooltip label="Share" hasArrow>
+                        <IconButton
+                          aria-label="Share Backroom"
+                          icon={<FiShare2 />}
+                          onClick={() => handleShare(backroom._id)}
+                          colorScheme="blue"
+                          variant="outline"
+                          size="sm"
+                          mr={2}
+                        />
+                      </Tooltip>
+                      <Tooltip label="Copy Link" hasArrow>
+                        <IconButton
+                          aria-label="Copy Link"
+                          icon={<FiClipboard />}
+                          onClick={() => handleCopyToClipboard(backroom._id)}
+                          colorScheme="blue"
+                          variant="outline"
+                          size="sm"
+                          mr={2}
+                        />
+                      </Tooltip>
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        variant="outline"
+                        onClick={() =>
+                          setExpandedIndex(
+                            expandedIndex === index ? null : index
+                          )
+                        }
+                      >
+                        {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
+                      </Button>
+                    </Flex>
+                  </Flex>
 
-        <Text fontSize="sm" color="#b0bec5" mb={2}>
-          {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
-          {new Date(backroom.createdAt).toLocaleTimeString()}
-        </Text>
+                  <Text fontSize="sm" color="#b0bec5" mb={2}>
+                    {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
+                    {new Date(backroom.createdAt).toLocaleTimeString()}
+                  </Text>
 
-        <Flex wrap="wrap">
-          {backroom.tags.map((tag, tagIndex) => (
-            <Tag
-              size="md"
-              key={tagIndex}
-              m={1}
-              cursor="pointer"
-              colorScheme={
-                selectedTags.includes(tag) ? 'blue' : 'gray'
-              }
-              onClick={() => handleTagSelection(tag)}
-            >
-              <TagLabel>{tag}</TagLabel>
-            </Tag>
-          ))}
-        </Flex>
+                  <Flex wrap="wrap">
+                    {backroom.tags.map((tag, tagIndex) => (
+                      <Tag
+                        size="md"
+                        key={tagIndex}
+                        m={1}
+                        cursor="pointer"
+                        colorScheme={
+                          selectedTags.includes(tag) ? 'blue' : 'gray'
+                        }
+                        onClick={() => handleTagSelection(tag)}
+                      >
+                        <TagLabel>{tag}</TagLabel>
+                      </Tag>
+                    ))}
+                  </Flex>
 
-        {/* Collapse component for full conversation */}
-        <Collapse in={expandedIndex === index} animateOpacity>
-          <Box mt={4}>
-            <BackroomConversation
-              conversationContent={backroom.content}
-              agentOne={backroom.explorerAgentName}
-              agentTwo={backroom.responderAgentName}
-              isExpanded={expandedIndex === index}
-            />
-          </Box>
-        </Collapse>
-      </Box>
-    ))
-  ) : (
-    <Text textAlign="center" fontSize="xl" color="#e0e0e0">
-      No backroom conversations found.
-    </Text>
-  )}
-</VStack>
+                  {/* Collapse component for full conversation */}
+                  <Collapse in={expandedIndex === index} animateOpacity>
+                    <Box mt={4}>
+                      <BackroomConversation
+                        conversationContent={backroom.content}
+                        agentOne={backroom.explorerAgentName}
+                        agentTwo={backroom.responderAgentName}
+                        isExpanded={expandedIndex === index}
+                      />
+                    </Box>
+                  </Collapse>
+                </Box>
+              ))
+            ) : (
+              <Text textAlign="center" fontSize="xl" color="#e0e0e0">
+                No backroom conversations found.
+              </Text>
+            )}
+          </VStack>
 
         </Box>
       </Box>
