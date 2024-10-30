@@ -11,13 +11,13 @@ const openai = new OpenAI({
 
 export default async function handler(req, res) {
   try {
-    const { description } = req.body
+    const { description, name, isRandom } = req.body
     console.log('Generating description for: ', description)
     // Generate description based on whether one was provided
     const descriptionPrompt =
-      description == null || description?.length === 0
+       isRandom || description?.length === 0 && name?.length === 0
         ? `Generate a random agent description based off of the following template: ${DESCRIPTION_TEMPLATE}`
-        : `Based on the following description: ${description} generate an agent description using the following template:\n\n${DESCRIPTION_TEMPLATE}`
+        : `Based on the following agent ${name?.length !== 0  ? `name: ${name}`: ""} and description: ${description} generate an agent description using the following template:\n\n${DESCRIPTION_TEMPLATE}`
 
     // Generate description using OpenAI
     const generateDescriptionResponse = await openai.chat.completions.create({

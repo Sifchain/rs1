@@ -15,12 +15,10 @@ import {
   AlertTitle,
   AlertDescription,
   Collapse,
-  IconButton,
   Tooltip,
   Spinner,
   useClipboard,
   useDisclosure,
-  Select,
 } from '@chakra-ui/react'
 import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -41,9 +39,6 @@ import { useAccount } from '../hooks/useMetaMask'
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
   const [description, setDescription] = useState('')
-  const [conversationPrompt, setConversationPrompt] = useState('')
-  const [recapPrompt, setRecapPrompt] = useState('')
-  const [tweetPrompt, setTweetPrompt] = useState('')
   const [twitterLinked, setTwitterLinked] = useState(false)
   const [agentId, setAgentId] = useState(null)
   const [loadingStep, setLoadingStep] = useState(0)
@@ -55,7 +50,7 @@ function CreateAgent() {
 
   const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true }) // Changed this line
-  const onGenerateDescription = async description => {
+  const onGenerateDescription = async (isRandom, desc) => {
     try {
       // Show loading state
       setDescription('Generating description...')
@@ -66,7 +61,9 @@ function CreateAgent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          description: description ?? '', // Pass current description if it exists
+          name: agentName ?? '',
+          description: desc ?? '', // Pass current description if it exists
+          isRandom
         }),
       })
 
@@ -277,13 +274,13 @@ function CreateAgent() {
                         {DESCRIPTION_TEMPLATE}
                       </Text>
                       <Tooltip
-                        label={`Generate a description using the template based off of your inputted description.`}
+                        label={`Generate a description using the template based off of your inputted name and description.`}
                         hasArrow
                         placement="top"
                       >
                         <Box as="span" cursor={'pointer'}>
                           <Button
-                            onClick={() => onGenerateDescription(description)}
+                            onClick={() => onGenerateDescription(false, description)}
                             variant="solid"
                             colorScheme="blue"
                             size="sm"
@@ -301,7 +298,7 @@ function CreateAgent() {
                       >
                         <Box as="span" cursor={'pointer'}>
                           <Button
-                            onClick={() => onGenerateDescription('')}
+                            onClick={() => onGenerateDescription(true, description)}
                             variant="solid"
                             colorScheme="purple"
                             size="sm"
@@ -321,6 +318,15 @@ function CreateAgent() {
                         leftIcon={<FiCopy />}
                       >
                         Copy Template
+                      </Button>
+                      <Button
+                        onClick={() => setDescription('')}
+                        variant="solid"
+                        colorScheme="red"
+                        size="sm"
+                        mr={2}
+                      >
+                        Clear Description
                       </Button>
                     </Box>
                   </Collapse>

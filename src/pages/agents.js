@@ -8,7 +8,6 @@ import {
   VStack,
   Divider,
   Tag,
-  TagLabel,
   Icon,
   Link,
   Input,
@@ -21,11 +20,9 @@ import {
   List,
   ListItem,
   Collapse,
-  IconButton,
 } from '@chakra-ui/react'
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 import { ArrowBackIcon } from '@chakra-ui/icons'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
@@ -64,6 +61,7 @@ function Agents() {
   const [wordCountError, setWordCountError] = useState(false)
   const [backrooms, setBackrooms] = useState([])
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+
   const handleEditTweet = (tweetId, tweetContent) => {
     setEditTweetId(tweetId)
     setEditTweetContent(tweetContent)
@@ -109,6 +107,8 @@ function Agents() {
       // Automatically select agent if agentId is in the URL
       if (agentId) {
         selectAgentById(agentId, data)
+        const agent = data.find(agent => agent._id === agentId)
+        setSelectedAgent(agent)
       }
     } catch (error) {
       console.error('Error fetching agents:', error)
@@ -124,11 +124,8 @@ function Agents() {
       setSelectedAgent(agent)
       setAgentName(agent?.name)
       setDescription(agent?.description || '')
-      setConversationPrompt(agent?.conversationPrompt || '')
-      setRecapPrompt(agent?.recapPrompt || '')
-      setTweetPrompt(agent?.tweetPrompt || '')
       setEditMode(false)
-
+      router.push(`agents?agentId=${id}`)
       // Fetch recent backroom conversations and other related data if necessary
       fetchRecentConversations(agent)
     }
@@ -165,27 +162,27 @@ function Agents() {
     fetchBackrooms()
   }, [])
 
-  const handleAgentSelection = async event => {
+const handleAgentSelection = useCallback(async (event) => {
     const agentId = event.target.value
-    const agent = agents.find(agent => agent?._id === agentId)
-    setSelectedAgent(agent)
+  const agent = agents.find(agent => agent?._id === agentId)
 
-    // Pre-fill the edit form
+    selectAgentById(agentId, agents)
+    setSelectedAgent(agent)
     setAgentName(agent?.name)
-    setDescription(agent?.description || '') // Optional fields
+    setDescription(agent?.description || '')
     setConversationPrompt(agent?.conversationPrompt || '')
     setRecapPrompt(agent?.recapPrompt || '')
     setTweetPrompt(agent?.tweetPrompt || '')
-    setEditMode(false) // Initially show agent details, not edit mode
+    setEditMode(false)
 
-    // Fetch recent backroom conversations related to this agent
+    // Fetch and process backroom conversations
     try {
       const response = await fetch(
         `/api/backrooms?explorerAgentName=${agent?.name}`
       )
       const data = await response.json()
 
-      // Filter backrooms where the agent is involved as explorer or responder
+      // Filter relevant conversations
       const filteredConversations = data.filter(
         backroom =>
           backroom.explorerId === agent?._id ||
@@ -193,7 +190,7 @@ function Agents() {
       )
       setRecentBackroomConversations(filteredConversations)
 
-      // Extract tags from these conversations
+      // Process and set unique tags
       const tagsFromConversations = filteredConversations.flatMap(
         backroom => backroom.tags || []
       )
@@ -201,7 +198,19 @@ function Agents() {
     } catch (error) {
       console.error('Error fetching recent backroom conversations:', error)
     }
-  }
+}, [
+    agentId,
+    agents,
+    setSelectedAgent,
+    setAgentName,
+    setDescription,
+    setConversationPrompt,
+    setRecapPrompt,
+    setTweetPrompt,
+    setEditMode,
+    setRecentBackroomConversations,
+    setBackroomTags
+  ])
 
   const handleEditClick = () => {
     setEditMode(true)
@@ -738,8 +747,9 @@ function Agents() {
               justifyContent="center"
             >
               <Select
-                placeholder="Select Agent"
+                placeholder={selectedAgent == null ? "Select Agent" : selectedAgent?.name}
                 onChange={handleAgentSelection}
+                value={selectedAgent?.name}
                 maxW="400px"
                 bg="#424242"
                 color="#e0e0e0"
