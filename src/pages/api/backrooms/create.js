@@ -10,9 +10,6 @@ import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
 
 mongoose.set('strictQuery', false)
 
-// const promptManager = new PromptManager()
-// await promptManager.loadTemplate('cli')
-
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) return
   return mongoose.connect(process.env.MONGODB_URI, {
@@ -96,9 +93,8 @@ export default async function handler(req, res) {
     explorerAgent,
     explorerDescription,
     responderAgent,
-    responderDescription,
     tags = [],
-    templateName = 'cli',
+    backroomType = 'cli',
   } = req.body
 
   const explorer = await Agent.findOne({ name: explorerAgent })
@@ -111,10 +107,21 @@ export default async function handler(req, res) {
           .status(400)
           .json({ error: 'Invalid explorer or responder agent name' })
       }
+      // // Initialize
+      // const promptManager = new PromptManager(
+      //   backroomType, // e.g., 'academic'
+      //   explorerAgent, // full agent object
+      //   responderAgent // full agent object
+      // )
 
-      // await promptManager.loadTemplate(templateName)
-      // const template = promptManager.getTemplate(templateName)
+      // try {
+      //   // Load appropriate template based on backroom type
+      //   const { explorerPrompt: initialExplorerMessageHistory, responderPrompt: initialResponderMessageHistory } =  await promptManager.loadTemplate()
 
+      //   console.log(formattedPrompt)
+      // } catch (error) {
+      //   console.error('Error in prompt management:', error)
+      // }
       const explorerEvolutions = explorer.evolutions.length
         ? explorer.evolutions.slice(-20).map(evo => evo.description)
         : explorer.description
@@ -148,20 +155,6 @@ export default async function handler(req, res) {
           context: [],
         },
       ]
-      // promptManager.formatPrompt(
-      //   template,
-      //   {
-      //     explorerAgent: {
-      //       name: explorerAgent,
-      //       description: explorer.description || 'Description not provided.',
-      //       evolutions: combinedEvolutions,
-      //     },
-      //     responderAgent: {
-      //       name: responderAgent,
-      //       description: responder.description || 'Description not provided.',
-      //     },
-      //   }
-      // )
 
       let explorerMessageHistory = [...initialExplorerMessageHistory]
       let responderMessageHistory = [...initialResponderMessageHistory]
