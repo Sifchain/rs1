@@ -328,10 +328,10 @@ const handleAgentSelection = useCallback(async (event) => {
     )
   }
 
-  const hasEditPermission = () => {
+  const hasEditPermission =  useCallback(() => {
     const user = JSON.parse(localStorage.getItem('user'))
-    return user && selectedAgent && user._id === selectedAgent.user
-  }
+    return user && selectedAgent && user?._id === selectedAgent?.user
+  }, [selectedAgent])
 
   const displayRecentBackrooms = () => {
     if (recentBackroomConversations.length === 0) {
