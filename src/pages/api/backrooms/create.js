@@ -315,7 +315,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
 
       const fullBackroomURL = getFullURL(
         `/backrooms?expanded=${newBackroom._id}`,
-        `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`
+        `${req.headers['x-forwarded-proto'] || 'http'}://${app.realityspiral.com}`
       );
 
       console.log('full link' + fullBackroomURL)
