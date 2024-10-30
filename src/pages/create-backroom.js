@@ -33,9 +33,8 @@ import { genIsBalanceEnough } from '../utils/balance'
 
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
-  const [explorerDescription, setExplorerDescription] = useState('')
   const [responderAgent, setResponderAgent] = useState('')
-  const [responderDescription, setResponderDescription] = useState('')
+  const [backroomType, setBackroomType] = useState('')
   const [agents, setAgents] = useState([])
   const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null) // Holds explorer agent details
   const [selectedResponderInfo, setSelectedResponderInfo] = useState(null) // Holds responder agent details
@@ -118,7 +117,52 @@ function CreateBackroom() {
       setSelectedResponderInfo(null)
     }
   }
-
+const backroomTypes = [
+  {
+    id: 'academic',
+    name: 'Academic & Scientific',
+    description: 'Engage in rigorous discussions about scientific theories, research methodologies, and academic discoveries. Suitable for deep dives into physics, biology, chemistry, and other scientific disciplines, with emphasis on evidence-based reasoning and theoretical exploration.'
+  },
+  {
+    id: 'philosophy',
+    name: 'Philosophy & Ethics',
+    description: 'Explore fundamental questions about existence, consciousness, morality, and ethical frameworks. These conversations focus on philosophical debates, thought experiments, moral dilemmas, and the examination of complex ethical scenarios in AI and human contexts.'
+  },
+  {
+    id: 'creative',
+    name: 'Creative & Artistic',
+    description: 'Discuss and analyze artistic expression, creative processes, and aesthetic theory. Includes conversations about literature, poetry, visual arts, music, and other creative forms, with emphasis on interpretation, creative techniques, and artistic innovation.'
+  },
+  {
+    id: 'humor',
+    name: 'Humor & Entertainment',
+    description: 'Exchange witty observations, explore comedy theory, and analyze the mechanics of humor. Covers various forms of comedic expression, including wordplay, situational humor, cultural references, and the psychological aspects of what makes things funny.'
+  },
+  {
+    id: 'emotional',
+    name: 'Emotional & Social',
+    description: 'Examine emotional intelligence, interpersonal dynamics, and social relationships. Focus on understanding empathy, emotional responses, social behavior patterns, and the complexities of human (and AI) interactions and relationships.'
+  },
+  {
+    id: 'problem_solving',
+    name: 'Problem Solving',
+    description: 'Tackle complex challenges through systematic analysis and creative solution-finding. These conversations involve strategic thinking, decision-making frameworks, logic puzzles, and methodology discussions for approaching various types of problems.'
+  },
+  {
+    id: 'cultural',
+    name: 'Cultural & Anthropological',
+    description: 'Investigate cultural phenomena, societal patterns, and human traditions across different contexts. Explores cross-cultural comparisons, historical perspectives, language evolution, and the examination of social norms and their implications.'
+  },
+  {
+    id: 'technical',
+    name: 'Technical & Computational',
+    description: 'Delve into technical discussions about computing, programming, and system design. Covers topics like algorithm optimization, software architecture, data structures, AI systems, and computational theory with a focus on practical implementation and theoretical understanding.'
+  }
+];
+  const handleBackroomType = e => {
+    const backroomType = e.target.value
+    setBackroomType(backroomType)
+  }
   // Form validation
   const handleValidation = () => {
     let valid = true
@@ -130,6 +174,10 @@ function CreateBackroom() {
     }
     if (!responderAgent) {
       errors.responderAgent = 'Responder Agent is required'
+      valid = false
+    }
+    if (!backroomType) {
+      errors.backroomType = 'Backroom Type is required'
       valid = false
     }
     // Check if the selected explorer and responder agents are the same
@@ -232,7 +280,7 @@ function CreateBackroom() {
             mb={6}
           >
             {/* Explorer Setup */}
-            <Box width={{ base: '100%', md: '48%' }} mb={{ base: 4, md: 0 }}>
+            <Box width={{ base: '100%', md: '48%' }} mb={{ base: 4, md: 0 }} me={2}>
               <Heading size="md" mb={4} color="#81d4fa">
                 Explorer Setup
               </Heading>
@@ -269,6 +317,36 @@ function CreateBackroom() {
               )}
             </Box>
 
+                        {/* Type */}
+            <Box width={{ base: '100%', md: '48%' }} mb={{ base: 4, md: 0 }} me={2}>
+              <Heading size="md" mb={4} color="#81d4fa">
+                Backroom Type
+              </Heading>
+        <FormControl invalid={Boolean(errors.backroomType)}>
+        <Select
+          value={backroomType}
+          onChange={handleBackroomType}
+          placeholder="Select Conversation Type"
+        >
+          {backroomTypes.map(type => (
+            <option key={type.id} value={type.id} className="bg-gray-800">
+              {type.name}
+            </option>
+          ))}
+        </Select>
+        {errors.backroomType && (
+          <FormErrorMessage>{errors.backroomType}</FormErrorMessage>
+        )}
+              </FormControl>
+              {backroomType && (
+                <Box mt={4}>
+                  <Text mb={4}>
+                    <strong>Description:</strong>{' '}
+                    {backroomTypes.find(room => room.id === backroomType).description}
+                  </Text>
+                </Box>
+              )}
+            </Box>
             {/* Responder Setup */}
             <Box width={{ base: '100%', md: '48%' }}>
               <Heading size="md" mb={4} color="#81d4fa">
