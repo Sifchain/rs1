@@ -7,6 +7,7 @@ import PromptManager from '../../../utils/promptManager'
 import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
+
 import { generateImage } from '../../../utils/ai'
 
 mongoose.set('strictQuery', false)
