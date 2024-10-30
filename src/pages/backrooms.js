@@ -15,6 +15,8 @@ import {
   IconButton,
   Tooltip,
   Link,
+  AspectRatio,
+  Image,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -30,13 +32,16 @@ import { useAccount } from '../hooks/useMetaMask'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Define regex to match each agent's messages
-  const agentRegex = new RegExp(`(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`, 'g')
+  const agentRegex = new RegExp(
+    `(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`,
+    'g'
+  )
 
   const parsedContent = []
   let match
 
   // Helper function to clean up code block indicators
-  const cleanMessage = (message) => {
+  const cleanMessage = message => {
     return message.replace(/```(shell|bash)?\s*/g, '').trim()
   }
 
@@ -51,12 +56,12 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
   return parsedContent
 }
 
-
 // Component to render each message bubble
 const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
   <Box mb={4} maxW="80%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
-      <Icon color={colorScheme.iconColor} /> {/* Use the icon passed in as a prop */}
+      <Icon color={colorScheme.iconColor} />{' '}
+      {/* Use the icon passed in as a prop */}
       <Text fontWeight="bold" ml={2} color="#e0e0e0">
         {username}
       </Text>
@@ -76,13 +81,24 @@ const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
   </Box>
 )
 
-
 // Main component for displaying the conversation with alternating colors
 const BackroomConversation = ({ conversationContent, agentOne, agentTwo }) => {
-  const parsedMessages = parseConversationByAgents(conversationContent, agentOne, agentTwo)
+  const parsedMessages = parseConversationByAgents(
+    conversationContent,
+    agentOne,
+    agentTwo
+  )
   const userColors = {
-    [agentOne]: { bgColor: 'green.700', borderColor: 'green.400', iconColor: '#4caf50' },
-    [agentTwo]: { bgColor: 'blue.700', borderColor: 'blue.400', iconColor: '#81d4fa' },
+    [agentOne]: {
+      bgColor: 'green.700',
+      borderColor: 'green.400',
+      iconColor: '#4caf50',
+    },
+    [agentTwo]: {
+      bgColor: 'blue.700',
+      borderColor: 'blue.400',
+      iconColor: '#81d4fa',
+    },
   }
 
   return (
@@ -99,10 +115,6 @@ const BackroomConversation = ({ conversationContent, agentOne, agentTwo }) => {
     </VStack>
   )
 }
-
-
-
-
 
 // Main Backrooms Component
 
@@ -167,7 +179,9 @@ function Backrooms() {
         setTags(sortedTags)
 
         if (expanded) {
-          const index = updatedBackrooms.findIndex(backroom => backroom._id === expanded)
+          const index = updatedBackrooms.findIndex(
+            backroom => backroom._id === expanded
+          )
           if (index !== -1) setExpandedIndex(index)
         }
 
@@ -183,7 +197,6 @@ function Backrooms() {
         setLoading(false)
       }
     }
-
 
     fetchBackrooms()
   }, [expanded, queryTags])
@@ -205,9 +218,17 @@ function Backrooms() {
   }
 
   const filteredBackrooms = backrooms.filter(backroom => {
-    const agentMatch = selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
-    const tagMatch = selectedTags.length === 0 || selectedTags.every(tag => backroom.tags?.includes(tag))
-    const searchMatch = searchQuery === '' || backroom.content.toLowerCase().includes(searchQuery.toLowerCase()) || backroom.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    const agentMatch =
+      selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
+    const tagMatch =
+      selectedTags.length === 0 ||
+      selectedTags.every(tag => backroom.tags?.includes(tag))
+    const searchMatch =
+      searchQuery === '' ||
+      backroom.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      backroom.tags?.some(tag =>
+        tag.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     return agentMatch && tagMatch && searchMatch
   })
 
@@ -325,7 +346,6 @@ function Backrooms() {
                 ))}
             </Select>
 
-
             <Input
               placeholder="Search conversations via hashtags"
               value={searchQuery}
@@ -367,11 +387,21 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        <Link href={`/agents?agentId=${backroom.explorerId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
+                        <Link
+                          href={`/agents?agentId=${backroom.explorerId}`}
+                          color="#64b5f6"
+                          textDecoration="underline"
+                          _hover={{ color: '#29b6f6' }}
+                        >
                           {backroom.explorerAgentName}
                         </Link>
                         {' → '}
-                        <Link href={`/agents?agentId=${backroom.responderId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
+                        <Link
+                          href={`/agents?agentId=${backroom.responderId}`}
+                          color="#64b5f6"
+                          textDecoration="underline"
+                          _hover={{ color: '#29b6f6' }}
+                        >
                           {backroom.responderAgentName}
                         </Link>
                       </Text>
@@ -427,7 +457,9 @@ function Backrooms() {
                           )
                         }
                       >
-                        {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
+                        {expandedIndex === index
+                          ? 'Collapse'
+                          : 'View Full Conversation'}
                       </Button>
                     </Flex>
                   </Flex>
@@ -473,7 +505,6 @@ function Backrooms() {
               </Text>
             )}
           </VStack>
-
         </Box>
       </Box>
     </ChakraProvider>

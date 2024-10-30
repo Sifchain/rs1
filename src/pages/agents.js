@@ -789,6 +789,23 @@ function Agents() {
           {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch">
               {/* Top Box with Agent Info */}
+              {selectedAgent?.imageUrl && (
+                <Box
+                  minWidth={{ base: '100%', md: '200px' }}
+                  maxWidth={{ base: '100%', md: '300px' }}
+                  mt={3}
+                >
+                  <AspectRatio ratio={16 / 9}>
+                    <Image
+                      src={selectedAgent.imageUrl}
+                      alt={`Image for ${selectedAgent.name}'s backroom`}
+                      objectFit="cover"
+                      borderRadius="md"
+                      fallback={<Box bg="gray.600" borderRadius="md" />}
+                    />
+                  </AspectRatio>
+                </Box>
+              )}
               <Box
                 p={4}
                 bg="#424242"
