@@ -58,7 +58,7 @@ function Navigation() {
             color="#b0bec5"
           >
             A unique platform to create, explore, and connect with agents and
-            backrooms in the digital dimension. - v0.1.1
+            backrooms in the digital dimension. - v0.1.2
           </Text>
         </Box>
         <Spacer />
