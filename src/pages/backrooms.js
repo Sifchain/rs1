@@ -93,7 +93,7 @@ const BackroomConversation = ({ conversationContent, agentOne, agentTwo }) => {
           username={entry.username}
           message={entry.message}
           colorScheme={userColors[entry.username]}
-          icon={entry.username === agentTwo ? FiUser : FiCpu}
+          icon={entry.username === agentTwo ? FiCpu : FiUser}
         />
       ))}
     </VStack>
@@ -365,12 +365,12 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+                        <Link href={`/agents?agentId=${backroom.explorerId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
+                            {backroom.explorerAgentName}
+                          </Link>
+                        {' → '}
                         <Link href={`/agents?agentId=${backroom.responderId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
                           {backroom.responderAgentName}
-                        </Link>
-                        {' → '}
-                        <Link href={`/agents?agentId=${backroom.explorerId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
-                          {backroom.explorerAgentName}
                         </Link>
                       </Text>
                     </Box>
