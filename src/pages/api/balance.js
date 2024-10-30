@@ -36,17 +36,17 @@ export default async function handler(req, res) {
     // Format the balance using the token's decimals
     const formattedBalance = Utils.formatUnits(rawBalance, metadata.decimals)
     // Get transfer events
-    const transferEvents = await alchemy.core.getAssetTransfers({
-      fromBlock: '0x0',
-      toBlock: 'latest',
-      toAddress: address,
-      contractAddresses: [contractAddress],
-      category: ['erc20'],
-    })
+    // const transferEvents = await alchemy.core.getAssetTransfers({
+    //   fromBlock: '0x0',
+    //   toBlock: 'latest',
+    //   toAddress: address,
+    //   contractAddresses: [contractAddress],
+    //   category: ['erc20'],
+    // })
 
     return res.status(200).json({
       formattedBalance,
-      transferEvents,
+      // transferEvents,
     })
   } catch (error) {
     console.error('API Error:', error)
