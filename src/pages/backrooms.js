@@ -20,7 +20,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Navigation from '../components/Navigation'
 import SEO from '../components/SEO'
-import { FiShare2, FiClipboard } from 'react-icons/fi'
+import { FiShare2, FiClipboard, FiUser, FiCpu } from 'react-icons/fi'
 import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
@@ -28,12 +28,90 @@ import {
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 
+const parseConversationByAgents = (content, agentOne, agentTwo) => {
+  // Define regex to match each agent's messages
+  const agentRegex = new RegExp(`(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`, 'g')
+
+  const parsedContent = []
+  let match
+
+  // Helper function to clean up code block indicators
+  const cleanMessage = (message) => {
+    return message.replace(/```(shell|bash)?\s*/g, '').trim()
+  }
+
+  // Loop through each match and assign it to the respective agent
+  while ((match = agentRegex.exec(content)) !== null) {
+    const username = match[1].trim() // Captures either agentOne or agentTwo
+    let message = cleanMessage(match[2].trim()) // Clean up the message
+
+    parsedContent.push({ username, message })
+  }
+
+  return parsedContent
+}
+
+
+// Component to render each message bubble
+const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
+  <Box mb={4} maxW="80%" alignSelf="flex-start">
+    <Flex alignItems="center" mb={2}>
+      <Icon color={colorScheme.iconColor} /> {/* Use the icon passed in as a prop */}
+      <Text fontWeight="bold" ml={2} color="#e0e0e0">
+        {username}
+      </Text>
+    </Flex>
+    <Box
+      p={3}
+      borderRadius="md"
+      bg={colorScheme.bgColor}
+      border="1px solid"
+      borderColor={colorScheme.borderColor}
+      color="white"
+      whiteSpace="pre-wrap"
+      fontFamily="monospace"
+    >
+      {message}
+    </Box>
+  </Box>
+)
+
+
+// Main component for displaying the conversation with alternating colors
+const BackroomConversation = ({ conversationContent, agentOne, agentTwo }) => {
+  const parsedMessages = parseConversationByAgents(conversationContent, agentOne, agentTwo)
+  const userColors = {
+    [agentOne]: { bgColor: 'green.700', borderColor: 'green.400', iconColor: '#4caf50' },
+    [agentTwo]: { bgColor: 'blue.700', borderColor: 'blue.400', iconColor: '#81d4fa' },
+  }
+
+  return (
+    <VStack p={4} spacing={4} align="stretch">
+      {parsedMessages.map((entry, index) => (
+        <UserBubble
+          key={index}
+          username={entry.username}
+          message={entry.message}
+          colorScheme={userColors[entry.username]}
+          icon={entry.username === agentTwo ? FiCpu : FiUser}
+        />
+      ))}
+    </VStack>
+  )
+}
+
+
+
+
+
+// Main Backrooms Component
+
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedAgent, setSelectedAgent] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const [expandedIndex, setExpandedIndex] = useState(null) // This tracks which conversation is expanded
+  const [expandedIndex, setExpandedIndex] = useState(null) // Tracks which conversation is expanded
   const [tags, setTags] = useState([])
   const [selectedTags, setSelectedTags] = useState([])
   const [enoughFunds, setEnoughFunds] = useState(false)
@@ -65,32 +143,34 @@ function Backrooms() {
       try {
         const response = await fetch('/api/backrooms/get')
         const data = await response.json()
-        setBackrooms(data)
 
-        // Extract unique tags for filtering and count occurrences
-        const tagCounts = data
+        // Ensure each backroom has a snippet if not, generate from the content
+        const updatedBackrooms = data.map(backroom => ({
+          ...backroom,
+          snippet: backroom.snippet || backroom.content.slice(0, 100) + '...', // Trim content if no snippet is available
+        }))
+
+        setBackrooms(updatedBackrooms)
+
+        // Handle tags and expanded states as before
+        const tagCounts = updatedBackrooms
           .flatMap(backroom => backroom.tags || [])
           .reduce((counts, tag) => {
             counts[tag] = (counts[tag] || 0) + 1
             return counts
           }, {})
 
-        // Sort tags by frequency and limit to top 10
         const sortedTags = Object.keys(tagCounts)
           .sort((a, b) => tagCounts[b] - tagCounts[a])
           .slice(0, 10)
 
         setTags(sortedTags)
 
-        // If 'expanded' is present in the URL, find the matching backroom
         if (expanded) {
-          const index = data.findIndex(backroom => backroom._id === expanded)
-          if (index !== -1) {
-            setExpandedIndex(index) // Set the matching backroom to be expanded
-          }
+          const index = updatedBackrooms.findIndex(backroom => backroom._id === expanded)
+          if (index !== -1) setExpandedIndex(index)
         }
 
-        // If 'tags' are present in the URL, set them as selected tags for filtering
         if (queryTags) {
           const queryTagArray = queryTags
             .split(',')
@@ -103,6 +183,7 @@ function Backrooms() {
         setLoading(false)
       }
     }
+
 
     fetchBackrooms()
   }, [expanded, queryTags])
@@ -124,12 +205,10 @@ function Backrooms() {
   }
 
   const filteredBackrooms = backrooms.filter(backroom => {
-    const agentMatch =
-      selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
-    const tagMatch =
-      selectedTags.length === 0 ||
-      selectedTags.every(tag => backroom.tags?.includes(tag))
-    return agentMatch && tagMatch
+    const agentMatch = selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
+    const tagMatch = selectedTags.length === 0 || selectedTags.every(tag => backroom.tags?.includes(tag))
+    const searchMatch = searchQuery === '' || backroom.content.toLowerCase().includes(searchQuery.toLowerCase()) || backroom.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    return agentMatch && tagMatch && searchMatch
   })
 
   const handleShare = backroomId => {
@@ -223,7 +302,10 @@ function Backrooms() {
           >
             <Select
               value={selectedAgent}
-              onChange={e => setSelectedAgent(e.target.value)}
+              onChange={e => {
+                setSelectedAgent(e.target.value)
+                setSearchQuery('') // Clear searchQuery on agent change
+              }}
               maxW="300px"
               mb={{ base: 4, md: 0 }}
               bg="#424242"
@@ -232,18 +314,17 @@ function Backrooms() {
               _hover={{ borderColor: '#81d4fa' }}
             >
               <option value="All">All Agents</option>
-              {/* The default option for 'All Agents' */}
-              {/* Dynamically populate the dropdown with agent names */}
               {Array.from(
                 new Set(backrooms.map(backroom => backroom.explorerAgentName))
               )
-                .filter(agent => agent !== 'All') // Ensure no duplicate "All" option
+                .filter(agent => agent !== 'All')
                 .map((agent, index) => (
                   <option key={index} value={agent}>
                     {agent}
                   </option>
                 ))}
             </Select>
+
 
             <Input
               placeholder="Search conversations via hashtags"
@@ -257,7 +338,6 @@ function Backrooms() {
             />
           </Flex>
 
-          {/* Display the top 10 tags */}
           <Flex wrap="wrap" mb={8}>
             {tags.map((tag, index) => (
               <Tag
@@ -287,9 +367,11 @@ function Backrooms() {
                   <Flex justifyContent="space-between" alignItems="center">
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                        <Link href="/agents">{backroom.explorerAgentName}</Link>{' '}
-                        &rarr;{' '}
-                        <Link href="/agents">
+                        <Link href={`/agents?agentId=${backroom.explorerId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
+                          {backroom.explorerAgentName}
+                        </Link>
+                        {' → '}
+                        <Link href={`/agents?agentId=${backroom.responderId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
                           {backroom.responderAgentName}
                         </Link>
                       </Text>
@@ -312,7 +394,6 @@ function Backrooms() {
                       )}
                     </Box>
 
-                    {/* Buttons next to the title */}
                     <Flex>
                       <Tooltip label="Share" hasArrow>
                         <IconButton
@@ -346,25 +427,21 @@ function Backrooms() {
                           )
                         }
                       >
-                        {expandedIndex === index
-                          ? 'Collapse'
-                          : 'View Full Conversation'}
+                        {expandedIndex === index ? 'Collapse' : 'View Full Conversation'}
                       </Button>
                     </Flex>
                   </Flex>
 
-                  {/* Snippet content moved below */}
                   <Text fontSize="sm" color="#b0bec5" mb={2}>
                     {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
                     {new Date(backroom.createdAt).toLocaleTimeString()}
                   </Text>
 
-                  {/* Tags are now clickable here as well */}
                   <Flex wrap="wrap">
-                    {backroom.tags.map((tag, index) => (
+                    {backroom.tags.map((tag, tagIndex) => (
                       <Tag
                         size="md"
-                        key={index}
+                        key={tagIndex}
                         m={1}
                         cursor="pointer"
                         colorScheme={
@@ -377,11 +454,15 @@ function Backrooms() {
                     ))}
                   </Flex>
 
+                  {/* Collapse component for full conversation */}
                   <Collapse in={expandedIndex === index} animateOpacity>
                     <Box mt={4}>
-                      <Text whiteSpace="pre-wrap" color="#e0e0e0">
-                        {backroom.content}
-                      </Text>
+                      <BackroomConversation
+                        conversationContent={backroom.content}
+                        agentOne={backroom.explorerAgentName}
+                        agentTwo={backroom.responderAgentName}
+                        isExpanded={expandedIndex === index}
+                      />
                     </Box>
                   </Collapse>
                 </Box>
@@ -392,6 +473,7 @@ function Backrooms() {
               </Text>
             )}
           </VStack>
+
         </Box>
       </Box>
     </ChakraProvider>
