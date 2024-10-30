@@ -315,11 +315,11 @@ Your task is to synthesize this information into a cohesive evolution summary th
 
       const fullBackroomURL = getFullURL(
         `/backrooms?expanded=${newBackroom._id}`,
-        `${req.headers['x-forwarded-proto'] || 'http'}://${app.realityspiral.com}`
-      );
+        `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
+      )
 
       console.log('full link' + fullBackroomURL)
-      
+
       const shortenedUrl = await shortenURL(fullBackroomURL)
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet

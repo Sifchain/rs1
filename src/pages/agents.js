@@ -19,11 +19,11 @@ import {
   Tooltip,
   useToast,
   List,
-  ListItem, 
-  Collapse, 
-  IconButton
+  ListItem,
+  Collapse,
+  IconButton,
 } from '@chakra-ui/react'
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
@@ -47,8 +47,7 @@ function Agents() {
   const [editMode, setEditMode] = useState(false)
   const [errors, setErrors] = useState({})
   const router = useRouter()
-  const { agentId } = router.query; 
-  
+  const { agentId } = router.query
 
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
@@ -64,7 +63,7 @@ function Agents() {
   const [wordCount, setWordCount] = useState(0)
   const [wordCountError, setWordCountError] = useState(false)
   const [backrooms, setBackrooms] = useState([])
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const handleEditTweet = (tweetId, tweetContent) => {
     setEditTweetId(tweetId)
     setEditTweetContent(tweetContent)
@@ -103,53 +102,55 @@ function Agents() {
   // Fetch agents
   const fetchAgents = async () => {
     try {
-      const response = await fetch('/api/agents');
-      const data = await response.json();
-      setAgents(data);
+      const response = await fetch('/api/agents')
+      const data = await response.json()
+      setAgents(data)
 
       // Automatically select agent if agentId is in the URL
       if (agentId) {
-        selectAgentById(agentId, data);
+        selectAgentById(agentId, data)
       }
     } catch (error) {
-      console.error('Error fetching agents:', error);
+      console.error('Error fetching agents:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   // Function to select agent by ID
   const selectAgentById = (id, agentsData = agents) => {
-    const agent = agentsData.find(agent => agent._id === id);
+    const agent = agentsData.find(agent => agent._id === id)
     if (agent) {
-      setSelectedAgent(agent);
-      setAgentName(agent?.name);
-      setDescription(agent?.description || '');
-      setConversationPrompt(agent?.conversationPrompt || '');
-      setRecapPrompt(agent?.recapPrompt || '');
-      setTweetPrompt(agent?.tweetPrompt || '');
-      setEditMode(false);
+      setSelectedAgent(agent)
+      setAgentName(agent?.name)
+      setDescription(agent?.description || '')
+      setConversationPrompt(agent?.conversationPrompt || '')
+      setRecapPrompt(agent?.recapPrompt || '')
+      setTweetPrompt(agent?.tweetPrompt || '')
+      setEditMode(false)
 
       // Fetch recent backroom conversations and other related data if necessary
-      fetchRecentConversations(agent);
+      fetchRecentConversations(agent)
     }
-  };
+  }
 
   // Fetch recent conversations for the selected agent
-  const fetchRecentConversations = async (agent) => {
+  const fetchRecentConversations = async agent => {
     try {
-      const response = await fetch(`/api/backrooms?explorerAgentName=${agent.name}`);
-      const data = await response.json();
-      setRecentBackroomConversations(data);
+      const response = await fetch(
+        `/api/backrooms?explorerAgentName=${agent.name}`
+      )
+      const data = await response.json()
+      setRecentBackroomConversations(data)
     } catch (error) {
-      console.error('Error fetching recent conversations:', error);
+      console.error('Error fetching recent conversations:', error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchAgents();
-  }, [agentId]);
-  
+    fetchAgents()
+  }, [agentId])
+
   const fetchBackrooms = async () => {
     try {
       const response = await fetch('/api/backrooms/get')
@@ -232,7 +233,7 @@ function Agents() {
     setErrors(errors)
     return valid
   }
-  
+
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
@@ -275,21 +276,21 @@ function Agents() {
     }
   }
 
-  const handleParseDescription = (text) => {
+  const handleParseDescription = text => {
     // Check if the description follows the expected format
-    if (!text.includes("\n- ")) {
-      return [{ title: "Description", items: [text] }];
+    if (!text.includes('\n- ')) {
+      return [{ title: 'Description', items: [text] }]
     }
-    
+
     // Parse the structured format
-    const sections = text.split(/\n- /).slice(1); // Split by each section title
+    const sections = text.split(/\n- /).slice(1) // Split by each section title
     return sections.map(section => {
-      const [title, ...content] = section.split('\n  - '); // Split by subsections
-      const items = content.map(item => item.replace(/\s{2}-\s/, '')); // Clean up bullet indicators
-      return { title, items };
-    });
-  };
-  
+      const [title, ...content] = section.split('\n  - ') // Split by subsections
+      const items = content.map(item => item.replace(/\s{2}-\s/, '')) // Clean up bullet indicators
+      return { title, items }
+    })
+  }
+
   const displayJourney = evolutions => {
     if (!evolutions || evolutions.length === 0) {
       return <Text>No journey updates recorded.</Text>
@@ -371,7 +372,7 @@ function Agents() {
       </Flex>
     ))
   }
-  
+
   const handleTagClick = tag => {
     // Navigate to the backrooms page with the tag as a URL parameter
     const tagWithoutHash = tag.replace('#', '')
@@ -798,44 +799,54 @@ function Agents() {
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
-                   {/* Display Parsed Description with "View Full Description" Button */}
-<Box mt={3}>
-  <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-    Description
-  </Text>
-  <Collapse in={isDescriptionExpanded} startingHeight={200}>
-    {handleParseDescription(selectedAgent.originalDescription || selectedAgent.description || 'No description provided').map((section, index) => (
-      <Box key={index} mt={4}>
-        <Text fontSize="medium" fontWeight="bold" color="#81d4fa">
-          {section.title}
-        </Text>
-        <List spacing={2} mt={2} color="#e0e0e0">
-          {section.items.map((item, idx) => (
-            <ListItem key={idx}>
-              <strong>{item.split(':')[0]}:</strong> {item.split(':').slice(1).join(':')}
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-    ))}
-  </Collapse>
+                    {/* Display Parsed Description with "View Full Description" Button */}
+                    <Box mt={3}>
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+                        Description
+                      </Text>
+                      <Collapse in={isDescriptionExpanded} startingHeight={200}>
+                        {handleParseDescription(
+                          selectedAgent.originalDescription ||
+                            selectedAgent.description ||
+                            'No description provided'
+                        ).map((section, index) => (
+                          <Box key={index} mt={4}>
+                            <Text
+                              fontSize="medium"
+                              fontWeight="bold"
+                              color="#81d4fa"
+                            >
+                              {section.title}
+                            </Text>
+                            <List spacing={2} mt={2} color="#e0e0e0">
+                              {section.items.map((item, idx) => (
+                                <ListItem key={idx}>
+                                  <strong>{item.split(':')[0]}:</strong>{' '}
+                                  {item.split(':').slice(1).join(':')}
+                                </ListItem>
+                              ))}
+                            </List>
+                          </Box>
+                        ))}
+                      </Collapse>
 
-  {/* Collapse/Expand Button */}
-  <Box mt={2}>
-    <Button
-      size="sm"
-      colorScheme="blue"
-      variant="solid"
-      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-      alignSelf="flex-start" // Align the button to the left
-    >
-      {isDescriptionExpanded ? 'Hide Full Description' : 'View Full Description'}
-    </Button>
-  </Box>
-</Box>
-
-
-
+                      {/* Collapse/Expand Button */}
+                      <Box mt={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          variant="solid"
+                          onClick={() =>
+                            setIsDescriptionExpanded(!isDescriptionExpanded)
+                          }
+                          alignSelf="flex-start" // Align the button to the left
+                        >
+                          {isDescriptionExpanded
+                            ? 'Hide Full Description'
+                            : 'View Full Description'}
+                        </Button>
+                      </Box>
+                    </Box>
 
                     {/* Display All Tags */}
                     <Box mt={3}>
