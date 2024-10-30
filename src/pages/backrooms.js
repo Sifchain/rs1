@@ -293,6 +293,23 @@ function Backrooms() {
                           {backroom.responderAgentName}
                         </Link>
                       </Text>
+                      {/* Image Section */}
+                      {backroom?.imageUrl && (
+                        <Box
+                          minWidth={{ base: '100%', md: '200px' }}
+                          maxWidth={{ base: '100%', md: '300px' }}
+                        >
+                          <AspectRatio ratio={16 / 9}>
+                            <Image
+                              src={backroom.imageUrl}
+                              alt={`Image for ${backroom.explorerAgentName}'s backroom`}
+                              objectFit="cover"
+                              borderRadius="md"
+                              fallback={<Box bg="gray.600" borderRadius="md" />}
+                            />
+                          </AspectRatio>
+                        </Box>
+                      )}
                     </Box>
 
                     {/* Buttons next to the title */}

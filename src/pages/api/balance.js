@@ -21,12 +21,10 @@ export default async function handler(req, res) {
 
     // Get token metadata
     const metadata = await alchemy.core.getTokenMetadata(contractAddress)
-    console.log(metadata)
     // Get token balance
     const response = await alchemy.core.getTokenBalances(address, [
       contractAddress,
     ])
-    console.log(response)
 
     if (!response.tokenBalances[0]) {
       return res.status(404).json({ message: 'No token balance found' })

@@ -18,6 +18,8 @@ import {
   Button,
   Tooltip,
   useToast,
+  AspectRatio,
+  Image,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -734,6 +736,24 @@ function Agents() {
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
+                    {/* Image Section */}
+                    {selectedAgent?.imageUrl && (
+                      <Box
+                        minWidth={{ base: '100%', md: '200px' }}
+                        maxWidth={{ base: '100%', md: '300px' }}
+                        mt={3}
+                      >
+                        <AspectRatio ratio={16 / 9}>
+                          <Image
+                            src={selectedAgent.imageUrl}
+                            alt={`Image for ${selectedAgent.name}'s backroom`}
+                            objectFit="cover"
+                            borderRadius="md"
+                            fallback={<Box bg="gray.600" borderRadius="md" />}
+                          />
+                        </AspectRatio>
+                      </Box>
+                    )}
                     {/* Display Description */}
                     <Box mt={3}>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">

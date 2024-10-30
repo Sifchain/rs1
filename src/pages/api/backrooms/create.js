@@ -7,6 +7,7 @@ import PromptManager from '../../../utils/promptManager'
 import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
+import { generateImage } from '../../../utils/ai'
 
 mongoose.set('strictQuery', false)
 
@@ -222,7 +223,9 @@ export default async function handler(req, res) {
         hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
       // To get a concise summary 1-2 sentences prompts
       const snippetContent = conversationContent.slice(0, 150) + '...'
-
+      const imagePrompt = `Create an image that represents the following conversation: ${conversationContent}`
+      const imageUrl = await generateImage(imagePrompt)
+      console.log('imageUrl', imageUrl)
       // Create and save the new backroom entry
       const newBackroom = new Backroom({
         role,
@@ -235,6 +238,7 @@ export default async function handler(req, res) {
         snippetContent,
         tags: [...new Set([...tags, ...generatedHashtags])],
         createdAt: Date.now(),
+        imageUrl,
       })
 
       await newBackroom.save()

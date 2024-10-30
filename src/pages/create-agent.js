@@ -161,9 +161,6 @@ function CreateAgent() {
             name: agentName,
             description,
             user: userId,
-            conversationPrompt,
-            recapPrompt,
-            tweetPrompt,
           }),
         })
 
@@ -353,7 +350,7 @@ function CreateAgent() {
                     cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
                   >
                     <Button
-                      isDisabled={!enoughFunds}
+                      isDisabled={enoughFunds}
                       onClick={handleSubmit}
                       colorScheme="blue"
                       width="100%"

@@ -2,6 +2,7 @@ import Agent from '../../models/Agent'
 import User from '../../models/User'
 import { checkAgentOwnership } from '../../utils/permissions'
 import mongoose from 'mongoose'
+import { generateImage } from '../../utils/ai'
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -45,29 +46,22 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const {
-        name,
-        user,
-        conversationPrompt,
-        recapPrompt,
-        description,
-        tweetPrompt,
-      } = req.body
+      const { name, user, description } = req.body
 
       if (!name || !description) {
         return res
           .status(400)
           .json({ error: 'All fields are required: name, description' })
       }
-
+      const imagePrompt = `Create an avatar image for the following agent name: ${name}`
+      let imageUrl = await generateImage(imagePrompt)
+      console.log('imageUrl', imageUrl)
       // Create a new agent with optional prompts
       const newAgent = new Agent({
         name,
         user,
-        conversationPrompt,
-        recapPrompt,
+        imageUrl,
         description,
-        tweetPrompt,
         originalDescription: description,
       })
       await newAgent.save()
@@ -75,6 +69,7 @@ export default async function handler(req, res) {
       // Sanitize and send the agent data
       res.status(201).json(sanitizeAgent(newAgent))
     } catch (error) {
+      console.log('error', error)
       res.status(500).json({ error })
     }
   } else if (req.method === 'GET') {
@@ -82,7 +77,7 @@ export default async function handler(req, res) {
       // Fetch agents and include only the specified fields
       const agents = await Agent.find(
         {},
-        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
+        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription imageUrl'
       )
       res.status(200).json(agents)
     } catch (error) {
@@ -112,9 +107,6 @@ export default async function handler(req, res) {
         agentId,
         {
           name,
-          conversationPrompt,
-          recapPrompt,
-          tweetPrompt,
           description,
           // should we update the original description?
           // originalDescription: description,
