@@ -36,7 +36,6 @@ export default async function handler(req, res) {
         updatedAgent.pendingTweets.find(t => t._id.toString() === tweetId)
           .tweetContent
       )
-      console.log('Tweet posted successfully:', tweetResponse)
 
       // Update the agent with the posted tweet URL
       updatedAgent.tweets.push(

@@ -15,7 +15,6 @@ class PromptManager {
       // Parse the JSONL file
       this.explorerTemplate = JSON.parse(fileContent)[0]
       this.responderTemplate = JSON.parse(fileContent)[1]
-      console.log(`Template "${templateName}" loaded successfully.`)
     } catch (error) {
       console.error(`Error loading template ${templateName}:`, error)
     }
@@ -32,8 +31,6 @@ class PromptManager {
       explorerAgent.description || 'No description available'
     const terminalDescription =
       responderAgent.description || 'No description available'
-    const conversationPrompt =
-      explorerAgent.customPrompt || 'No custom prompt available'
 
     return {
       system_prompt: template.system_prompt || '',

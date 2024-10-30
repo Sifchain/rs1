@@ -158,9 +158,6 @@ function CreateAgent() {
             name: agentName,
             description,
             user: userId,
-            conversationPrompt,
-            recapPrompt,
-            tweetPrompt,
           }),
         })
 

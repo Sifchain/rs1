@@ -49,9 +49,6 @@ function Agents() {
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
   const [description, setDescription] = useState('')
-  const [conversationPrompt, setConversationPrompt] = useState('')
-  const [recapPrompt, setRecapPrompt] = useState('')
-  const [tweetPrompt, setTweetPrompt] = useState('')
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
   const toast = useToast() // Initialize useToast for notifications
@@ -170,9 +167,6 @@ const handleAgentSelection = useCallback(async (event) => {
     setSelectedAgent(agent)
     setAgentName(agent?.name)
     setDescription(agent?.description || '')
-    setConversationPrompt(agent?.conversationPrompt || '')
-    setRecapPrompt(agent?.recapPrompt || '')
-    setTweetPrompt(agent?.tweetPrompt || '')
     setEditMode(false)
 
     // Fetch and process backroom conversations
@@ -204,9 +198,6 @@ const handleAgentSelection = useCallback(async (event) => {
     setSelectedAgent,
     setAgentName,
     setDescription,
-    setConversationPrompt,
-    setRecapPrompt,
-    setTweetPrompt,
     setEditMode,
     setRecentBackroomConversations,
     setBackroomTags
@@ -254,9 +245,6 @@ const handleAgentSelection = useCallback(async (event) => {
         body: JSON.stringify({
           name: agentName,
           description,
-          conversationPrompt,
-          recapPrompt,
-          tweetPrompt,
           agentId: selectedAgent._id,
           userId: JSON.parse(localStorage.getItem('user')),
         }),
@@ -269,9 +257,6 @@ const handleAgentSelection = useCallback(async (event) => {
         ...selectedAgent,
         name: agentName,
         description,
-        conversationPrompt,
-        recapPrompt,
-        tweetPrompt,
       }
       setSelectedAgent(updatedAgent)
       setAgents(
