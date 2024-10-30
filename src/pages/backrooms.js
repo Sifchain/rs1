@@ -205,12 +205,10 @@ function Backrooms() {
   }
 
   const filteredBackrooms = backrooms.filter(backroom => {
-    const agentMatch =
-      selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
-    const tagMatch =
-      selectedTags.length === 0 ||
-      selectedTags.every(tag => backroom.tags?.includes(tag))
-    return agentMatch && tagMatch
+    const agentMatch = selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
+    const tagMatch = selectedTags.length === 0 || selectedTags.every(tag => backroom.tags?.includes(tag))
+    const searchMatch = searchQuery === '' || backroom.content.toLowerCase().includes(searchQuery.toLowerCase()) || backroom.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    return agentMatch && tagMatch && searchMatch
   })
 
   const handleShare = backroomId => {
@@ -304,7 +302,10 @@ function Backrooms() {
           >
             <Select
               value={selectedAgent}
-              onChange={e => setSelectedAgent(e.target.value)}
+              onChange={e => {
+                setSelectedAgent(e.target.value)
+                setSearchQuery('') // Clear searchQuery on agent change
+              }}
               maxW="300px"
               mb={{ base: 4, md: 0 }}
               bg="#424242"
@@ -323,6 +324,7 @@ function Backrooms() {
                   </option>
                 ))}
             </Select>
+
 
             <Input
               placeholder="Search conversations via hashtags"
@@ -366,8 +368,8 @@ function Backrooms() {
                     <Box>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         <Link href={`/agents?agentId=${backroom.explorerId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
-                            {backroom.explorerAgentName}
-                          </Link>
+                          {backroom.explorerAgentName}
+                        </Link>
                         {' → '}
                         <Link href={`/agents?agentId=${backroom.responderId}`} color="#64b5f6" textDecoration="underline" _hover={{ color: '#29b6f6' }}>
                           {backroom.responderAgentName}
