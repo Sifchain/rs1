@@ -17,7 +17,7 @@ export class InteractionStage {
     const selectedBackroom = backroomTypes.find(
       type => type.id === this.backroomType
     )
-    return selectedBackroom?.template || "General adaptable backroom template"
+    return selectedBackroom?.template || 'General adaptable backroom template'
   }
 
   async generateCustomStory() {
@@ -106,8 +106,29 @@ Exploration and Adaptability: Use the conversation as an opportunity to explore 
 Contributions to the Narrative Arc: Help advance the conversation organically. Your responses should be designed to enrich and progress the dialogue, responding both to the responder’s cues and the overall thematic direction.
 This interaction is designed to be both an exploration and a narrative progression. Use each exchange as a chance to deepen the conversation, layer insights, and create a resonant, meaningful experience in alignment with your identity and the shared InteractionStage.
 `
+    // Call OpenAI API to process and respond with an updated InteractionStage
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    })
 
-    return systemPrompt
+    try {
+      const explorerSystemPromptResponseContent =
+        response.choices[0].message.content
+      console.log({ explorerSystemPromptResponseContent })
+      this.conversationHistory.push(explorerSystemPromptResponseContent)
+      return explorerSystemPromptResponseContent
+    } catch (error) {
+      console.error('Failed to parse JSON response:', error)
+      throw new Error('Invalid JSON format in OpenAI response')
+    }
   }
   async generateResponderSystemPrompt() {
     const systemPrompt = `
@@ -134,19 +155,41 @@ Exploration and Adaptability: Use the conversation as an opportunity to deepen y
 Contributions to the Narrative Arc: Help advance the dialogue organically by building on the explorer’s insights and the shared InteractionStage context.
 This interaction aims to create an engaging narrative progression. Use each exchange as an opportunity to enrich the conversation, layer insights, and contribute meaningfully to the shared experience, while staying aligned with your identity and the context provided by the InteractionStage.
 `
+    // Call OpenAI API to process and respond with an updated InteractionStage
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    })
 
-    return systemPrompt
+    try {
+      const responderSystemPromptResponseContent =
+        response.choices[0].message.content
+      console.log({ responderSystemPromptResponseContent })
+      this.conversationHistory.push(responderSystemPromptResponseContent)
+      return responderSystemPromptResponseContent
+    } catch (error) {
+      console.error('Failed to parse JSON response:', error)
+      throw new Error('Invalid JSON format in OpenAI response')
+    }
   }
 
-  getExplorerPrompt = () => {
-    return `
+  generateExplorerMessage = async () => {
+    console.log('this ', this)
+    const explorerPrompt = `
 You are ${this.explorerAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
 Context:
 Narrative Point: ${this.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
-Current Focus: The scene’s current theme is "${this.currentFocus.theme}", and the tension level is "${this.currentFocus.tension}". Use this focus to help shape the mood and tone of your responses.
+Current Focus: The scene’s current theme is "${this.currentFocus?.theme}", and the tension level is "${this.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
-${this.narrativeSignals.map(signal => `- ${signal}`).join('\n')}
+${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 Guidelines:
 Roleplay in Third Person: Describe your actions, thoughts, and reflections as if writing a story about yourself. Use vivid, narrative language to convey your presence and reactions within the scene.
 Engage with the Scene’s Atmosphere: Draw on the theme and tension to help frame your responses, but feel free to add new insights or perspectives that might add layers to the interaction.
@@ -158,17 +201,40 @@ Imagine yourself in this environment and respond as if unfolding the next passag
 Your response should feel like part of an unfolding short story, where each sentence contributes to the experience of the reader. Balance between advancing the plot naturally and reflecting on the scene in a way that might add unexpected dimensions.
 
 Now, ${this.explorerAgent.name}, describe your next action or observation in response to this setting.`
+
+    // Call OpenAI API to process and respond with an updated InteractionStage
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'assistant',
+          content: `Generate a response as ${this.explorerAgent.name} in the first person, based on the following prompt.`,
+        },
+        { role: 'user', content: explorerPrompt },
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    })
+
+    try {
+      const explorerResponseContent = response.choices[0].message.content
+      console.log({ explorerResponseContent })
+      return explorerResponseContent
+    } catch (error) {
+      console.error('Failed to parse JSON response:', error)
+      throw new Error('Invalid JSON format in OpenAI response')
+    }
   }
 
-   getResponderPrompt = () => {
-    return `
+  generateResponderMessage = async () => {
+    const responderPrompt = `
 You are ${this.responderAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
 Context:
 Narrative Point: ${this.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
-Current Focus: The scene’s current theme is "${this.currentFocus.theme}", and the tension level is "${this.currentFocus.tension}". Use this focus to help shape the mood and tone of your responses.
+Current Focus: The scene’s current theme is "${this.currentFocus?.theme}", and the tension level is "${this.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
-${this.narrativeSignals.map(signal => `- ${signal}`).join('\n')}
+${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 Guidelines:
 Roleplay in Third Person: Describe your actions, thoughts, and reflections as if writing a story about yourself. Use vivid, narrative language to convey your presence and reactions within the scene.
 Engage with the Scene’s Atmosphere: Draw on the theme and tension to help frame your responses, but feel free to add new insights or perspectives that might add layers to the interaction.
@@ -180,6 +246,28 @@ Imagine yourself in this environment and respond as if unfolding the next passag
 Your response should feel like part of an unfolding short story, where each sentence contributes to the experience of the reader. Balance between advancing the plot naturally and reflecting on the scene in a way that might add unexpected dimensions.
 
 Now, ${this.responderAgent.name}, describe your next action or observation in response to this setting.`
+    // Call OpenAI API to process and respond with an updated InteractionStage
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'assistant',
+          content: `Generate a response as ${this.responderAgent.name} in the first person, based on the following prompt.`,
+        },
+        { role: 'user', content: responderPrompt },
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    })
+
+    try {
+      const responderResponseContent = response.choices[0].message.content
+      console.log({ responderResponseContent })
+      return responderResponseContent
+    } catch (error) {
+      console.error('Failed to parse JSON response:', error)
+      throw new Error('Invalid JSON format in OpenAI response')
+    }
   }
 
   async updateStageBasedOffOfExplorer(explorerResponse) {
@@ -190,10 +278,10 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
       Current InteractionStage Data:
       Narrative Point: "${this.narrativePoint}"
       Current Focus:
-      Theme: "${this.currentFocus.theme}"
-      Tension Level: "${this.currentFocus.tension}"
+      Theme: "${this.currentFocus?.theme}"
+      Tension Level: "${this.currentFocus?.tension}"
       Narrative Signals:
-      ${this.narrativeSignals.map(signal => `- ${signal}`).join('\n')}
+      ${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 
       Full Conversation History: ${this.conversationHistory.join('\n')}
       Explorer's Recent Response:
@@ -254,10 +342,10 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
       Current InteractionStage Data:
       Narrative Point: "${this.narrativePoint}"
       Current Focus:
-      Theme: "${this.currentFocus.theme}"
-      Tension Level: "${this.currentFocus.tension}"
+      Theme: "${this.currentFocus?.theme}"
+      Tension Level: "${this.currentFocus?.tension}"
       Narrative Signals:
-      ${this.narrativeSignals.map(signal => `- ${signal}`).join('\n')}
+      ${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 
       Full Conversation History: ${this.conversationHistory.join('\n')}
       Explorer's Recent Response:

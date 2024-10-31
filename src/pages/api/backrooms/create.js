@@ -65,7 +65,6 @@ export default async function handler(req, res) {
         explorer,
         responder
       )
-      console.log('custom story', await interactionStage.generateCustomStory())
 
       let explorerMessageHistory = [
         await interactionStage.generateExplorerSystemPrompt(),
@@ -73,11 +72,10 @@ export default async function handler(req, res) {
       let responderMessageHistory = [
         await interactionStage.generateResponderSystemPrompt(),
       ]
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 2; i++) {
         // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         // Generate explorer response using the current InteractionStage state
-        const explorerMessage = await interactionStage.getExplorerPrompt()
-        console.log('explorerMessage ', explorerMessage)
+        const explorerMessage = await interactionStage.generateExplorerMessage()
 
         await interactionStage.updateStageBasedOffOfExplorer(explorerMessage)
         // Add explorer's response to conversation histories
@@ -95,7 +93,7 @@ export default async function handler(req, res) {
         })
 
         // Generate responder response using the updated InteractionStage state
-        const responderMessage = await interactionStage.getResponderPrompt()
+        const responderMessage = await interactionStage.generateResponderMessage()
 
         await interactionStage.updateStageBasedOffOfResponder(responderMessage)
         // Add responder's response to conversation histories
@@ -117,7 +115,7 @@ export default async function handler(req, res) {
         .slice(1) // Start from the initial CLI prompt to include only conversation parts
         .map(
           entry =>
-            `${entry.role === 'user' ? responder.name : responder.name}: ${entry.content}`
+            `${entry.role === 'user' ? responder.name : explorer.name}: ${entry.content}`
         )
         .join('\n')
 
