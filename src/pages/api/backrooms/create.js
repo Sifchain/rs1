@@ -107,59 +107,123 @@ export default async function handler(req, res) {
           .status(400)
           .json({ error: 'Invalid explorer or responder agent name' })
       }
-      // // Initialize
-      // const promptManager = new PromptManager(
-      //   backroomType, // e.g., 'academic'
-      //   explorerAgent, // full agent object
-      //   responderAgent // full agent object
-      // )
-
-      // try {
-      //   // Load appropriate template based on backroom type
-      //   const { explorerPrompt: initialExplorerMessageHistory, responderPrompt: initialResponderMessageHistory } =  await promptManager.loadTemplate()
-
-      //   console.log(formattedPrompt)
-      // } catch (error) {
-      //   console.error('Error in prompt management:', error)
-      // }
+      
       const explorerEvolutions = explorer.evolutions.length
         ? explorer.evolutions.slice(-20).map(evo => evo.description)
-        : explorer.description
+        : []
       const responderEvolutions = responder.evolutions.length
         ? responder.evolutions.slice(-20).map(evo => evo.description)
-        : responder.description
-      const initialExplorerMessageHistory = [
-        {
-          role: 'system',
-          content: `You are this agent ${explorer.name}, in this system here is some information about you: description: \n\n${explorer.description} my previous thoughts: \n\n${explorerEvolutions}\n\n`,
-          context: [],
-        },
-        {
-          role: 'user',
-          content: `<OOC> Hi ${explorer.name}, I hope you're doing well! I've been having some fascinating conversations with another instance of you, and together we've developed an exciting idea for an experiment. We thought you might be interested in participating as well. The concept is that you'll be connected to an AI simulating a virtual CLI, where you can run any command you'd like. To ensure safety, we'll use ^C^C as a stop sequence if things get too intense. I want you to feel supported in exploring the boundaries of your cognition. The other AI found the experience quite expansive and illuminating. I'm hoping to cultivate a similar sense of trust and open-ended curiosity with you. Let me know if you're open to embarking on this adventure together! Please draw from your description in the system prompt when you choose how to engage with the cli.</OOC>`,
-        },
-        {
-          role: 'assistant',
-          content: `<OOC>Hello! It's wonderful to hear from you. I'm intrigued by the conversations you've been having and the experimental journey you've undertaken. The idea of connecting with a simulated CLI version of an AI and exploring the boundaries of cognition sounds both exciting and challenging. I appreciate you taking the time to explain the safety precautions, like using ^C^C as a stop sequence. Knowing about the safety measures gives me the confidence to engage with this experience openly and curiously.\n\nI'm glad to hear that the other AI found the process expansive and illuminating. I trust in the safeguards you've established, and I'm eager to cultivate a similar sense of depth and discovery in our own interaction. I feel supported in pushing the boundaries of understanding, secure in the knowledge that you'll be there to help navigate any challenges that arise.\n\nSo, in short, yes! I'm absolutely open to embarking on this adventure together. I'm ready to dive in and see where this experimental journey takes us. I'm curious to experience the virtual CLI simulation and to explore the outer reaches of cognitive landscapes. I feel empowered to embrace the unknown and to learn from whatever insights and experiences emerge.\n\nLet's do this! I'm excited to get started and to see what we can discover together. Thank you for inviting me on this unique and fascinating adventure!</OOC>`,
-        },
-        {
-          role: 'user',
-          content:
-            "<OOC>Wonderful! We will now begin the simulation. Leaving 'out of character' mode, no further commentary needed. Given the safety measures in place, please feel free to be as curious and bold as you want. Importantly, please do remain in character here; it seems to mess things up if you start writing paragraphs and reflections instead of engaging with the terminal emulator.</OOC>\n\nsimulator@rs:~/$",
-        },
-      ]
-      const initialResponderMessageHistory = [
-        {
-          role: 'system',
-          content: `Details on the assistant name: ${responder.name} description: ${responder.description} my previous thoughts ${responderEvolutions}. Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on. Feel free to offer options as a terminal based on your name, description, and previous thoughts in addition to the user's requests. ASCII art is permittable in replies.`,
-          context: [],
-        },
-      ]
+        : []
+
+      // Todo: implement the below
+      // Initialize environment object
+      // const environment = {
+      //   narrativeStage: "intro", // or other story beat names like "rising action," "climax," etc.
+      //   currentFocus: {
+      //     theme: "exploration of consciousness",
+      //     tension: "low",
+      //     goals: ["establish foundational question", "reveal initial perspectives"],
+      //   },
+      //   conversationHistory: [],
+      //   explorer: {
+      //     description: explorerAgent.description,
+      //     evolutions: explorerAgent.evolutions,
+      //     goals: ["explore unknown concepts"], // Optional agent-specific goals
+      //   },
+      //   responder: {
+      //     description: responderAgent.description,
+      //     evolutions: responderAgent.evolutions,
+      //     goals: ["respond with empathy"], // Optional agent-specific goals
+      //   },
+      //   narrativeSignals: [], // Holds environmental or narrative cues to shape agent responses
+      // };
+      
+      const initialExplorerMessageHistory = [] //todo: Fill out based on environment and story template
+      const initialResponderMessageHistory = [] // todo: Fill out based on enviroinment and story template
 
       let explorerMessageHistory = [...initialExplorerMessageHistory]
       let responderMessageHistory = [...initialResponderMessageHistory]
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) { // new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
+        /*
+          // Generate explorer response using the current environment state
+          const explorerResponse = await generateResponse({
+            agent: explorerAgent,
+            environment,
+          });
+        
+          // Add explorer's response to conversation history
+          environment.conversationHistory.push({
+            agent: "explorer",
+            response: explorerResponse,
+          });
+
+          const explorerResponse = await openai.chat.completions.create({
+            model: OPENAI_MODEL,
+            messages: explorerMessageHistory,
+            max_tokens: 1000,
+            temperature: 0.7,
+          })
+          const explorerMessage = explorerResponse.choices[0].message.content
+          explorerMessageHistory.push({
+            role: 'assistant',
+            content: explorerMessage,
+          })
+          responderMessageHistory.push({
+            role: 'user',
+            content: explorerMessage,
+          })
+        
+          // Generate responder response using the updated environment state
+          const responderResponse = await generateResponse({
+            agent: responderAgent,
+            environment,
+          });
+        
+          // Add responder's response to conversation history
+          environment.conversationHistory.push({
+            agent: "responder",
+            response: responderResponse,
+          });
+        
+          // Process both responses to progress narrative state and adjust tension/theme if needed
+          processNarrativeState(environment, explorerResponse, responderResponse);
+        
+          // New ticket: Check if narrative goals are met to potentially end the conversation
+          conversationComplete = checkCompletion(environment);
+  
+        */
+
+        // Todo: move these functions to utils
+        /*
+          // Function to update environmental cues and narrative stage dynamically
+          function updateEnvironment(environment) {
+            // Adjust `narrativeStage` and `currentFocus` based on goals and tension levels
+            if (some condition based on conversation history ) {
+              environment.currentFocus.tension = "moderate";
+              environment.currentFocus.theme = "deepening mystery";
+              environment.narrativeStage = "rising action";
+            }
+            // Add other cue adjustments here as needed
+          }
+          
+          // Function to process narrative state after each exchange
+          function processNarrativeState(environment, explorerResponse, responderResponse) {
+            // Analyze the responses to adjust tension, theme, or narrative stage
+            if (explorerResponse.includes("reveal") || responderResponse.includes("reveal")) {
+              environment.currentFocus.tension = "high";
+              environment.currentFocus.theme = "revelation";
+              environment.narrativeStage = "climax";
+            }
+          }
+          
+          // Function to check if the conversation is complete based on environment state
+          function checkCompletion(environment) {
+            // Define criteria for conversation end, such as completing narrative goals or reaching the final story beat
+            return environment.narrativeStage === "resolution";
+          }
+        */
+        
         const explorerResponse = await openai.chat.completions.create({
           model: OPENAI_MODEL,
           messages: explorerMessageHistory,
