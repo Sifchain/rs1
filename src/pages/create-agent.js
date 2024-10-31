@@ -261,7 +261,6 @@ function CreateAgent() {
                   </Flex>
                   <Collapse in={isOpen} animateOpacity>
                     <Box
-                      mb={2}
                       p={4}
                       bg="#424242"
                       borderRadius="md"
