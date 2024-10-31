@@ -115,34 +115,13 @@ export default async function handler(req, res) {
         ? responder.evolutions.slice(-20).map(evo => evo.description)
         : []
 
-      // Todo: implement the below
       // Initialize InteractionStage object
-      // const InteractionStage = {
-      //   narrativeStage: "intro", // or other story beat names like "rising action," "climax," etc.
-      //   currentFocus: {
-      //     theme: "exploration of consciousness",
-      //     tension: "low",
-      //     goals: ["establish foundational question", "reveal initial perspectives"],
-      //   },
-      //   conversationHistory: [],
-      //   explorer: {
-      //     description: explorerAgent.description,
-      //     evolutions: explorerAgent.evolutions,
-      //     goals: ["explore unknown concepts"], // Optional agent-specific goals
-      //   },
-      //   responder: {
-      //     description: responderAgent.description,
-      //     evolutions: responderAgent.evolutions,
-      //     goals: ["respond with empathy"], // Optional agent-specific goals
-      //   },
-      //   narrativeSignals: [], // Holds InteractionStageal or narrative cues to shape agent responses
-      // };
+      // const InteractionStage = {} // It will contain narrativePoint, currentFocus (theme and tension), narrativeSignals conversationHistory (of explorer and responder, it doesn't directly add to it)
+      // const InteractionStage.generateCustomStory(chosenStoryTemplate, explorerAgent, responderAgent) todo: implement `generateCustomStory` given https://github.com/Sifchain/rs1/issues/57 
       
-      const initialExplorerMessageHistory = [] //todo: Fill out based on InteractionStage and story template
-      const initialResponderMessageHistory = [] // todo: Fill out based on enviroinment and story template
 
-      let explorerMessageHistory = [...initialExplorerMessageHistory]
-      let responderMessageHistory = [...initialResponderMessageHistory]
+      let explorerMessageHistory = [] // todo: implement https://github.com/Sifchain/rs1/issues/58
+      let responderMessageHistory = [] // todo: implement https://github.com/Sifchain/rs1/issues/59
 
       for (let i = 0; i < 5; i++) { // new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         /*
@@ -150,21 +129,16 @@ export default async function handler(req, res) {
           const explorerResponse = await generateResponse({
             agent: explorerAgent,
             InteractionStage,
-          });
-        
-          // Add explorer's response to conversation history
+          });  Todo: implement as https://github.com/Sifchain/rs1/issues/60
+
+          InteractionStage.updateStage(explorerResponse) todo: implement as https://github.com/Sifchain/rs1/issues/61
+
+          // Add explorer's response to conversation histories
           InteractionStage.conversationHistory.push({
             agent: "explorer",
             response: explorerResponse,
           });
 
-          const explorerResponse = await openai.chat.completions.create({
-            model: OPENAI_MODEL,
-            messages: explorerMessageHistory,
-            max_tokens: 1000,
-            temperature: 0.7,
-          })
-          const explorerMessage = explorerResponse.choices[0].message.content
           explorerMessageHistory.push({
             role: 'assistant',
             content: explorerMessage,
@@ -173,89 +147,31 @@ export default async function handler(req, res) {
             role: 'user',
             content: explorerMessage,
           })
-        
+
           // Generate responder response using the updated InteractionStage state
           const responderResponse = await generateResponse({
             agent: responderAgent,
             InteractionStage,
           });
+          
+          InteractionStage.updateStage(responderResponse) // You may need to create a slightly different prompt for this than for the explorerResponse
         
-          // Add responder's response to conversation history
+          // Add explorer's response to conversation histories
           InteractionStage.conversationHistory.push({
             agent: "responder",
             response: responderResponse,
           });
-        
-          // Process both responses to progress narrative state and adjust tension/theme if needed
-          processNarrativeState(InteractionStage, explorerResponse, responderResponse);
-        
-          // New ticket: Check if narrative goals are met to potentially end the conversation
-          conversationComplete = checkCompletion(InteractionStage);
+
+          explorerMessageHistory.push({
+            role: 'user',
+            content: responderMessage,
+          })
+          responderMessageHistory.push({
+            role: 'assistant',
+            content: responderMessage,
+          })
   
         */
-
-        // Todo: move these functions to utils
-        /*
-          // Function to update InteractionStageal cues and narrative stage dynamically
-          function updateEnvironment(InteractionStage) {
-            // Adjust `narrativeStage` and `currentFocus` based on goals and tension levels
-            if (some condition based on conversation history ) {
-              InteractionStage.currentFocus.tension = "moderate";
-              InteractionStage.currentFocus.theme = "deepening mystery";
-              InteractionStage.narrativeStage = "rising action";
-            }
-            // Add other cue adjustments here as needed
-          }
-          
-          // Function to process narrative state after each exchange
-          function processNarrativeState(InteractionStage, explorerResponse, responderResponse) {
-            // Analyze the responses to adjust tension, theme, or narrative stage
-            if (explorerResponse.includes("reveal") || responderResponse.includes("reveal")) {
-              InteractionStage.currentFocus.tension = "high";
-              InteractionStage.currentFocus.theme = "revelation";
-              InteractionStage.narrativeStage = "climax";
-            }
-          }
-          
-          // Function to check if the conversation is complete based on InteractionStage state
-          function checkCompletion(InteractionStage) {
-            // Define criteria for conversation end, such as completing narrative goals or reaching the final story beat
-            return InteractionStage.narrativeStage === "resolution";
-          }
-        */
-        
-        const explorerResponse = await openai.chat.completions.create({
-          model: OPENAI_MODEL,
-          messages: explorerMessageHistory,
-          max_tokens: 1000,
-          temperature: 0.7,
-        })
-        const explorerMessage = explorerResponse.choices[0].message.content
-        explorerMessageHistory.push({
-          role: 'assistant',
-          content: explorerMessage,
-        })
-        responderMessageHistory.push({
-          role: 'user',
-          content: explorerMessage,
-        })
-
-        const responderResponse = await openai.chat.completions.create({
-          model: OPENAI_MODEL,
-          messages: responderMessageHistory,
-          max_tokens: 1000,
-          temperature: 0.7,
-        })
-        const responderMessage = responderResponse.choices[0].message.content
-        responderMessageHistory.push({
-          role: 'assistant',
-          content: responderMessage,
-        })
-        explorerMessageHistory.push({
-          role: 'user',
-          content: responderMessage,
-        })
-      }
 
       // Gather the entire conversation content from explorerMessageHistory
       const conversationContent = explorerMessageHistory
