@@ -107,6 +107,8 @@ function Agents() {
         selectAgentById(agentId, data)
         const agent = data.find(agent => agent._id === agentId)
         setSelectedAgent(agent)
+      } else {
+        setSelectedAgent(null)
       }
     } catch (error) {
       console.error('Error fetching agents:', error)

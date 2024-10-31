@@ -109,7 +109,7 @@ const BackroomConversation = ({ conversationContent, agentOne, agentTwo }) => {
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedAgent, setSelectedAgent] = useState('All')
+  const [selectedAgent, setSelectedAgent] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedIndex, setExpandedIndex] = useState(null) // Tracks which conversation is expanded
   const [tags, setTags] = useState([])
@@ -183,8 +183,6 @@ function Backrooms() {
         setLoading(false)
       }
     }
-
-
     fetchBackrooms()
   }, [expanded, queryTags])
 
@@ -205,7 +203,7 @@ function Backrooms() {
   }
 
   const filteredBackrooms = backrooms.filter(backroom => {
-    const agentMatch = selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
+    const agentMatch = selectedAgent === '' || backroom.explorerAgentName === selectedAgent
     const tagMatch = selectedTags.length === 0 || selectedTags.every(tag => backroom.tags?.includes(tag))
     const searchMatch = searchQuery === '' || backroom.content.toLowerCase().includes(searchQuery.toLowerCase()) || backroom.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
     return agentMatch && tagMatch && searchMatch
@@ -261,7 +259,6 @@ function Backrooms() {
       />
       <Navigation />
       <Box bg="#424242" color="#e0e0e0" minHeight="100vh" py={10} px={6}>
-        <Box maxW="container.xl" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={10}>
             <Heading
               textAlign="center"
@@ -313,7 +310,7 @@ function Backrooms() {
               borderColor="#757575"
               _hover={{ borderColor: '#81d4fa' }}
             >
-              <option value="All">All Agents</option>
+              <option value={''}>All Agents</option>
               {Array.from(
                 new Set(backrooms.map(backroom => backroom.explorerAgentName))
               )
@@ -456,8 +453,6 @@ function Backrooms() {
               </Text>
             )}
           </VStack>
-
-        </Box>
       </Box>
     </ChakraProvider>
   )
