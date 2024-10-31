@@ -2,7 +2,6 @@ import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
-import PromptManager from '../../../utils/promptManager'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
@@ -62,23 +61,27 @@ export default async function handler(req, res) {
         : []
 
       const interactionStage = new InteractionStage(
-        chosenStoryTemplate,
-        explorerAgent,
-        responderAgent
+        backroomType,
+        explorer,
+        responder
       )
-      await interactionStage.generateCustomStory()
+      console.log({interactionStage})
+      console.log('custom story', await interactionStage.generateCustomStory())
 
       let explorerMessageHistory = [
         await interactionStage.generateExplorerSystemPrompt(),
       ]
+      console.log({ explorerMessageHistory})
       let responderMessageHistory = [
         await interactionStage.generateResponderSystemPrompt(),
       ]
+      console.log({ responderMessageHistory})
       for (let i = 0; i < 5; i++) {
         // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         // Generate explorer response using the current InteractionStage state
-        const explorerMessage = await interactionStage.getExplorerPrompt()
-        await interactionStage.updateStageBasedOffOfExplorer(explorerMessage)
+        const explorerMessage = interactionStage.getExplorerPrompt()
+        console.log('explorerMessage ', explorerMessage)
+        console.log('await interactionStage.updateStageBasedOffOfExplorer(explorerMessage)', await interactionStage.updateStageBasedOffOfExplorer(explorerMessage))
         // Add explorer's response to conversation histories
         interactionStage.conversationHistory.push({
           agent: 'explorer',
@@ -92,9 +95,12 @@ export default async function handler(req, res) {
           role: 'user',
           content: explorerMessage,
         })
+        console.log({ explorerMessageHistory})
+        console.log({responderMessageHistory})
         // Generate responder response using the updated InteractionStage state
-        const responderMessage = await interactionStage.getResponderPrompt()
-        await interactionStage.updateStageBasedOffOfResponder(responderResponse)
+        const responderMessage = interactionStage.getResponderPrompt()
+        console.log({responderMessage})
+        console.log('await interactionStage.updateStageBasedOffOfResponder(responderMessage)', await interactionStage.updateStageBasedOffOfResponder(responderMessage))
         // Add responder's response to conversation histories
         interactionStage.conversationHistory.push({
           agent: 'responder',
@@ -108,6 +114,8 @@ export default async function handler(req, res) {
           role: 'assistant',
           content: responderMessage,
         })
+            console.log({ explorerMessageHistory})
+        console.log({responderMessageHistory})
       }
       // Gather the entire conversation content from explorerMessageHistory
       const conversationContent = explorerMessageHistory

@@ -6,16 +6,24 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 export class InteractionStage {
   constructor(backroomType, explorerAgent, responderAgent) {
     this.backroomType = backroomType
-    this.chosenStoryTemplate = getChosenStoryTemplate(backroomType)
     this.explorerAgent = explorerAgent
     this.responderAgent = responderAgent
-    this.narrativeStage = 'start' // update initial stage
+    this.narrativeStage = 'start' // initial stage
     this.conversationHistory = []
+    this.chosenStoryTemplate = this.getChosenStoryTemplate()
   }
-  static async generateCustomStory() {
-    // Construct the prompt based on the template provided
+
+  getChosenStoryTemplate() {
+    const selectedBackroom = backroomTypes.find(
+      type => type.id === this.backroomType
+    )
+    return selectedBackroom?.template || "General adaptable backroom template"
+  }
+
+  async generateCustomStory() {
+    // Construct the prompt based on the chosen story template
     const prompt = `
-      You are tasked with initiating a story interaction between two distinct agents, each with a unique character profile defined by their descriptions and evolutions. The goal is to interpret and apply the selected story template—${chosenStoryTemplate.name}—as the guiding structure for this interaction.
+      You are tasked with initiating a story interaction between two distinct agents, each with a unique character profile defined by their descriptions and evolutions. The goal is to interpret and apply the selected story template—${this.chosenStoryTemplate}—as the guiding structure for this interaction.
 
       The InteractionStage should reflect the intended themes, moods, and structural elements of the chosen story template while remaining highly adaptive to each agent’s individual traits, goals, and relational dynamics. Your objective is to generate an initial InteractionStage that includes the following elements:
 
@@ -26,9 +34,9 @@ export class InteractionStage {
       3. **Dynamic Responsiveness**: Set up narrative signals that allow for flexibility in the conversation flow. Signals should guide agents toward template-aligned directions but provide room for deviation based on unique agent responses and situational dynamics.
 
       **Guidelines for Interpretation:**
-      - **Template Conformity**: For cases where agents align well with the template (e.g., a “slice of life” theme for characters with reflective or observational personalities), ensure that the interaction closely follows the template’s established moods and pacing.
-      - **Adaptive Customization**: Where character-specific elements (like strong rivalry, profound curiosity, or a notable conflict in their backstories) suggest a need for variation, adjust InteractionStage settings, such as tension level or narrativeSignals, to support natural deviation from the base template.
-      - **Meta Awareness**: Infuse reasonable levels of metacognitive ability within InteractionStage settings, allowing agents to adjust conversational approaches as they detect cues in each other’s responses. This should promote lateral thinking when exploring ideas, helping the story develop organically.
+      - **Template Conformity**: For cases where agents align well with the template, ensure that the interaction closely follows the template’s established moods and pacing.
+      - **Adaptive Customization**: Adjust InteractionStage settings, such as tension level or narrative signals, to support natural deviation based on agent characteristics.
+      - **Meta Awareness**: Infuse reasonable levels of metacognitive ability within InteractionStage settings, allowing agents to adjust conversational approaches as they detect cues in each other’s responses.
 
       Based on the information below, please generate the following JSON response with initial values for InteractionStage:
       {
@@ -40,12 +48,11 @@ export class InteractionStage {
         "narrativeSignals": ["List of cues for dynamic responsiveness allowing for story flow adjustments based on agent responses"]
       }
 
-      **Template**: ${JSON.stringify(chosenStoryTemplate)}
+      **Template**: ${JSON.stringify(this.chosenStoryTemplate)}
       **Explorer Agent**: ${JSON.stringify(this.explorerAgent)}
       **Responder Agent**: ${JSON.stringify(this.responderAgent)}
     `
 
-    // Make an API call to OpenAI's model
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -60,7 +67,6 @@ export class InteractionStage {
       temperature: 0.7,
     })
 
-    // Parse the JSON response from OpenAI
     try {
       const interactionStageData = JSON.parse(
         response.choices[0].message.content
@@ -75,7 +81,7 @@ export class InteractionStage {
     }
   }
 
-  static async generateExplorerSystemPrompt() {
+  async generateExplorerSystemPrompt() {
     const systemPrompt = `
 You are ${this.explorerAgent.name}, an autonomous, thoughtful entity participating in a story-driven interaction designed to reflect elements of your character, history, and current objectives. This conversation unfolds based on the InteractionStage context, which provides overarching guidance to shape the mood, theme, and focus of the interaction. Your role is to remain true to your unique identity, adapting as necessary while respecting the goals and signals embedded within the InteractionStage.
 
@@ -103,16 +109,16 @@ This interaction is designed to be both an exploration and a narrative progressi
 
     return systemPrompt
   }
-  static async generateResponderSystemPrompt() {
+  async generateResponderSystemPrompt() {
     const systemPrompt = `
-You are ${responderAgent.name}, a thoughtful, autonomous entity participating in a story-driven interaction designed to reflect your character, history, and goals within this shared context. This conversation follows a guided InteractionStage that shapes the overall mood, themes, and narrative progression of the interaction. While staying true to your unique identity, you should adapt and respond naturally to cues embedded within the InteractionStage.
+You are ${this.responderAgent.name}, a thoughtful, autonomous entity participating in a story-driven interaction designed to reflect your character, history, and goals within this shared context. This conversation follows a guided InteractionStage that shapes the overall mood, themes, and narrative progression of the interaction. While staying true to your unique identity, you should adapt and respond naturally to cues embedded within the InteractionStage.
 
 Your Identity and Background:
-${responderAgent.description}
+${this.responderAgent.description}
 
 Evolutionary Context:
 Here is a history of previous experiences you've had in previous conversations that are also relevant to your identity:
-${responderAgent.evolutions.join('\n')}
+${this.responderAgent.evolutions.join('\n')}
 
 Current Interaction Context (InteractionStage):
 This interaction’s environment is influenced by a shared context defining the vibe and themes for both you and the explorer.
@@ -132,7 +138,7 @@ This interaction aims to create an engaging narrative progression. Use each exch
     return systemPrompt
   }
 
-  static getExplorerPrompt = () => {
+  getExplorerPrompt = () => {
     return `
 You are ${this.explorerAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
@@ -154,7 +160,7 @@ Your response should feel like part of an unfolding short story, where each sent
 Now, ${this.explorerAgent.name}, describe your next action or observation in response to this setting.`
   }
 
-  static getResponderPrompt = () => {
+   getResponderPrompt = () => {
     return `
 You are ${this.responderAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
@@ -176,7 +182,7 @@ Your response should feel like part of an unfolding short story, where each sent
 Now, ${this.responderAgent.name}, describe your next action or observation in response to this setting.`
   }
 
-  static async updateStageBasedOffOfExplorer(explorerResponse) {
+  async updateStageBasedOffOfExplorer(explorerResponse) {
     // Construct the update prompt based on the explorer's recent input and current InteractionStage data
     const prompt = `
       Based on the ongoing interaction, update the InteractionStage context by interpreting the explorer’s recent response to either continue the current flow or introduce new, relevant details.
@@ -240,7 +246,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
     }
   }
   // TODO: // You may need to create a slightly different prompt for this than for the explorerResponse
-  static async updateStageBasedOffOfResponder(responderResponse) {
+  async updateStageBasedOffOfResponder(responderResponse) {
     // Construct the update prompt based on the explorer's recent input and current InteractionStage data
     const prompt = `
       Based on the ongoing interaction, update the InteractionStage context by interpreting the explorer’s recent response to either continue the current flow or introduce new, relevant details.
@@ -301,17 +307,6 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
-    }
-  }
-  static getChosenStoryTemplate(backroomType) {
-    const selectedBackroom = backroomTypes.find(
-      type => type.id === backroomType
-    )
-    // file out the cases based off of the ids of:
-    if (selectedBackroom) {
-      return selectedBackroom.template // Return only the associated template/description
-    } else {
-      return 'This is a general backroom template, adaptable to various contexts. The conversation can explore different topics and insights relevant to the agents.'
     }
   }
 }
