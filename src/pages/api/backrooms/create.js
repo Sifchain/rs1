@@ -107,7 +107,7 @@ export default async function handler(req, res) {
           .status(400)
           .json({ error: 'Invalid explorer or responder agent name' })
       }
-      
+
       const explorerEvolutions = explorer.evolutions.length
         ? explorer.evolutions.slice(-20).map(evo => evo.description)
         : []
@@ -117,8 +117,8 @@ export default async function handler(req, res) {
 
       // Initialize InteractionStage object
       // const InteractionStage = {} // It will contain narrativePoint, currentFocus (theme and tension), narrativeSignals conversationHistory (of explorer and responder, it doesn't directly add to it)
-      // const InteractionStage.generateCustomStory(chosenStoryTemplate, explorerAgent, responderAgent) todo: implement `generateCustomStory` given https://github.com/Sifchain/rs1/issues/57 
-      
+      // const InteractionStage.generateCustomStory(chosenStoryTemplate, explorerAgent, responderAgent) todo: implement `generateCustomStory` given https://github.com/Sifchain/rs1/issues/57
+
 
       let explorerMessageHistory = [] // todo: implement https://github.com/Sifchain/rs1/issues/58
       let responderMessageHistory = [] // todo: implement https://github.com/Sifchain/rs1/issues/59
@@ -153,9 +153,9 @@ export default async function handler(req, res) {
             agent: responderAgent,
             InteractionStage,
           });
-          
+
           InteractionStage.updateStage(responderResponse) // You may need to create a slightly different prompt for this than for the explorerResponse
-        
+
           // Add explorer's response to conversation histories
           InteractionStage.conversationHistory.push({
             agent: "responder",
@@ -170,9 +170,9 @@ export default async function handler(req, res) {
             role: 'assistant',
             content: responderMessage,
           })
-  
-        */
 
+        */
+      }
       // Gather the entire conversation content from explorerMessageHistory
       const conversationContent = explorerMessageHistory
         .slice(4) // Start from the initial CLI prompt to include only conversation parts
