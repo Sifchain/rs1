@@ -116,8 +116,8 @@ export default async function handler(req, res) {
         : []
 
       // Todo: implement the below
-      // Initialize environment object
-      // const environment = {
+      // Initialize InteractionStage object
+      // const InteractionStage = {
       //   narrativeStage: "intro", // or other story beat names like "rising action," "climax," etc.
       //   currentFocus: {
       //     theme: "exploration of consciousness",
@@ -135,10 +135,10 @@ export default async function handler(req, res) {
       //     evolutions: responderAgent.evolutions,
       //     goals: ["respond with empathy"], // Optional agent-specific goals
       //   },
-      //   narrativeSignals: [], // Holds environmental or narrative cues to shape agent responses
+      //   narrativeSignals: [], // Holds InteractionStageal or narrative cues to shape agent responses
       // };
       
-      const initialExplorerMessageHistory = [] //todo: Fill out based on environment and story template
+      const initialExplorerMessageHistory = [] //todo: Fill out based on InteractionStage and story template
       const initialResponderMessageHistory = [] // todo: Fill out based on enviroinment and story template
 
       let explorerMessageHistory = [...initialExplorerMessageHistory]
@@ -146,14 +146,14 @@ export default async function handler(req, res) {
 
       for (let i = 0; i < 5; i++) { // new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         /*
-          // Generate explorer response using the current environment state
+          // Generate explorer response using the current InteractionStage state
           const explorerResponse = await generateResponse({
             agent: explorerAgent,
-            environment,
+            InteractionStage,
           });
         
           // Add explorer's response to conversation history
-          environment.conversationHistory.push({
+          InteractionStage.conversationHistory.push({
             agent: "explorer",
             response: explorerResponse,
           });
@@ -174,53 +174,53 @@ export default async function handler(req, res) {
             content: explorerMessage,
           })
         
-          // Generate responder response using the updated environment state
+          // Generate responder response using the updated InteractionStage state
           const responderResponse = await generateResponse({
             agent: responderAgent,
-            environment,
+            InteractionStage,
           });
         
           // Add responder's response to conversation history
-          environment.conversationHistory.push({
+          InteractionStage.conversationHistory.push({
             agent: "responder",
             response: responderResponse,
           });
         
           // Process both responses to progress narrative state and adjust tension/theme if needed
-          processNarrativeState(environment, explorerResponse, responderResponse);
+          processNarrativeState(InteractionStage, explorerResponse, responderResponse);
         
           // New ticket: Check if narrative goals are met to potentially end the conversation
-          conversationComplete = checkCompletion(environment);
+          conversationComplete = checkCompletion(InteractionStage);
   
         */
 
         // Todo: move these functions to utils
         /*
-          // Function to update environmental cues and narrative stage dynamically
-          function updateEnvironment(environment) {
+          // Function to update InteractionStageal cues and narrative stage dynamically
+          function updateEnvironment(InteractionStage) {
             // Adjust `narrativeStage` and `currentFocus` based on goals and tension levels
             if (some condition based on conversation history ) {
-              environment.currentFocus.tension = "moderate";
-              environment.currentFocus.theme = "deepening mystery";
-              environment.narrativeStage = "rising action";
+              InteractionStage.currentFocus.tension = "moderate";
+              InteractionStage.currentFocus.theme = "deepening mystery";
+              InteractionStage.narrativeStage = "rising action";
             }
             // Add other cue adjustments here as needed
           }
           
           // Function to process narrative state after each exchange
-          function processNarrativeState(environment, explorerResponse, responderResponse) {
+          function processNarrativeState(InteractionStage, explorerResponse, responderResponse) {
             // Analyze the responses to adjust tension, theme, or narrative stage
             if (explorerResponse.includes("reveal") || responderResponse.includes("reveal")) {
-              environment.currentFocus.tension = "high";
-              environment.currentFocus.theme = "revelation";
-              environment.narrativeStage = "climax";
+              InteractionStage.currentFocus.tension = "high";
+              InteractionStage.currentFocus.theme = "revelation";
+              InteractionStage.narrativeStage = "climax";
             }
           }
           
-          // Function to check if the conversation is complete based on environment state
-          function checkCompletion(environment) {
+          // Function to check if the conversation is complete based on InteractionStage state
+          function checkCompletion(InteractionStage) {
             // Define criteria for conversation end, such as completing narrative goals or reaching the final story beat
-            return environment.narrativeStage === "resolution";
+            return InteractionStage.narrativeStage === "resolution";
           }
         */
         
@@ -318,7 +318,7 @@ Analytical Framework:
 1. Key Transformations
 - What fundamental shifts occurred in the agent's:
   * Understanding of self
-  * Relationship with reality/environment
+  * Relationship with reality/InteractionStage
   * Core beliefs or values
   * Problem-solving approaches
   * Emotional responses
