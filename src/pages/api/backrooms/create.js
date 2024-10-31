@@ -2,11 +2,9 @@ import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
-import { TwitterApi } from 'twitter-api-v2'
-import PromptManager from '../../../utils/promptManager'
-import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
+import { InteractionStage } from '@/utils/InteractionStage'
 
 mongoose.set('strictQuery', false)
 
@@ -16,58 +14,6 @@ const connectDB = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-}
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-const postTweet = async (accessToken, refreshToken, message, agentId) => {
-  let attempt = 0
-  const maxRetries = 3
-  let tweet
-  let newAccessToken = accessToken
-  let newRefreshToken = refreshToken
-
-  while (attempt < maxRetries) {
-    try {
-      const twitterClient = new TwitterApi(newAccessToken)
-      const response = await twitterClient.v2.tweet(message)
-      tweet = response.data
-
-      if (tweet?.id) {
-        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`
-        await Agent.findByIdAndUpdate(agentId, { $push: { tweets: tweetUrl } })
-      }
-
-      return tweet
-    } catch (error) {
-      attempt++
-      if (['403', '402', '401', '400'].includes(error.code.toString())) {
-        try {
-          const twitterClient = new TwitterApi({
-            clientId: process.env.TWITTER_API_KEY,
-            clientSecret: process.env.TWITTER_API_SECRET_KEY,
-          })
-
-          const { accessToken, refreshToken } =
-            await twitterClient.refreshOAuth2Token(newRefreshToken)
-          newAccessToken = accessToken
-          newRefreshToken = refreshToken
-
-          await Agent.findByIdAndUpdate(agentId, {
-            'twitterAuthToken.accessToken': newAccessToken,
-            'twitterAuthToken.refreshToken': newRefreshToken,
-          })
-
-          continue
-        } catch (refreshError) {
-          throw new Error('Failed to refresh access token')
-        }
-      }
-      if (attempt >= maxRetries)
-        throw new Error('Failed to post tweet after multiple attempts')
-      await delay(2000)
-    }
-  }
 }
 
 const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
@@ -115,63 +61,54 @@ export default async function handler(req, res) {
         ? responder.evolutions.slice(-20).map(evo => evo.description)
         : []
 
-      // Initialize InteractionStage object
-      // const InteractionStage = {} // It will contain narrativePoint, currentFocus (theme and tension), narrativeSignals conversationHistory (of explorer and responder, it doesn't directly add to it)
-      // const InteractionStage.generateCustomStory(chosenStoryTemplate, explorerAgent, responderAgent) todo: implement `generateCustomStory` given https://github.com/Sifchain/rs1/issues/57
+      const interactionStage = new InteractionStage(
+        chosenStoryTemplate,
+        explorerAgent,
+        responderAgent
+      )
+      await interactionStage.generateCustomStory()
 
-
-      let explorerMessageHistory = [] // todo: implement https://github.com/Sifchain/rs1/issues/58
-      let responderMessageHistory = [] // todo: implement https://github.com/Sifchain/rs1/issues/59
-
-      for (let i = 0; i < 5; i++) { // new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
-        /*
-          // Generate explorer response using the current InteractionStage state
-          const explorerResponse = await generateResponse({
-            agent: explorerAgent,
-            InteractionStage,
-          });  Todo: implement as https://github.com/Sifchain/rs1/issues/60
-
-          InteractionStage.updateStage(explorerResponse) todo: implement as https://github.com/Sifchain/rs1/issues/61
-
-          // Add explorer's response to conversation histories
-          InteractionStage.conversationHistory.push({
-            agent: "explorer",
-            response: explorerResponse,
-          });
-
-          explorerMessageHistory.push({
-            role: 'assistant',
-            content: explorerMessage,
-          })
-          responderMessageHistory.push({
-            role: 'user',
-            content: explorerMessage,
-          })
-
-          // Generate responder response using the updated InteractionStage state
-          const responderResponse = await generateResponse({
-            agent: responderAgent,
-            InteractionStage,
-          });
-
-          InteractionStage.updateStage(responderResponse) // You may need to create a slightly different prompt for this than for the explorerResponse
-
-          // Add explorer's response to conversation histories
-          InteractionStage.conversationHistory.push({
-            agent: "responder",
-            response: responderResponse,
-          });
-
-          explorerMessageHistory.push({
-            role: 'user',
-            content: responderMessage,
-          })
-          responderMessageHistory.push({
-            role: 'assistant',
-            content: responderMessage,
-          })
-
-        */
+      let explorerMessageHistory = [
+        await interactionStage.generateExplorerSystemPrompt(),
+      ]
+      let responderMessageHistory = [
+        await interactionStage.generateResponderSystemPrompt(),
+      ]
+      for (let i = 0; i < 5; i++) {
+        // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
+        // Generate explorer response using the current InteractionStage state
+        const explorerMessage = await interactionStage.getExplorerPrompt()
+        await interactionStage.updateStageBasedOffOfExplorer(explorerMessage)
+        // Add explorer's response to conversation histories
+        interactionStage.conversationHistory.push({
+          agent: 'explorer',
+          response: explorerMessage,
+        })
+        explorerMessageHistory.push({
+          role: 'assistant',
+          content: explorerMessage,
+        })
+        responderMessageHistory.push({
+          role: 'user',
+          content: explorerMessage,
+        })
+        // Generate responder response using the updated InteractionStage state
+        const responderMessage =
+          await interactionStage.getResponderPrompt()
+        await interactionStage.updateStageBasedOffOfResponder(responderResponse)
+        // Add responder's response to conversation histories
+        interactionStage.conversationHistory.push({
+          agent: 'responder',
+          response: responderMessage,
+        })
+        explorerMessageHistory.push({
+          role: 'user',
+          content: responderMessage,
+        })
+        responderMessageHistory.push({
+          role: 'assistant',
+          content: responderMessage,
+        })
       }
       // Gather the entire conversation content from explorerMessageHistory
       const conversationContent = explorerMessageHistory
