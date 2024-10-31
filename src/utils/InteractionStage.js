@@ -1,10 +1,12 @@
 import OpenAI from 'openai'
+import { backroomTypes } from '@/constants/constants'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export class InteractionStage {
-  constructor(chosenStoryTemplate, explorerAgent, responderAgent) {
-    this.chosenStoryTemplate = chosenStoryTemplate
+  constructor(backroomType, explorerAgent, responderAgent) {
+    this.backroomType = backroomType
+    this.chosenStoryTemplate = getChosenStoryTemplate(backroomType)
     this.explorerAgent = explorerAgent
     this.responderAgent = responderAgent
     this.narrativeStage = 'start' // update initial stage
@@ -299,6 +301,17 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
+    }
+  }
+  static getChosenStoryTemplate(backroomType) {
+    const selectedBackroom = backroomTypes.find(
+      type => type.id === backroomType
+    )
+    // file out the cases based off of the ids of:
+    if (selectedBackroom) {
+      return selectedBackroom.template // Return only the associated template/description
+    } else {
+      return 'This is a general backroom template, adaptable to various contexts. The conversation can explore different topics and insights relevant to the agents.'
     }
   }
 }

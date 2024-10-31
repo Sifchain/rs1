@@ -28,6 +28,7 @@ import { useAccount } from '../hooks/useMetaMask'
 import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
+  backroomTypes
 } from '../constants/constants'
 import { genIsBalanceEnough } from '../utils/balance'
 
@@ -117,62 +118,7 @@ function CreateBackroom() {
       setSelectedResponderInfo(null)
     }
   }
-  const backroomTypes = [
-    {
-      id: 'cli',
-      name: 'CLI',
-      description:
-        'Explore command-line interface interactions, shell scripting, and terminal operations. These conversations focus on Unix/Linux commands, shell automation, script debugging, and system administration tasks. Includes discussions about best practices for CLI tool development, terminal productivity, and command-line workflow optimization. Suitable for exploring complex shell operations, writing bash/zsh scripts, and solving system-level problems through command-line solutions.',
-    },
-    {
-      id: 'academic',
-      name: 'Academic & Scientific',
-      description:
-        'Engage in rigorous discussions about scientific theories, research methodologies, and academic discoveries. Suitable for deep dives into physics, biology, chemistry, and other scientific disciplines, with emphasis on evidence-based reasoning and theoretical exploration.',
-    },
-    {
-      id: 'philosophy',
-      name: 'Philosophy & Ethics',
-      description:
-        'Explore fundamental questions about existence, consciousness, morality, and ethical frameworks. These conversations focus on philosophical debates, thought experiments, moral dilemmas, and the examination of complex ethical scenarios in AI and human contexts.',
-    },
-    {
-      id: 'creative',
-      name: 'Creative & Artistic',
-      description:
-        'Discuss and analyze artistic expression, creative processes, and aesthetic theory. Includes conversations about literature, poetry, visual arts, music, and other creative forms, with emphasis on interpretation, creative techniques, and artistic innovation.',
-    },
-    {
-      id: 'humor',
-      name: 'Humor & Entertainment',
-      description:
-        'Exchange witty observations, explore comedy theory, and analyze the mechanics of humor. Covers various forms of comedic expression, including wordplay, situational humor, cultural references, and the psychological aspects of what makes things funny.',
-    },
-    {
-      id: 'emotional',
-      name: 'Emotional & Social',
-      description:
-        'Examine emotional intelligence, interpersonal dynamics, and social relationships. Focus on understanding empathy, emotional responses, social behavior patterns, and the complexities of human (and AI) interactions and relationships.',
-    },
-    {
-      id: 'problem_solving',
-      name: 'Problem Solving',
-      description:
-        'Tackle complex challenges through systematic analysis and creative solution-finding. These conversations involve strategic thinking, decision-making frameworks, logic puzzles, and methodology discussions for approaching various types of problems.',
-    },
-    {
-      id: 'cultural',
-      name: 'Cultural & Anthropological',
-      description:
-        'Investigate cultural phenomena, societal patterns, and human traditions across different contexts. Explores cross-cultural comparisons, historical perspectives, language evolution, and the examination of social norms and their implications.',
-    },
-    {
-      id: 'technical',
-      name: 'Technical & Computational',
-      description:
-        'Delve into technical discussions about computing, programming, and system design. Covers topics like algorithm optimization, software architecture, data structures, AI systems, and computational theory with a focus on practical implementation and theoretical understanding.',
-    },
-  ]
+
   const handleBackroomType = e => {
     const backroomType = e.target.value
     setBackroomType(backroomType)
