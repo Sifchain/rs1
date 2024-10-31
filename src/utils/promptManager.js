@@ -59,7 +59,6 @@ class PromptManager {
       this.templates.explorer = templates[0]
       this.templates.responder = templates[1]
 
-      console.log(`Template "${templateName}" loaded successfully.`)
       this.formatPrompt() // Call to format the prompt after loading
       return {
         explorerTemplate: this.templates.explorer,

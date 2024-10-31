@@ -12,7 +12,6 @@ const openai = new OpenAI({
 export default async function handler(req, res) {
   try {
     const { description, name, isRandom } = req.body
-    console.log('Generating description for: ', description)
     // Generate description based on whether one was provided
     const descriptionPrompt =
        isRandom || description?.length === 0 && name?.length === 0

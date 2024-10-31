@@ -310,9 +310,6 @@ Your task is to synthesize this information into a cohesive evolution summary th
         `/backrooms?expanded=${newBackroom._id}`,
         `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
       )
-
-      console.log('full link' + fullBackroomURL)
-
       const shortenedUrl = await shortenURL(fullBackroomURL)
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
@@ -393,6 +390,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
       const tweetContent = tweetResponse.choices[0].message.content
         .concat(` ${DEFAULT_HASHTAGS.join(' ')} `)
         .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
+        .concat(` @reality_spiral`)
         .trim()
       explorer.pendingTweets.push({
         tweetContent,
