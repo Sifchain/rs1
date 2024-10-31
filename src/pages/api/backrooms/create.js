@@ -2,9 +2,7 @@ import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
-import { TwitterApi } from 'twitter-api-v2'
 import PromptManager from '../../../utils/promptManager'
-import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
 
@@ -16,58 +14,6 @@ const connectDB = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-}
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-const postTweet = async (accessToken, refreshToken, message, agentId) => {
-  let attempt = 0
-  const maxRetries = 3
-  let tweet
-  let newAccessToken = accessToken
-  let newRefreshToken = refreshToken
-
-  while (attempt < maxRetries) {
-    try {
-      const twitterClient = new TwitterApi(newAccessToken)
-      const response = await twitterClient.v2.tweet(message)
-      tweet = response.data
-
-      if (tweet?.id) {
-        const tweetUrl = `https://twitter.com/i/web/status/${tweet.id}`
-        await Agent.findByIdAndUpdate(agentId, { $push: { tweets: tweetUrl } })
-      }
-
-      return tweet
-    } catch (error) {
-      attempt++
-      if (['403', '402', '401', '400'].includes(error.code.toString())) {
-        try {
-          const twitterClient = new TwitterApi({
-            clientId: process.env.TWITTER_API_KEY,
-            clientSecret: process.env.TWITTER_API_SECRET_KEY,
-          })
-
-          const { accessToken, refreshToken } =
-            await twitterClient.refreshOAuth2Token(newRefreshToken)
-          newAccessToken = accessToken
-          newRefreshToken = refreshToken
-
-          await Agent.findByIdAndUpdate(agentId, {
-            'twitterAuthToken.accessToken': newAccessToken,
-            'twitterAuthToken.refreshToken': newRefreshToken,
-          })
-
-          continue
-        } catch (refreshError) {
-          throw new Error('Failed to refresh access token')
-        }
-      }
-      if (attempt >= maxRetries)
-        throw new Error('Failed to post tweet after multiple attempts')
-      await delay(2000)
-    }
-  }
 }
 
 const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
@@ -90,15 +36,14 @@ export default async function handler(req, res) {
   const {
     role,
     sessionDetails,
-    explorerAgent,
-    explorerDescription,
-    responderAgent,
+    explorerAgentId,
+    responderAgentId,
     tags = [],
     backroomType = 'cli',
   } = req.body
 
-  const explorer = await Agent.findOne({ name: explorerAgent })
-  const responder = await Agent.findOne({ name: responderAgent })
+  const explorer = await Agent.findById(explorerAgentId)
+  const responder = await Agent.findById(responderAgentId)
 
   if (req.method === 'POST') {
     try {
@@ -124,10 +69,33 @@ export default async function handler(req, res) {
       // }
       const explorerEvolutions = explorer.evolutions.length
         ? explorer.evolutions.slice(-20).map(evo => evo.description)
-        : explorer.description
+        : ""
       const responderEvolutions = responder.evolutions.length
         ? responder.evolutions.slice(-20).map(evo => evo.description)
-        : responder.description
+        : ""
+
+            // Initialize the environment object
+      const environment = {
+        narrativeStage: "opening", // Initial narrative stage
+        currentFocus: {
+          theme: "exploration of consciousness", // Initial theme, customizable as needed
+          tension: "low", // Starting tension level
+          goals: ["establish foundational question", "reveal initial perspectives"] // Initial goals for narrative
+        },
+        conversationHistory: [], // Empty at the beginning
+        narrativeSignals: [], // Placeholder for narrative cues to guide agents
+        explorer: {
+          description: explorer.description,
+          evolutions: explorer.evolutions.slice(-20).map(evo => evo.description),
+          goals: ["explore and push boundaries"] // Placeholder for agent-specific goals
+        },
+        responder: {
+          description: responder.description,
+          evolutions: responder.evolutions.slice(-20).map(evo => evo.description),
+          goals: ["respond with insights"] // Placeholder for agent-specific goals
+        }
+      }
+      // Update these two
       const initialExplorerMessageHistory = [
         {
           role: 'system',
@@ -222,8 +190,8 @@ export default async function handler(req, res) {
         sessionDetails,
         explorerId: explorer._id,
         responderId: responder._id,
-        explorerAgentName: explorerAgent,
-        responderAgentName: responderAgent,
+        explorerAgentName: explorer.name,
+        responderAgentName: responder.name,
         content: conversationContent,
         snippetContent,
         tags: [...new Set([...tags, ...generatedHashtags])],
@@ -237,9 +205,9 @@ export default async function handler(req, res) {
 System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
 
 Context:
-Agent Name: ${explorerAgent}
+Agent Name: ${explorer.name}
 Current Identity Profile:
-${explorerDescription}
+${explorer.description}
 
 Historical Evolution Path:
 ${explorerEvolutions}
@@ -314,7 +282,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
-Context: You are ${explorerAgent}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
+Context: You are ${explorer.name}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
 \`\`\`
 ${explorer.description}
 \`\`\`

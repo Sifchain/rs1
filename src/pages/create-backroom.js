@@ -81,23 +81,24 @@ function CreateBackroom() {
 
     if (agent && agents.length > 0) {
       // Select explorer by name
-      const selectedExplorer = agents.find(ag => ag.name === agent)
+      const selectedExplorer = agents.find(ag => ag._id === agentId)
       setExplorerAgent(agent)
       setSelectedExplorerInfo(selectedExplorer)
       setSelectedExplorerEvolutions(selectedExplorer?.evolutions || [])
     } else if (agentId && agents.length > 0) {
       // Select explorer by id
       const selectedExplorer = agents.find(ag => ag._id === agentId)
-      setExplorerAgent(selectedExplorer?.name || '')
+      setExplorerAgent(selectedExplorer?._id || '')
       setSelectedExplorerInfo(selectedExplorer)
       setSelectedExplorerEvolutions(selectedExplorer?.evolutions || [])
     }
   }, [router.query, agents])
 
   const handleExplorerChange = e => {
-    const selectedAgentName = e.target.value
-    setExplorerAgent(selectedAgentName)
-    const selectedExplorer = agents.find(ag => ag.name === selectedAgentName)
+    const selectedAgentId = e.target.value
+    setExplorerAgent(selectedAgentId)
+
+    const selectedExplorer = agents.find(ag => ag._id === selectedAgentId)
     if (selectedExplorer) {
       setSelectedExplorerInfo(selectedExplorer)
       setSelectedExplorerEvolutions(selectedExplorer.evolutions || [])
@@ -108,9 +109,9 @@ function CreateBackroom() {
   }
 
   const handleResponderChange = e => {
-    const selectedAgentName = e.target.value
-    setResponderAgent(selectedAgentName)
-    const selectedResponder = agents.find(ag => ag.name === selectedAgentName)
+     const selectedAgentId = e.target.value
+    setResponderAgent(selectedAgentId)
+    const selectedResponder = agents.find(ag => ag._id === selectedAgentId)
     if (selectedResponder) {
       setSelectedResponderInfo(selectedResponder)
     } else {
@@ -201,31 +202,12 @@ function CreateBackroom() {
       valid = false
     }
 
-    if (
-      explorerDescription &&
-      (explorerDescription.length < 10 || explorerDescription.length > 10000)
-    ) {
-      errors.explorerDescription =
-        'Explorer description should be between 10 and 10000 characters'
-      valid = false
-    }
-
-    if (
-      responderDescription &&
-      (responderDescription.length < 10 || responderDescription.length > 10000)
-    ) {
-      errors.responderDescription =
-        'Responder description should be between 10 and 10000 characters'
-      valid = false
-    }
-
     setErrors(errors)
     return valid
   }
 
   const handleSubmit = async () => {
     if (!handleValidation()) return
-
     setLoading(true)
     try {
       const res = await fetch('/api/backrooms/create', {
@@ -235,10 +217,8 @@ function CreateBackroom() {
         },
         body: JSON.stringify({
           role: 'Explorer',
-          explorerAgent,
-          explorerDescription,
-          responderAgent,
-          responderDescription,
+          explorerAgentId: explorerAgent,
+          responderAgentId: responderAgent,
           backroomType,
         }),
       })
@@ -315,7 +295,7 @@ function CreateBackroom() {
                   _hover={{ borderColor: '#64b5f6' }}
                 >
                   {agents.map(agent => (
-                    <option key={agent._id} value={agent.name}>
+                    <option key={agent._id} value={agent._id}>
                       {agent.name}
                     </option>
                   ))}
@@ -393,7 +373,7 @@ function CreateBackroom() {
                   _hover={{ borderColor: '#64b5f6' }}
                 >
                   {agents.map(agent => (
-                    <option key={agent._id} value={agent.name}>
+                    <option key={agent._id} value={agent._id}>
                       {agent.name}
                     </option>
                   ))}
@@ -443,7 +423,7 @@ function CreateBackroom() {
           {selectedExplorerEvolutions.length > 0 && (
             <Box mt={8}>
               <Heading size="lg" mb={4} color="#81d4fa">
-                Evolution History for {explorerAgent}
+                Evolution History for {selectedExplorerInfo?.name}
               </Heading>
               <Table variant="simple" size="lg" colorScheme="blue">
                 <Thead>
