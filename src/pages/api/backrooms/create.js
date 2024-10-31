@@ -65,23 +65,21 @@ export default async function handler(req, res) {
         explorer,
         responder
       )
-      console.log({interactionStage})
       console.log('custom story', await interactionStage.generateCustomStory())
 
       let explorerMessageHistory = [
         await interactionStage.generateExplorerSystemPrompt(),
       ]
-      console.log({ explorerMessageHistory})
       let responderMessageHistory = [
         await interactionStage.generateResponderSystemPrompt(),
       ]
-      console.log({ responderMessageHistory})
       for (let i = 0; i < 5; i++) {
         // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         // Generate explorer response using the current InteractionStage state
-        const explorerMessage = interactionStage.getExplorerPrompt()
+        const explorerMessage = await interactionStage.getExplorerPrompt()
         console.log('explorerMessage ', explorerMessage)
-        console.log('await interactionStage.updateStageBasedOffOfExplorer(explorerMessage)', await interactionStage.updateStageBasedOffOfExplorer(explorerMessage))
+
+        await interactionStage.updateStageBasedOffOfExplorer(explorerMessage)
         // Add explorer's response to conversation histories
         interactionStage.conversationHistory.push({
           agent: 'explorer',
@@ -95,12 +93,11 @@ export default async function handler(req, res) {
           role: 'user',
           content: explorerMessage,
         })
-        console.log({ explorerMessageHistory})
-        console.log({responderMessageHistory})
+
         // Generate responder response using the updated InteractionStage state
-        const responderMessage = interactionStage.getResponderPrompt()
-        console.log({responderMessage})
-        console.log('await interactionStage.updateStageBasedOffOfResponder(responderMessage)', await interactionStage.updateStageBasedOffOfResponder(responderMessage))
+        const responderMessage = await interactionStage.getResponderPrompt()
+
+        await interactionStage.updateStageBasedOffOfResponder(responderMessage)
         // Add responder's response to conversation histories
         interactionStage.conversationHistory.push({
           agent: 'responder',
@@ -114,15 +111,13 @@ export default async function handler(req, res) {
           role: 'assistant',
           content: responderMessage,
         })
-            console.log({ explorerMessageHistory})
-        console.log({responderMessageHistory})
       }
       // Gather the entire conversation content from explorerMessageHistory
       const conversationContent = explorerMessageHistory
-        .slice(4) // Start from the initial CLI prompt to include only conversation parts
+        .slice(1) // Start from the initial CLI prompt to include only conversation parts
         .map(
           entry =>
-            `${entry.role === 'user' ? explorer.name : responder.name}: ${entry.content}`
+            `${entry.role === 'user' ? responder.name : responder.name}: ${entry.content}`
         )
         .join('\n')
 
