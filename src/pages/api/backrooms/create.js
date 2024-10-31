@@ -56,7 +56,6 @@ export default async function handler(req, res) {
 
       const explorerEvolutions = explorer.evolutions.length
         ? explorer.evolutions.slice(-20).map(evo => evo.description)
-
         : []
       const responderEvolutions = responder.evolutions.length
         ? responder.evolutions.slice(-20).map(evo => evo.description)
@@ -94,8 +93,7 @@ export default async function handler(req, res) {
           content: explorerMessage,
         })
         // Generate responder response using the updated InteractionStage state
-        const responderMessage =
-          await interactionStage.getResponderPrompt()
+        const responderMessage = await interactionStage.getResponderPrompt()
         await interactionStage.updateStageBasedOffOfResponder(responderResponse)
         // Add responder's response to conversation histories
         interactionStage.conversationHistory.push({
