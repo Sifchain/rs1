@@ -2,6 +2,7 @@ import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
+import PromptManager from '../../../utils/promptManager'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
@@ -36,15 +37,14 @@ export default async function handler(req, res) {
   const {
     role,
     sessionDetails,
-    explorerAgent,
-    explorerDescription,
-    responderAgent,
+    explorerAgentId,
+    responderAgentId,
     tags = [],
     backroomType = 'cli',
   } = req.body
 
-  const explorer = await Agent.findOne({ name: explorerAgent })
-  const responder = await Agent.findOne({ name: responderAgent })
+  const explorer = await Agent.findById(explorerAgentId)
+  const responder = await Agent.findById(responderAgentId)
 
   if (req.method === 'POST') {
     try {
@@ -56,6 +56,7 @@ export default async function handler(req, res) {
 
       const explorerEvolutions = explorer.evolutions.length
         ? explorer.evolutions.slice(-20).map(evo => evo.description)
+
         : []
       const responderEvolutions = responder.evolutions.length
         ? responder.evolutions.slice(-20).map(evo => evo.description)
@@ -139,8 +140,8 @@ export default async function handler(req, res) {
         sessionDetails,
         explorerId: explorer._id,
         responderId: responder._id,
-        explorerAgentName: explorerAgent,
-        responderAgentName: responderAgent,
+        explorerAgentName: explorer.name,
+        responderAgentName: responder.name,
         content: conversationContent,
         snippetContent,
         tags: [...new Set([...tags, ...generatedHashtags])],
@@ -154,9 +155,9 @@ export default async function handler(req, res) {
 System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
 
 Context:
-Agent Name: ${explorerAgent}
+Agent Name: ${explorer.name}
 Current Identity Profile:
-${explorerDescription}
+${explorer.description}
 
 Historical Evolution Path:
 ${explorerEvolutions}
@@ -231,7 +232,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
-Context: You are ${explorerAgent}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
+Context: You are ${explorer.name}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
 \`\`\`
 ${explorer.description}
 \`\`\`
