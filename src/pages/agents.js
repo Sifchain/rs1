@@ -8,7 +8,6 @@ import {
   VStack,
   Divider,
   Tag,
-  TagLabel,
   Icon,
   Link,
   Input,
@@ -27,7 +26,7 @@ import {
 } from '@chakra-ui/react'
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 import { ArrowBackIcon } from '@chakra-ui/icons'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 import { useRouter } from 'next/router'
@@ -36,6 +35,7 @@ import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
   TOKEN_CONTRACT_ADDRESS,
+  MINIMUM_TOKENS_TO_CREATE_BACKROOM
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 
@@ -54,9 +54,6 @@ function Agents() {
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
   const [description, setDescription] = useState('')
-  const [conversationPrompt, setConversationPrompt] = useState('')
-  const [recapPrompt, setRecapPrompt] = useState('')
-  const [tweetPrompt, setTweetPrompt] = useState('')
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
   const toast = useToast() // Initialize useToast for notifications
@@ -66,6 +63,7 @@ function Agents() {
   const [wordCountError, setWordCountError] = useState(false)
   const [backrooms, setBackrooms] = useState([])
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+
   const handleEditTweet = (tweetId, tweetContent) => {
     setEditTweetId(tweetId)
     setEditTweetContent(tweetContent)
@@ -111,6 +109,10 @@ function Agents() {
       // Automatically select agent if agentId is in the URL
       if (agentId) {
         selectAgentById(agentId, data)
+        const agent = data.find(agent => agent._id === agentId)
+        setSelectedAgent(agent)
+      } else {
+        setSelectedAgent(null)
       }
     } catch (error) {
       console.error('Error fetching agents:', error)
@@ -126,11 +128,8 @@ function Agents() {
       setSelectedAgent(agent)
       setAgentName(agent?.name)
       setDescription(agent?.description || '')
-      setConversationPrompt(agent?.conversationPrompt || '')
-      setRecapPrompt(agent?.recapPrompt || '')
-      setTweetPrompt(agent?.tweetPrompt || '')
       setEditMode(false)
-
+      router.push(`agents?agentId=${id}`)
       // Fetch recent backroom conversations and other related data if necessary
       fetchRecentConversations(agent)
     }
@@ -140,7 +139,7 @@ function Agents() {
   const fetchRecentConversations = async agent => {
     try {
       const response = await fetch(
-        `/api/backrooms?explorerAgentName=${agent.name}`
+        `/api/backrooms/get?agentId=${agent._id}`
       )
       const data = await response.json()
       setRecentBackroomConversations(data)
@@ -167,43 +166,49 @@ function Agents() {
     fetchBackrooms()
   }, [])
 
-  const handleAgentSelection = async event => {
+  const handleAgentSelection = useCallback(async (event) => {
     const agentId = event.target.value
     const agent = agents.find(agent => agent?._id === agentId)
+
+    selectAgentById(agentId, agents)
     setSelectedAgent(agent)
-
-    // Pre-fill the edit form
     setAgentName(agent?.name)
-    setDescription(agent?.description || '') // Optional fields
-    setConversationPrompt(agent?.conversationPrompt || '')
-    setRecapPrompt(agent?.recapPrompt || '')
-    setTweetPrompt(agent?.tweetPrompt || '')
-    setEditMode(false) // Initially show agent details, not edit mode
+    setDescription(agent?.description || '')
+    setEditMode(false)
 
-    // Fetch recent backroom conversations related to this agent
+    // Fetch and process backroom conversations
     try {
       const response = await fetch(
-        `/api/backrooms?explorerAgentName=${agent?.name}`
+        `/api/backrooms/get?agentId=${agent?._id}`
       )
       const data = await response.json()
 
-      // Filter backrooms where the agent is involved as explorer or responder
+      // Filter relevant conversations
       const filteredConversations = data.filter(
         backroom =>
-          backroom.explorerId === agent?._id ||
-          backroom.responderId === agent?._id
+          backroom?.explorerId === agent?._id ||
+          backroom?.responderId === agent?._id
       )
       setRecentBackroomConversations(filteredConversations)
 
-      // Extract tags from these conversations
+      // Process and set unique tags
       const tagsFromConversations = filteredConversations.flatMap(
-        backroom => backroom.tags || []
+        backroom => backroom?.tags || []
       )
       setBackroomTags(Array.from(new Set(tagsFromConversations)))
     } catch (error) {
       console.error('Error fetching recent backroom conversations:', error)
     }
-  }
+  }, [
+    agentId,
+    agents,
+    setSelectedAgent,
+    setAgentName,
+    setDescription,
+    setEditMode,
+    setRecentBackroomConversations,
+    setBackroomTags
+  ])
 
   const handleEditClick = () => {
     setEditMode(true)
@@ -247,9 +252,6 @@ function Agents() {
         body: JSON.stringify({
           name: agentName,
           description,
-          conversationPrompt,
-          recapPrompt,
-          tweetPrompt,
           agentId: selectedAgent._id,
           userId: JSON.parse(localStorage.getItem('user')),
         }),
@@ -262,9 +264,6 @@ function Agents() {
         ...selectedAgent,
         name: agentName,
         description,
-        conversationPrompt,
-        recapPrompt,
-        tweetPrompt,
       }
       setSelectedAgent(updatedAgent)
       setAgents(
@@ -306,10 +305,10 @@ function Agents() {
         <Text mb={4}>{selectedAgent.originalDescription}</Text>
         {evolutions.map((evolution, index) => {
           const backroom = backrooms.find(
-            backroom => backroom._id === evolution.backroomId
+            backroom => backroom?._id === evolution.backroomId
           )
           const responderAgent = agents.find(
-            agent => agent._id === backroom.responderId
+            agent => agent._id === backroom?.responderId
           )
           const responderAgentName = responderAgent?.name || 'Unknown'
           return (
@@ -320,7 +319,7 @@ function Agents() {
               <Text fontWeight="bold">Description: </Text>
               <Text>{evolution.description}</Text>
               <Text fontWeight="bold">Tags:</Text>
-              <Text>{backroom.tags.join(', ')}</Text>
+              <Text>{backroom?.tags.join(', ')}</Text>
               <Text fontWeight="bold" mb={1}>
                 <Link
                   color="#81d4fa"
@@ -336,11 +335,13 @@ function Agents() {
     )
   }
 
-  const hasEditPermission = () => {
+  const hasEditPermission = useCallback(() => {
     const user = JSON.parse(localStorage.getItem('user'))
-    return user && selectedAgent && user._id === selectedAgent.user
+    return user && selectedAgent && user?._id === selectedAgent?.user
+  }, [selectedAgent])
+  const handleCreateBackroom = () => {
+    router.push(`/create-backroom${agentId != null ? `?agentId=${agentId}` : ''}`)
   }
-
   const displayRecentBackrooms = () => {
     if (recentBackroomConversations.length === 0) {
       return <Text>No recent backroom conversations available.</Text>
@@ -357,7 +358,7 @@ function Agents() {
         boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
         mb={3}
         cursor="pointer"
-        onClick={() => router.push(`/backrooms?expanded=${backroom._id}`)}
+        onClick={() => router.push(`/backrooms?expanded=${backroom?._id}`)}
       >
         <Text
           as="a"
@@ -366,10 +367,10 @@ function Agents() {
           _hover={{ color: '#29b6f6' }}
           cursor="pointer"
         >
-          {backroom.explorerAgentName} &rarr; {backroom.responderAgentName}
+          {backroom?.explorerAgentName} &rarr; {backroom?.responderAgentName}
         </Text>
         <Text fontSize="sm" color="#b0bec5">
-          {new Date(backroom.createdAt).toLocaleDateString()}
+          {new Date(backroom?.createdAt).toLocaleDateString()}
         </Text>
       </Flex>
     ))
@@ -721,31 +722,39 @@ function Agents() {
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="2000px" mx="auto">
-          <Flex justifyContent="space-between" alignItems="center" mb={1}>
+
+        <Box py={10} px={{ base: 4, md: 6 }} mx="auto">
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            alignItems="center"
+            justifyContent="space-between"
+            textAlign="center"
+            gap={{ base: 4, md: 8 }}
+          >
             <Heading
-              textAlign="center"
-              mb={10}
-              fontSize="4xl"
+              fontSize={{ base: '3xl', md: '4xl' }}
               color="#81d4fa"
               fontFamily="'Arial', sans-serif"
             >
               Agents
             </Heading>
-            {/* Dropdown to select agent */}
+
             <Flex
-              direction="row"
-              mb={4}
+              direction={{ base: 'column', md: 'row' }}
               alignItems="center"
               justifyContent="center"
+              width="100%"
+              gap={{ base: 2, md: 4 }}
             >
               <Select
-                placeholder="Select Agent"
+                placeholder={selectedAgent == null ? "Select Agent" : selectedAgent?.name}
                 onChange={handleAgentSelection}
-                maxW="400px"
+                value={selectedAgent?.name}
+                width="100%"
+                maxW={{ base: "100%", md: "400px" }}
                 bg="#424242"
                 color="#e0e0e0"
-                border="2px solid #757575"
+                border="1px solid #757575"
                 _hover={{ borderColor: '#81d4fa' }}
               >
                 {Array.isArray(agents) && agents.length > 0 ? (
@@ -758,6 +767,7 @@ function Agents() {
                   <option disabled>No agents available</option>
                 )}
               </Select>
+
               <Tooltip
                 label={
                   !enoughFunds
@@ -769,26 +779,44 @@ function Agents() {
               >
                 <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
                   <Button
-                    onClick={() => router.push('/create-agent')} // Disable click functionality
+                    onClick={() => router.push('/create-agent')}
                     colorScheme="blue"
-                    ms={10}
                     size="md"
                     fontWeight="bold"
                     isDisabled={!enoughFunds}
+                    width={{ base: '100%', md: 'auto' }}
                   >
                     + New Agent
                   </Button>
                 </Box>
               </Tooltip>
+
+              <Tooltip
+                label={
+                  !enoughFunds
+                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
+                    : ''
+                }
+                hasArrow
+                placement="top"
+              >
+                <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
+                  <Button
+                    onClick={handleCreateBackroom}
+                    isDisabled={!enoughFunds}
+                    colorScheme="green"
+                    width={{ base: '100%', md: 'auto' }}
+                  >
+                    Create Backroom
+                  </Button>
+                </Box>
+              </Tooltip>
             </Flex>
           </Flex>
-          {selectedAgent?.pendingTweets?.length > 0
-            ? displayPendingTweets()
-            : null}
-          {/* Display agent details */}
+
+          {/* Agent details */}
           {selectedAgent && !editMode && (
-            <VStack spacing={6} align="stretch">
-              {/* Top Box with Agent Info */}
+            <VStack spacing={6} align="stretch" mt={8}>
               <Box
                 p={4}
                 bg="#424242"
@@ -796,8 +824,8 @@ function Agents() {
                 border="2px solid #757575"
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Flex justifyContent="space-between" alignItems="flex-start">
-                  <Box>
+                <Flex direction={{ base: 'column', md: 'row' }} alignItems="flex-start">
+                  <Box flex="1" mb={{ base: 4, md: 0 }}>
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
@@ -818,6 +846,11 @@ function Agents() {
                               fontWeight="bold"
                               color="#81d4fa"
                             >
+                          selectedAgent.description ||
+                          'No description provided'
+                        ).map((section, index) => (
+                          <Box key={index} mt={4}>
+                            <Text fontSize="medium" fontWeight="bold" color="#81d4fa">
                               {section.title}
                             </Text>
                             <List spacing={2} mt={2} color="#e0e0e0">
@@ -850,13 +883,24 @@ function Agents() {
                       </Box>
                     </Box>
                     {/* Display All Tags */}
+
+                      <Box mt={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          variant="solid"
+                          onClick={() =>
+                            setIsDescriptionExpanded(!isDescriptionExpanded)
+                          }
+                          alignSelf="flex-start"
+                        >
+                          {isDescriptionExpanded ? 'Hide Full Description' : 'View Full Description'}
+                        </Button>
+                      </Box>
+                    </Box>
+
                     <Box mt={3}>
-                      <Text
-                        fontSize="lg"
-                        fontWeight="bold"
-                        color="#81d4fa"
-                        mt={3}
-                      >
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Backroom Tags:
                       </Text>
                       <Box mt={2} mb={3}>
@@ -880,8 +924,7 @@ function Agents() {
                       </Box>
                     </Box>
                   </Box>
-                  <Box minWidth="120px" textAlign="right">
-                    {/* Edit button */}
+                  <Box textAlign={{ base: "left", md: "right" }} mt={{ base: 0, md: 0 }}>
                     <Tooltip
                       label={
                         !hasEditPermission()
@@ -894,54 +937,50 @@ function Agents() {
                       <Box
                         as="span"
                         cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                        display="flex"
+                        justifyContent={{ base: "center", md: "flex-end" }}
                       >
                         <Button
-                          onClick={
-                            hasEditPermission() ? handleEditClick : undefined
-                          } // Disable click functionality
+                          onClick={hasEditPermission() ? handleEditClick : undefined}
                           colorScheme="blue"
                           mb={4}
-                          isDisabled={!hasEditPermission()} // Button looks disabled but can still be hovered for Tooltip
-                          pointerEvents={hasEditPermission() ? 'auto' : 'none'} // Prevent clicking
+                          isDisabled={!hasEditPermission()}
+                          pointerEvents={hasEditPermission() ? 'auto' : 'none'}
                         >
                           Edit
                         </Button>
                       </Box>
                     </Tooltip>
-
-                    <Flex alignItems="center" justifyContent="flex-end">
-                      <Icon as={FiCalendar} mr={1} />
-                      <Text fontSize="sm" color="#b0bec5" whiteSpace="nowrap">
-                        Created: {new Date().toLocaleDateString()}
-                      </Text>
-                    </Flex>
                   </Box>
+
+
                 </Flex>
               </Box>
 
-              {/* Agent Journey */}
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
+              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Agent Journey
                 </Text>
                 <Divider mb={4} />
-                <Box mt={4}>{displayJourney(selectedAgent.evolutions)}</Box>
+
+                <Box
+                  p={3}
+                  bg="#2d2d2d"
+                  border="1px solid"
+                  borderColor="#757575"
+                  borderRadius="md"
+                  fontSize="sm"
+                  maxHeight="150px"
+                  overflowY="auto"
+                  whiteSpace="pre-wrap"
+                  mb={4}
+                >
+                  {displayJourney(selectedAgent.evolutions)}
+                </Box>
+
               </Box>
 
-              {/* Recent Backroom Conversations */}
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
+              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Recent Backroom Conversations
                 </Text>
@@ -949,14 +988,7 @@ function Agents() {
                 {displayRecentBackrooms()}
               </Box>
 
-              {/* Display Tweets */}
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
+              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Tweets
                 </Text>
@@ -974,108 +1006,7 @@ function Agents() {
               </Box>
             </VStack>
           )}
-          {/* Edit Agent Form */}
-          {selectedAgent && editMode && (
-            <VStack spacing={6} align="stretch">
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
-                <Flex justifyContent="space-between" alignItems="center" mb={5}>
-                  {/* Back Button */}
-                  <Button
-                    leftIcon={<ArrowBackIcon />}
-                    colorScheme="blue"
-                    onClick={() => router.back()}
-                  >
-                    Back
-                  </Button>
 
-                  {/* Center-aligned heading */}
-                  <Heading
-                    textAlign="center"
-                    fontSize="4xl"
-                    color="#81d4fa"
-                    fontFamily="'Arial', sans-serif"
-                    flex="1"
-                  >
-                    Edit Agent Details
-                  </Heading>
-
-                  {/* Spacer to keep the heading centered */}
-                  <Box width="60px" />
-                </Flex>
-                {/* Name */}
-                <FormControl isInvalid={errors.agentName}>
-                  <Flex alignItems="center" mb={4}>
-                    {/* Label */}
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Name:
-                    </Text>
-                    {/* Input */}
-                    <Input
-                      placeholder="Name"
-                      value={agentName}
-                      onChange={e => setAgentName(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.agentName ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                    />
-                  </Flex>
-                  {errors.agentName && (
-                    <FormErrorMessage mb={4}>
-                      {errors.agentName}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-                {/* Description */}
-                <FormControl isInvalid={errors.description}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Description:
-                    </Text>
-                    <Textarea
-                      placeholder="Description"
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.description ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                      minHeight="500px"
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.description && (
-                    <FormErrorMessage mb={4}>
-                      {errors.description}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-                <Flex justifyContent="flex-end" mt={4}>
-                  <Button colorScheme="blue" onClick={handleUpdateAgent} mt={4}>
-                    Update Agent
-                  </Button>
-                </Flex>
-              </Box>
-            </VStack>
-          )}
           {loading && (
             <Flex justifyContent="center" mt={4}>
               <Text>Loading agents...</Text>
@@ -1083,6 +1014,7 @@ function Agents() {
           )}
         </Box>
       </Box>
+
     </ChakraProvider>
   )
 }

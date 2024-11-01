@@ -15,12 +15,10 @@ import {
   AlertTitle,
   AlertDescription,
   Collapse,
-  IconButton,
   Tooltip,
   Spinner,
   useClipboard,
   useDisclosure,
-  Select,
 } from '@chakra-ui/react'
 import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -41,9 +39,6 @@ import { useAccount } from '../hooks/useMetaMask'
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
   const [description, setDescription] = useState('')
-  const [conversationPrompt, setConversationPrompt] = useState('')
-  const [recapPrompt, setRecapPrompt] = useState('')
-  const [tweetPrompt, setTweetPrompt] = useState('')
   const [twitterLinked, setTwitterLinked] = useState(false)
   const [agentId, setAgentId] = useState(null)
   const [loadingStep, setLoadingStep] = useState(0)
@@ -54,8 +49,8 @@ function CreateAgent() {
   const router = useRouter()
 
   const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true }) // Changed this line
-  const onGenerateDescription = async description => {
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: false })
+  const onGenerateDescription = async (isRandom, desc) => {
     try {
       // Show loading state
       setDescription('Generating description...')
@@ -66,7 +61,9 @@ function CreateAgent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          description: description ?? '', // Pass current description if it exists
+          name: agentName ?? '',
+          description: desc ?? '', // Pass current description if it exists
+          isRandom
         }),
       })
 
@@ -211,8 +208,8 @@ function CreateAgent() {
       />
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="2000px" mx="auto">
-          <Flex justifyContent="space-between" alignItems="center" mb={5}>
+        <Box py={{ base: 6, md: 10 }} px={{ base: 4, md: 6 }} maxW="800px" mx="auto">
+          <Flex justifyContent="space-between" alignItems="center" mb={3}>
             {/* Back Button */}
             <Button
               leftIcon={<ArrowBackIcon />}
@@ -222,13 +219,19 @@ function CreateAgent() {
             >
               Back
             </Button>
-            <Heading textAlign="center" mb={10} fontSize="4xl" color="#81d4fa">
+            <Heading
+              textAlign="center"
+              mb={{ base: 6, md: 10 }}
+              fontSize={{ base: "2xl", md: "4xl" }}
+              color="#81d4fa"
+            >
               Create Agent
             </Heading>
             <Box width="60px" />
           </Flex>
+  
           {loadingStep === 0 && (
-            <Flex direction="column" gap={6}>
+            <Flex direction="column" gap={4}>
               <VStack spacing={4} align="stretch">
                 <FormControl isInvalid={errors.agentName}>
                   <Text fontWeight="bold" color="#81d4fa" mb={2}>
@@ -237,16 +240,18 @@ function CreateAgent() {
                   <Input
                     placeholder="Enter agent name"
                     value={agentName}
-                    onChange={e => setAgentName(e.target.value)}
+                    onChange={(e) => setAgentName(e.target.value)}
                     bg="#424242"
                     color="#e0e0e0"
                     border="2px solid"
-                    borderColor={errors.agentName ? 'red.500' : '#757575'}
+                    borderColor={errors.agentName ? "red.500" : "#757575"}
+                    size={{ base: "sm", md: "md" }}
                   />
                   {errors.agentName && (
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
                   )}
                 </FormControl>
+  
                 {/* Description Section */}
                 <FormControl isInvalid={errors.description}>
                   <Flex justify="space-between" align="center">
@@ -259,95 +264,100 @@ function CreateAgent() {
                       size="sm"
                       onClick={onToggle}
                     >
-                      Template Guide {isOpen ? '▲' : '▼'}
+                      Template Guide {isOpen ? "▲" : "▼"}
                     </Button>
                   </Flex>
                   <Collapse in={isOpen} animateOpacity>
                     <Box
-                      mb={2}
-                      p={4}
-                      bg="#424242"
+                      p={3}
+                      bg="#2d2d2d"
+                      border="1px solid"
+                      borderColor="#757575"
                       borderRadius="md"
                       fontSize="sm"
+                      maxHeight="150px"
+                      overflowY="auto"
+                      whiteSpace="pre-wrap"
+                      mb={4}
                     >
-                      <Text whiteSpace="pre-wrap" mb={2}>
-                        {DESCRIPTION_TEMPLATE}
-                      </Text>
-                      <Tooltip
-                        label={`Generate a description using the template based off of your inputted description.`}
-                        hasArrow
-                        placement="top"
-                      >
-                        <Box as="span" cursor={'pointer'}>
-                          <Button
-                            onClick={() => onGenerateDescription(description)}
-                            variant="solid"
-                            colorScheme="blue"
-                            size="sm"
-                            mr={2}
-                            leftIcon={<RepeatIcon />}
-                          >
-                            Generate Description
-                          </Button>
-                        </Box>
-                      </Tooltip>
-                      <Tooltip
-                        label={`Generate a surprise description using the template.`}
-                        hasArrow
-                        placement="top"
-                      >
-                        <Box as="span" cursor={'pointer'}>
-                          <Button
-                            onClick={() => onGenerateDescription('')}
-                            variant="solid"
-                            colorScheme="purple"
-                            size="sm"
-                            mr={2}
-                            leftIcon={<StarIcon />}
-                          >
-                            I'm feeling lucky
-                          </Button>
-                        </Box>
-                      </Tooltip>
-                      <Button
-                        onClick={onCopy}
-                        variant="ghost"
-                        colorScheme="blue"
-                        size="sm"
-                        mr={2}
-                        leftIcon={<FiCopy />}
-                      >
-                        Copy Template
-                      </Button>
+                      {DESCRIPTION_TEMPLATE}
                     </Box>
                   </Collapse>
                   <Textarea
                     mt={4}
                     placeholder="Describe your agent... (Use the template above or create your own format)"
                     value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    rows={10}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={6}
                     bg="#424242"
                     color="#e0e0e0"
                     border="2px solid"
-                    borderColor={errors.description ? 'red.500' : '#757575'}
+                    borderColor={errors.description ? "red.500" : "#757575"}
+                    resize="vertical"
+                    size={{ base: "sm", md: "md" }}
                   />
                   {errors.description && (
                     <FormErrorMessage>{errors.description}</FormErrorMessage>
                   )}
                 </FormControl>
+  
+                {/* Buttons */}
+                <Flex wrap="wrap" gap={2} mt={4}>
+                  <Button
+                    onClick={() => onGenerateDescription(false, description)}
+                    variant="solid"
+                    colorScheme="blue"
+                    size="sm"
+                    leftIcon={<RepeatIcon />}
+                    mb={2}
+                  >
+                    Generate Description
+                  </Button>
+                  <Button
+                    onClick={() => onGenerateDescription(true, description)}
+                    variant="solid"
+                    colorScheme="purple"
+                    size="sm"
+                    leftIcon={<StarIcon />}
+                    mb={2}
+                  >
+                    I'm feeling lucky
+                  </Button>
+                  <Button
+                    onClick={onCopy}
+                    variant="outline"
+                    colorScheme="blue"
+                    size="sm"
+                    leftIcon={<FiCopy />}
+                    mb={2}
+                  >
+                    Copy Template
+                  </Button>
+                  <Button
+                    onClick={() => setDescription("")}
+                    variant="solid"
+                    colorScheme="red"
+                    size="sm"
+                    mb={2}
+                  >
+                    Clear Description
+                  </Button>
+                </Flex>
+  
+                {/* Create Agent Button */}
                 <Tooltip
                   label={
                     !enoughFunds
                       ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RSP to create a new agent.`
-                      : ''
+                      : ""
                   }
                   hasArrow
                   placement="top"
                 >
                   <Box
                     as="span"
-                    cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
+                    cursor={!enoughFunds ? "pointer" : "not-allowed"}
+                    width="100%"
                   >
                     <Button
                       isDisabled={enoughFunds}
@@ -355,26 +365,27 @@ function CreateAgent() {
                       colorScheme="blue"
                       width="100%"
                       mt={4}
+                      size="md"
                     >
-                      {agentId ? 'Agent Created' : 'Create Agent'}
+                      {agentId ? "Agent Created" : "Create Agent"}
                     </Button>
                   </Box>
                 </Tooltip>
               </VStack>
             </Flex>
           )}
-
+  
           {loadingStep > 0 && loadingStep < 3 && (
             <Box textAlign="center" mt={6}>
               <Spinner size="xl" color="blue.500" />
-              <Heading fontSize="lg" mt={4}>
+              <Heading fontSize={{ base: "md", md: "lg" }} mt={4}>
                 {loadingStep === 1
-                  ? 'Contacting Spiral Reality AI...'
-                  : 'Validating Agent Details...'}
+                  ? "Contacting Spiral Reality AI..."
+                  : "Validating Agent Details..."}
               </Heading>
             </Box>
           )}
-
+  
           {loadingStep === 3 && (
             <Box textAlign="center" mt={6}>
               <Alert
@@ -391,8 +402,7 @@ function CreateAgent() {
                     Agent Successfully Created!
                   </AlertTitle>
                   <AlertDescription textAlign="center" color="#e0e0e0">
-                    Your agent has been created and is ready for further
-                    actions.
+                    Your agent has been created and is ready for further actions.
                   </AlertDescription>
                 </Box>
               </Alert>
@@ -420,24 +430,26 @@ function CreateAgent() {
                 onClick={handleTwitterAuth}
                 colorScheme="twitter"
                 width="100%"
+                size="md"
                 disabled={twitterLinked}
               >
                 {twitterLinked
-                  ? 'Twitter Account Linked'
-                  : 'Link Twitter Account'}
+                  ? "Twitter Account Linked"
+                  : "Link Twitter Account"}
               </Button>
               <Tooltip
                 label={
                   !enoughFunds
                     ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
-                    : ''
+                    : ""
                 }
                 hasArrow
                 placement="top"
               >
                 <Box
                   as="span"
-                  cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
+                  cursor={!enoughFunds ? "pointer" : "not-allowed"}
+                  width="100%"
                 >
                   <Button
                     onClick={handleCreateBackroom}
@@ -445,6 +457,7 @@ function CreateAgent() {
                     colorScheme="green"
                     width="100%"
                     mt={4}
+                    size="md"
                   >
                     Create Backroom
                   </Button>
@@ -456,6 +469,7 @@ function CreateAgent() {
       </Box>
     </ChakraProvider>
   )
+  
 }
 
 export default withMetaMaskCheck(CreateAgent)

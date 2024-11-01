@@ -26,6 +26,8 @@ const BackroomSchema = new mongoose.Schema({
     required: false,
     default: '',
   },
+  backroomType: { type: String, default: '' },
+  topic: { type: String, default: '' },
 })
 
 // Middleware to auto-update the `updatedAt` field on each save
