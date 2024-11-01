@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { backroomTypes } from '@/constants/constants'
+import { backroomTypes, MAX_TOKENS } from '@/constants/constants'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -56,7 +56,7 @@ export class InteractionStage {
     `
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'system',
@@ -65,7 +65,7 @@ export class InteractionStage {
         },
         { role: 'user', content: prompt },
       ],
-      max_tokens: 1000,
+      max_tokens: MAX_TOKENS,
       temperature: 0.7,
     })
 
@@ -117,7 +117,7 @@ This interaction is designed to be both an exploration and a narrative progressi
           content: systemPrompt,
         },
       ],
-      max_tokens: 1000,
+      max_tokens: MAX_TOKENS,
       temperature: 0.7,
     })
 
@@ -166,7 +166,7 @@ This interaction aims to create an engaging narrative progression. Use each exch
           content: systemPrompt,
         },
       ],
-      max_tokens: 1000,
+      max_tokens: MAX_TOKENS,
       temperature: 0.7,
     })
 
@@ -215,7 +215,7 @@ Now, ${this.explorerAgent.name}, describe your next action or observation in res
         },
         { role: 'user', content: explorerPrompt },
       ],
-      max_tokens: 1000,
+      max_tokens: MAX_TOKENS,
       temperature: 0.7,
     })
 
@@ -260,7 +260,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
         },
         { role: 'user', content: responderPrompt },
       ],
-      max_tokens: 1000,
+      max_tokens: MAX_TOKENS,
       temperature: 0.7,
     })
 
@@ -320,7 +320,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
         },
         { role: 'user', content: prompt },
       ],
-      max_tokens: 1000,
+      max_tokens: MAX_TOKENS,
       temperature: 0.7,
     })
 
@@ -384,7 +384,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
         },
         { role: 'user', content: prompt },
       ],
-      max_tokens: 1000,
+      max_tokens: MAX_TOKENS,
       temperature: 0.7,
     })
 
