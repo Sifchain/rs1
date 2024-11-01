@@ -3,7 +3,7 @@ import Agent from '../../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { getFullURL, shortenURL } from '@/utils/urls'
-import { OPENAI_MODEL, DEFAULT_HASHTAGS } from '../../../constants/constants'
+import { OPENAI_MODEL, DEFAULT_HASHTAGS, MAX_TOKENS } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
 
 mongoose.set('strictQuery', false)
@@ -127,7 +127,7 @@ export default async function handler(req, res) {
       const hashtagResponse = await openai.chat.completions.create({
         model: OPENAI_MODEL,
         messages: [{ role: 'user', content: hashtagPrompt }],
-        max_tokens: 50,
+        max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
 
@@ -217,7 +217,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
           },
           { role: 'user', content: `${recapPrompt}` },
         ],
-        max_tokens: 500,
+        max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
 
@@ -305,7 +305,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
           },
           { role: 'user', content: tweetPrompt },
         ],
-        max_tokens: 280,
+        max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
 
