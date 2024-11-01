@@ -270,7 +270,6 @@ function Backrooms() {
       </ChakraProvider>
     )
   }
-  console.log('backrooms ', backrooms)
   return (
     <ChakraProvider>
       <SEO

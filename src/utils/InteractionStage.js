@@ -354,7 +354,7 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
 
       Output in JSON Format:
       {
-        "narrativeStage": "Updated narrative stage: A, B, C",
+        "narrativeStage": "Updated narrative stage",
         "narrativePoint": "Refined narrative point",
         "currentFocus": { "theme": "Updated theme", "tension": "Adjusted tension" },
         "narrativeSignals": ["Updated list of narrative signals"]
@@ -429,7 +429,7 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
 
       Output in JSON Format:
       {
-              "narrativeStage": "Updated narrative stage: A, B, C",
+              "narrativeStage": "Updated narrative stage",
         "narrativePoint": "Refined narrative point",
         "currentFocus": { "theme": "Updated theme", "tension": "Adjusted tension" },
         "narrativeSignals": ["Updated list of narrative signals"]
