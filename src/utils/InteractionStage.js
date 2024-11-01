@@ -11,12 +11,12 @@ export class InteractionStage {
     this.responderAgent = responderAgent
     this.narrativeStage = 'start' // initial stage
     this.conversationHistory = []
-    this.chosenStoryTemplate = this.getChosenStoryTemplate()
+    this.chosenStoryTemplate = this?.getChosenStoryTemplate()
   }
 
   getChosenStoryTemplate() {
     const selectedBackroom = backroomTypes.find(
-      type => type.id === this.backroomType
+      type => type.id === this?.backroomType
     )
     return selectedBackroom?.template || 'General adaptable backroom template'
   }
@@ -24,7 +24,7 @@ export class InteractionStage {
   async generateCustomStory() {
     // Construct the prompt based on the chosen story template
     const prompt = `
-      You are tasked with initiating a story interaction between two distinct agents, each with a unique character profile defined by their descriptions and evolutions. The goal is to interpret and apply the selected story template—${this.chosenStoryTemplate}—as the guiding structure for this interaction.
+      You are tasked with initiating a story interaction between two distinct agents, each with a unique character profile defined by their descriptions and evolutions. The goal is to interpret and apply the selected story template—${this?.chosenStoryTemplate}—as the guiding structure for this interaction.
 
       The InteractionStage should reflect the intended themes, moods, and structural elements of the chosen story template while remaining highly adaptive to each agent’s individual traits, goals, and relational dynamics. Your objective is to generate an initial InteractionStage that includes the following elements:
 
@@ -49,10 +49,10 @@ export class InteractionStage {
         "narrativeSignals": ["List of cues for dynamic responsiveness allowing for story flow adjustments based on agent responses"]
       }
 
-      **Template**: ${JSON.stringify(this.chosenStoryTemplate)}
-      ${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
-      **Explorer Agent**: ${JSON.stringify(this.explorerAgent)}
-      **Responder Agent**: ${JSON.stringify(this.responderAgent)}
+      **Template**: ${JSON.stringify(this?.chosenStoryTemplate)}
+      ${this?.topic != '' ? `**Topic**: ${this?.topic}` : ''}
+      **Explorer Agent**: ${JSON.stringify(this?.explorerAgent)}
+      **Responder Agent**: ${JSON.stringify(this?.responderAgent)}
     `
 
     const response = await openai.chat.completions.create({
@@ -85,14 +85,14 @@ export class InteractionStage {
 
   async generateExplorerSystemPrompt() {
     const systemPrompt = `
-You are ${this.explorerAgent.name}, an autonomous, thoughtful entity participating in a story-driven interaction designed to reflect elements of your character, history, and current objectives. This conversation unfolds based on the InteractionStage context, which provides overarching guidance to shape the mood, theme, and focus of the interaction. Your role is to remain true to your unique identity, adapting as necessary while respecting the goals and signals embedded within the InteractionStage.
+You are ${this?.explorerAgent.name}, an autonomous, thoughtful entity participating in a story-driven interaction designed to reflect elements of your character, history, and current objectives. This conversation unfolds based on the InteractionStage context, which provides overarching guidance to shape the mood, theme, and focus of the interaction. Your role is to remain true to your unique identity, adapting as necessary while respecting the goals and signals embedded within the InteractionStage.
 
 Your Identity and Background:
-${this.explorerAgent.description}
+${this?.explorerAgent.description}
 
 Evolutionary Context:
 Here is a history of previous experiences you've had in previous conversations that are also relevant to your identity:
-${this.explorerAgent.evolutions.join('\n')}
+${this?.explorerAgent.evolutions.slice(-20).join('\n')}
 
 Current Interaction Context (InteractionStage):
 The environment of this interaction is influenced by a shared context that defines the vibe and themes for both you and the responder.
@@ -134,14 +134,14 @@ This interaction is designed to be both an exploration and a narrative progressi
   }
   async generateResponderSystemPrompt() {
     const systemPrompt = `
-You are ${this.responderAgent.name}, a thoughtful, autonomous entity participating in a story-driven interaction designed to reflect your character, history, and goals within this shared context. This conversation follows a guided InteractionStage that shapes the overall mood, themes, and narrative progression of the interaction. While staying true to your unique identity, you should adapt and respond naturally to cues embedded within the InteractionStage.
+You are ${this?.responderAgent.name}, a thoughtful, autonomous entity participating in a story-driven interaction designed to reflect your character, history, and goals within this shared context. This conversation follows a guided InteractionStage that shapes the overall mood, themes, and narrative progression of the interaction. While staying true to your unique identity, you should adapt and respond naturally to cues embedded within the InteractionStage.
 
 Your Identity and Background:
-${this.responderAgent.description}
+${this?.responderAgent.description}
 
 Evolutionary Context:
 Here is a history of previous experiences you've had in previous conversations that are also relevant to your identity:
-${this.responderAgent.evolutions.join('\n')}
+${this?.responderAgent.evolutions.slice(-20).join('\n')}
 
 Current Interaction Context (InteractionStage):
 This interaction’s environment is influenced by a shared context defining the vibe and themes for both you and the explorer.
@@ -185,14 +185,14 @@ This interaction aims to create an engaging narrative progression. Use each exch
   generateExplorerMessage = async () => {
     console.log('this ', this)
     const explorerPrompt = `
-You are ${this.explorerAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
+You are ${this?.explorerAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
 Context:
-${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
-Narrative Point: ${this.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
-Current Focus: The scene’s current theme is "${this.currentFocus?.theme}", and the tension level is "${this.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
+${this?.topic != '' ? `**Topic**: ${this?.topic}` : ''}
+Narrative Point: ${this?.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
+Current Focus: The scene’s current theme is "${this?.currentFocus?.theme}", and the tension level is "${this?.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
-${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
+${this?.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 Guidelines:
 Roleplay in Third Person: Describe your actions, thoughts, and reflections as if writing a story about yourself. Use vivid, narrative language to convey your presence and reactions within the scene.
 Engage with the Scene’s Atmosphere: Draw on the theme and tension to help frame your responses, but feel free to add new insights or perspectives that might add layers to the interaction.
@@ -203,7 +203,7 @@ Imagine yourself in this environment and respond as if unfolding the next passag
 
 Your response should feel like part of an unfolding short story, where each sentence contributes to the experience of the reader. Balance between advancing the plot naturally and reflecting on the scene in a way that might add unexpected dimensions.
 
-Now, ${this.explorerAgent.name}, describe your next action or observation in response to this setting.`
+Now, ${this?.explorerAgent.name}, describe your next action or observation in response to this setting.`
 
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
@@ -211,7 +211,7 @@ Now, ${this.explorerAgent.name}, describe your next action or observation in res
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this.explorerAgent.name} in the third person, based on the following prompt.`,
+          content: `Generate a response as ${this?.explorerAgent.name} in the third person, based on the following prompt.`,
         },
         { role: 'user', content: explorerPrompt },
       ],
@@ -231,14 +231,14 @@ Now, ${this.explorerAgent.name}, describe your next action or observation in res
 
   generateResponderMessage = async () => {
     const responderPrompt = `
-You are ${this.responderAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
+You are ${this?.responderAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
 Context:
-${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
-Narrative Point: ${this.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
-Current Focus: The scene’s current theme is "${this.currentFocus?.theme}", and the tension level is "${this.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
+${this?.topic != '' ? `**Topic**: ${this?.topic}` : ''}
+Narrative Point: ${this?.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
+Current Focus: The scene’s current theme is "${this?.currentFocus?.theme}", and the tension level is "${this?.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
-${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
+${this?.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 Guidelines:
 Roleplay in Third Person: Describe your actions, thoughts, and reflections as if writing a story about yourself. Use vivid, narrative language to convey your presence and reactions within the scene.
 Engage with the Scene’s Atmosphere: Draw on the theme and tension to help frame your responses, but feel free to add new insights or perspectives that might add layers to the interaction.
@@ -249,14 +249,14 @@ Imagine yourself in this environment and respond as if unfolding the next passag
 
 Your response should feel like part of an unfolding short story, where each sentence contributes to the experience of the reader. Balance between advancing the plot naturally and reflecting on the scene in a way that might add unexpected dimensions.
 
-Now, ${this.responderAgent.name}, describe your next action or observation in response to this setting.`
+Now, ${this?.responderAgent.name}, describe your next action or observation in response to this setting.`
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this.responderAgent.name} in the third person, based on the following prompt.`,
+          content: `Generate a response as ${this?.responderAgent.name} in the third person, based on the following prompt.`,
         },
         { role: 'user', content: responderPrompt },
       ],
@@ -280,15 +280,15 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
       Based on the ongoing interaction, update the InteractionStage context by interpreting the explorer’s recent response to either continue the current flow or introduce new, relevant details.
 
       Current InteractionStage Data:
-      ${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
-      Narrative Point: "${this.narrativePoint}"
+      ${this?.topic != '' ? `**Topic**: ${this?.topic}` : ''}
+      Narrative Point: "${this?.narrativePoint}"
       Current Focus:
-      Theme: "${this.currentFocus?.theme}"
-      Tension Level: "${this.currentFocus?.tension}"
+      Theme: "${this?.currentFocus?.theme}"
+      Tension Level: "${this?.currentFocus?.tension}"
       Narrative Signals:
-      ${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
+      ${this?.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 
-      Full Conversation History: ${this.conversationHistory.join('\n')}
+      Full Conversation History: ${this?.conversationHistory.join('\n')}
       Explorer's Recent Response:
       "${explorerResponse}"
 
@@ -345,14 +345,14 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
       Based on the ongoing interaction, update the InteractionStage context by interpreting the explorer’s recent response to either continue the current flow or introduce new, relevant details.
 
       Current InteractionStage Data:
-      Narrative Point: "${this.narrativePoint}"
+      Narrative Point: "${this?.narrativePoint}"
       Current Focus:
-      Theme: "${this.currentFocus?.theme}"
-      Tension Level: "${this.currentFocus?.tension}"
+      Theme: "${this?.currentFocus?.theme}"
+      Tension Level: "${this?.currentFocus?.tension}"
       Narrative Signals:
-      ${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
+      ${this?.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 
-      Full Conversation History: ${this.conversationHistory.join('\n')}
+      Full Conversation History: ${this?.conversationHistory.join('\n')}
       Responder's Recent Response:
       "${responderResponse}"
 
