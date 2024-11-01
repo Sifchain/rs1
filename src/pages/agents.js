@@ -162,9 +162,9 @@ function Agents() {
     fetchBackrooms()
   }, [])
 
-const handleAgentSelection = useCallback(async (event) => {
+  const handleAgentSelection = useCallback(async (event) => {
     const agentId = event.target.value
-  const agent = agents.find(agent => agent?._id === agentId)
+    const agent = agents.find(agent => agent?._id === agentId)
 
     selectAgentById(agentId, agents)
     setSelectedAgent(agent)
@@ -195,7 +195,7 @@ const handleAgentSelection = useCallback(async (event) => {
     } catch (error) {
       console.error('Error fetching recent backroom conversations:', error)
     }
-}, [
+  }, [
     agentId,
     agents,
     setSelectedAgent,
@@ -331,11 +331,11 @@ const handleAgentSelection = useCallback(async (event) => {
     )
   }
 
-  const hasEditPermission =  useCallback(() => {
+  const hasEditPermission = useCallback(() => {
     const user = JSON.parse(localStorage.getItem('user'))
     return user && selectedAgent && user?._id === selectedAgent?.user
   }, [selectedAgent])
-    const handleCreateBackroom = () => {
+  const handleCreateBackroom = () => {
     router.push(`/create-backroom${agentId != null ? `?agentId=${agentId}` : ''}`)
   }
   const displayRecentBackrooms = () => {
@@ -718,32 +718,39 @@ const handleAgentSelection = useCallback(async (event) => {
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={10} px={6} maxW="2000px" mx="auto">
-          <Flex justifyContent="space-between" alignItems="center" mb={1}>
+
+        <Box py={10} px={{ base: 4, md: 6 }} mx="auto">
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            alignItems="center"
+            justifyContent="space-between"
+            textAlign="center"
+            gap={{ base: 4, md: 8 }}
+          >
             <Heading
-              textAlign="center"
-              mb={10}
-              fontSize="4xl"
+              fontSize={{ base: '3xl', md: '4xl' }}
               color="#81d4fa"
               fontFamily="'Arial', sans-serif"
             >
               Agents
             </Heading>
-            {/* Dropdown to select agent */}
+
             <Flex
-              direction="row"
-              mb={4}
+              direction={{ base: 'column', md: 'row' }}
               alignItems="center"
               justifyContent="center"
+              width="100%"
+              gap={{ base: 2, md: 4 }}
             >
               <Select
                 placeholder={selectedAgent == null ? "Select Agent" : selectedAgent?.name}
                 onChange={handleAgentSelection}
                 value={selectedAgent?.name}
-                maxW="400px"
+                width="100%"
+                maxW={{ base: "100%", md: "400px" }}
                 bg="#424242"
                 color="#e0e0e0"
-                border="2px solid #757575"
+                border="1px solid #757575"
                 _hover={{ borderColor: '#81d4fa' }}
               >
                 {Array.isArray(agents) && agents.length > 0 ? (
@@ -756,6 +763,7 @@ const handleAgentSelection = useCallback(async (event) => {
                   <option disabled>No agents available</option>
                 )}
               </Select>
+
               <Tooltip
                 label={
                   !enoughFunds
@@ -767,17 +775,18 @@ const handleAgentSelection = useCallback(async (event) => {
               >
                 <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
                   <Button
-                    onClick={() => router.push('/create-agent')} // Disable click functionality
+                    onClick={() => router.push('/create-agent')}
                     colorScheme="blue"
-                    ms={10}
                     size="md"
                     fontWeight="bold"
                     isDisabled={!enoughFunds}
+                    width={{ base: '100%', md: 'auto' }}
                   >
                     + New Agent
                   </Button>
                 </Box>
               </Tooltip>
+
               <Tooltip
                 label={
                   !enoughFunds
@@ -787,16 +796,12 @@ const handleAgentSelection = useCallback(async (event) => {
                 hasArrow
                 placement="top"
               >
-                <Box
-                  as="span"
-                  cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
-                >
+                <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
                   <Button
                     onClick={handleCreateBackroom}
                     isDisabled={!enoughFunds}
                     colorScheme="green"
-                    width="100%"
-                    ms={2}
+                    width={{ base: '100%', md: 'auto' }}
                   >
                     Create Backroom
                   </Button>
@@ -804,13 +809,10 @@ const handleAgentSelection = useCallback(async (event) => {
               </Tooltip>
             </Flex>
           </Flex>
-          {selectedAgent?.pendingTweets?.length > 0
-            ? displayPendingTweets()
-            : null}
-          {/* Display agent details */}
+
+          {/* Agent details */}
           {selectedAgent && !editMode && (
-            <VStack spacing={6} align="stretch">
-              {/* Top Box with Agent Info */}
+            <VStack spacing={6} align="stretch" mt={8}>
               <Box
                 p={4}
                 bg="#424242"
@@ -818,12 +820,11 @@ const handleAgentSelection = useCallback(async (event) => {
                 border="2px solid #757575"
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Flex justifyContent="space-between" alignItems="flex-start">
-                  <Box>
+                <Flex direction={{ base: 'column', md: 'row' }} alignItems="flex-start">
+                  <Box flex="1" mb={{ base: 4, md: 0 }}>
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
-                    {/* Display Parsed Description with "View Full Description" Button */}
                     <Box mt={3}>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Description
@@ -831,15 +832,11 @@ const handleAgentSelection = useCallback(async (event) => {
                       <Collapse in={isDescriptionExpanded} startingHeight={200}>
                         {handleParseDescription(
                           selectedAgent.originalDescription ||
-                            selectedAgent.description ||
-                            'No description provided'
+                          selectedAgent.description ||
+                          'No description provided'
                         ).map((section, index) => (
                           <Box key={index} mt={4}>
-                            <Text
-                              fontSize="medium"
-                              fontWeight="bold"
-                              color="#81d4fa"
-                            >
+                            <Text fontSize="medium" fontWeight="bold" color="#81d4fa">
                               {section.title}
                             </Text>
                             <List spacing={2} mt={2} color="#e0e0e0">
@@ -854,7 +851,6 @@ const handleAgentSelection = useCallback(async (event) => {
                         ))}
                       </Collapse>
 
-                      {/* Collapse/Expand Button */}
                       <Box mt={2}>
                         <Button
                           size="sm"
@@ -863,23 +859,15 @@ const handleAgentSelection = useCallback(async (event) => {
                           onClick={() =>
                             setIsDescriptionExpanded(!isDescriptionExpanded)
                           }
-                          alignSelf="flex-start" // Align the button to the left
+                          alignSelf="flex-start"
                         >
-                          {isDescriptionExpanded
-                            ? 'Hide Full Description'
-                            : 'View Full Description'}
+                          {isDescriptionExpanded ? 'Hide Full Description' : 'View Full Description'}
                         </Button>
                       </Box>
                     </Box>
 
-                    {/* Display All Tags */}
                     <Box mt={3}>
-                      <Text
-                        fontSize="lg"
-                        fontWeight="bold"
-                        color="#81d4fa"
-                        mt={3}
-                      >
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Backroom Tags:
                       </Text>
                       <Box mt={2} mb={3}>
@@ -903,8 +891,7 @@ const handleAgentSelection = useCallback(async (event) => {
                       </Box>
                     </Box>
                   </Box>
-                  <Box minWidth="120px" textAlign="right">
-                    {/* Edit button */}
+                  <Box textAlign={{ base: "left", md: "right" }} mt={{ base: 0, md: 0 }}>
                     <Tooltip
                       label={
                         !hasEditPermission()
@@ -917,54 +904,50 @@ const handleAgentSelection = useCallback(async (event) => {
                       <Box
                         as="span"
                         cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                        display="flex"
+                        justifyContent={{ base: "center", md: "flex-end" }}
                       >
                         <Button
-                          onClick={
-                            hasEditPermission() ? handleEditClick : undefined
-                          } // Disable click functionality
+                          onClick={hasEditPermission() ? handleEditClick : undefined}
                           colorScheme="blue"
                           mb={4}
-                          isDisabled={!hasEditPermission()} // Button looks disabled but can still be hovered for Tooltip
-                          pointerEvents={hasEditPermission() ? 'auto' : 'none'} // Prevent clicking
+                          isDisabled={!hasEditPermission()}
+                          pointerEvents={hasEditPermission() ? 'auto' : 'none'}
                         >
                           Edit
                         </Button>
                       </Box>
                     </Tooltip>
-
-                    <Flex alignItems="center" justifyContent="flex-end">
-                      <Icon as={FiCalendar} mr={1} />
-                      <Text fontSize="sm" color="#b0bec5" whiteSpace="nowrap">
-                        Created: {new Date().toLocaleDateString()}
-                      </Text>
-                    </Flex>
                   </Box>
+
+
                 </Flex>
               </Box>
 
-              {/* Agent Journey */}
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
+              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Agent Journey
                 </Text>
                 <Divider mb={4} />
-                <Box mt={4}>{displayJourney(selectedAgent.evolutions)}</Box>
+
+                <Box
+                  p={3}
+                  bg="#2d2d2d"
+                  border="1px solid"
+                  borderColor="#757575"
+                  borderRadius="md"
+                  fontSize="sm"
+                  maxHeight="150px"
+                  overflowY="auto"
+                  whiteSpace="pre-wrap"
+                  mb={4}
+                >
+                  {displayJourney(selectedAgent.evolutions)}
+                </Box>
+
               </Box>
 
-              {/* Recent Backroom Conversations */}
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
+              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Recent Backroom Conversations
                 </Text>
@@ -972,14 +955,7 @@ const handleAgentSelection = useCallback(async (event) => {
                 {displayRecentBackrooms()}
               </Box>
 
-              {/* Display Tweets */}
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
+              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Tweets
                 </Text>
@@ -997,108 +973,7 @@ const handleAgentSelection = useCallback(async (event) => {
               </Box>
             </VStack>
           )}
-          {/* Edit Agent Form */}
-          {selectedAgent && editMode && (
-            <VStack spacing={6} align="stretch">
-              <Box
-                p={4}
-                bg="#424242"
-                borderRadius="lg"
-                border="2px solid #757575"
-                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-              >
-                <Flex justifyContent="space-between" alignItems="center" mb={5}>
-                  {/* Back Button */}
-                  <Button
-                    leftIcon={<ArrowBackIcon />}
-                    colorScheme="blue"
-                    onClick={() => router.back()}
-                  >
-                    Back
-                  </Button>
 
-                  {/* Center-aligned heading */}
-                  <Heading
-                    textAlign="center"
-                    fontSize="4xl"
-                    color="#81d4fa"
-                    fontFamily="'Arial', sans-serif"
-                    flex="1"
-                  >
-                    Edit Agent Details
-                  </Heading>
-
-                  {/* Spacer to keep the heading centered */}
-                  <Box width="60px" />
-                </Flex>
-                {/* Name */}
-                <FormControl isInvalid={errors.agentName}>
-                  <Flex alignItems="center" mb={4}>
-                    {/* Label */}
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Name:
-                    </Text>
-                    {/* Input */}
-                    <Input
-                      placeholder="Name"
-                      value={agentName}
-                      onChange={e => setAgentName(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.agentName ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                    />
-                  </Flex>
-                  {errors.agentName && (
-                    <FormErrorMessage mb={4}>
-                      {errors.agentName}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-                {/* Description */}
-                <FormControl isInvalid={errors.description}>
-                  <Flex alignItems="center" mb={4}>
-                    <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      minWidth="150px"
-                      color="#81d4fa"
-                    >
-                      Description:
-                    </Text>
-                    <Textarea
-                      placeholder="Description"
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      bg="#424242"
-                      color="#e0e0e0"
-                      border="2px solid"
-                      borderColor={errors.description ? 'red.500' : '#757575'}
-                      _hover={{ borderColor: '#81d4fa' }}
-                      minHeight="500px"
-                      p={4}
-                    />
-                  </Flex>
-                  {errors.description && (
-                    <FormErrorMessage mb={4}>
-                      {errors.description}
-                    </FormErrorMessage>
-                  )}
-                </FormControl>
-                <Flex justifyContent="flex-end" mt={4}>
-                  <Button colorScheme="blue" onClick={handleUpdateAgent} mt={4}>
-                    Update Agent
-                  </Button>
-                </Flex>
-              </Box>
-            </VStack>
-          )}
           {loading && (
             <Flex justifyContent="center" mt={4}>
               <Text>Loading agents...</Text>
@@ -1106,6 +981,7 @@ const handleAgentSelection = useCallback(async (event) => {
           )}
         </Box>
       </Box>
+
     </ChakraProvider>
   )
 }
