@@ -57,7 +57,7 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 
 // Component to render each message bubble
 const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
-  <Box mb={4} maxW="80%" alignSelf="flex-start">
+  <Box mb={4} maxW="100%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
       <Icon color={colorScheme.iconColor} />{' '}
       {/* Use the icon passed in as a prop */}

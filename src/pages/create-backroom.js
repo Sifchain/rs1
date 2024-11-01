@@ -15,8 +15,8 @@ import {
   Th,
   Tbody,
   Td,
-  Link,
   Tooltip,
+  Spinner,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -37,29 +37,44 @@ function CreateBackroom() {
   const [responderAgent, setResponderAgent] = useState('')
   const [backroomType, setBackroomType] = useState('')
   const [agents, setAgents] = useState([])
-  const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null) // Holds explorer agent details
-  const [selectedResponderInfo, setSelectedResponderInfo] = useState(null) // Holds responder agent details
-  const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState(
-    []
-  )
+  const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null)
+  const [selectedResponderInfo, setSelectedResponderInfo] = useState(null)
+  const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState([])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const router = useRouter()
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
   const [topic, setTopic] = useState('')
+
+  const loadingMessages = ["Processing", "Analyzing", "Connecting", "Finalizing", "Completing"]
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (loading) {
+        setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length)
+      }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [loading])
+
+  const currentMessage = loadingMessages[currentMessageIndex]
+
   const fetchAgents = async () => {
     try {
       const response = await fetch('/api/agents')
       const data = await response.json()
       setAgents([...data])
     } catch (error) {
-      setAgents([]) // Fallback to empty if fetching fails
+      setAgents([]) 
     }
   }
+
   useEffect(() => {
     fetchAgents()
   }, [])
+
   useEffect(() => {
     if (address) {
       const fetchHasEnoughFunds = async () => {
@@ -78,6 +93,7 @@ function CreateBackroom() {
         })
     }
   }, [address, loading])
+
   useEffect(() => {
     const { agent, agentId } = router.query
 
@@ -130,7 +146,7 @@ function CreateBackroom() {
     const backroomTopic = e.target.value
     setTopic(backroomTopic)
   }
-  // Form validation
+
   const handleValidation = () => {
     let valid = true
     let errors = {}
@@ -147,7 +163,6 @@ function CreateBackroom() {
       errors.backroomType = 'Backroom Type is required'
       valid = false
     }
-    // Check if the selected explorer and responder agents are the same
     if (explorerAgent === responderAgent) {
       errors.responderAgent = 'Explorer and Responder agents cannot be the same'
       errors.explorerAgent = 'Explorer and Responder agents cannot be the same'
@@ -191,8 +206,34 @@ function CreateBackroom() {
     }
   }
 
+  const LoadingOverlay = () => (
+    <Box
+      position="fixed"
+      top="0"
+      left="0"
+      width="100%"
+      height="100%"
+      bg="rgba(0, 0, 0, 0.8)"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      flexDirection="column"
+      zIndex="1000"
+      color="#81d4fa"
+    >
+      <Spinner size="xl" thickness="4px" color="#81d4fa" mb={6} speed="0.8s" />
+      <Text fontSize="2xl" fontWeight="bold" fontFamily="Arial, sans-serif" mb={2}>
+        {currentMessage}...
+      </Text>
+      <Text fontSize="md" color="#b0bec5">
+        Please wait while we process your request.
+      </Text>
+    </Box>
+  )
+
   return (
     <ChakraProvider>
+      {loading && <LoadingOverlay />}
       <SEO
         title="Reality Spiral - Create a Backroom"
         description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
@@ -202,7 +243,6 @@ function CreateBackroom() {
         <Navigation />
         <Box py={10} px={6} maxW="2000px" mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={5}>
-            {/* Back Button */}
             <Button
               leftIcon={<ArrowBackIcon />}
               colorScheme="blue"
@@ -210,8 +250,6 @@ function CreateBackroom() {
             >
               Back
             </Button>
-
-            {/* Center-aligned heading */}
             <Heading
               textAlign="center"
               fontSize="4xl"
@@ -221,8 +259,6 @@ function CreateBackroom() {
             >
               Create a Backroom
             </Heading>
-
-            {/* Spacer to keep the heading centered */}
             <Box width="60px" />
           </Flex>
 
@@ -231,7 +267,6 @@ function CreateBackroom() {
             justifyContent="space-between"
             mb={6}
           >
-            {/* Explorer Setup */}
             <Box
               width={{ base: '100%', md: '48%' }}
               mb={{ base: 4, md: 0 }}
@@ -262,18 +297,24 @@ function CreateBackroom() {
                 )}
               </FormControl>
 
-              {/* Show current explorer agent info if selected */}
               {selectedExplorerInfo && (
-                <Box mt={4}>
-                  <Text mb={4}>
-                    <strong>Description:</strong>{' '}
-                    {selectedExplorerInfo.description}
-                  </Text>
+                <Box
+                  p={3}
+                  bg="#2d2d2d"
+                  border="1px solid"
+                  borderColor="#757575"
+                  borderRadius="md"
+                  fontSize="sm"
+                  maxHeight="150px"
+                  overflowY="auto"
+                  whiteSpace="pre-wrap"
+                  mb={4}
+                >
+                  {selectedExplorerInfo.description}
                 </Box>
               )}
             </Box>
 
-            {/* Type */}
             <Box
               width={{ base: '100%', md: '48%' }}
               mb={{ base: 4, md: 0 }}
@@ -314,7 +355,7 @@ function CreateBackroom() {
                 </Box>
               )}
             </Box>
-            {/* Responder Setup */}
+
             <Box width={{ base: '100%', md: '48%' }}>
               <Heading size="md" mb={4} color="#81d4fa">
                 Responder Setup
@@ -340,17 +381,25 @@ function CreateBackroom() {
                 )}
               </FormControl>
 
-              {/* Show current responder agent info if selected */}
               {selectedResponderInfo && (
-                <Box mt={4}>
-                  <Text mb={4}>
-                    <strong>Description:</strong>{' '}
-                    {selectedResponderInfo.description}
-                  </Text>
+                <Box
+                  p={3}
+                  bg="#2d2d2d"
+                  border="1px solid"
+                  borderColor="#757575"
+                  borderRadius="md"
+                  fontSize="sm"
+                  maxHeight="150px"
+                  overflowY="auto"
+                  whiteSpace="pre-wrap"
+                  mb={4}
+                >
+                  {selectedResponderInfo.description}
                 </Box>
               )}
             </Box>
           </Flex>
+          
           <FormControl isInvalid={errors.topic}>
             <Text
               fontSize="lg"
@@ -378,6 +427,7 @@ function CreateBackroom() {
               <FormErrorMessage mb={2}>{errors.topic}</FormErrorMessage>
             )}
           </FormControl>
+
           <Tooltip
             label={
               !enoughFunds
@@ -403,31 +453,66 @@ function CreateBackroom() {
             </Box>
           </Tooltip>
 
-          {/* Display agent's evolutions */}
           {selectedExplorerEvolutions.length > 0 && (
-            <Box mt={8}>
-              <Heading size="lg" mb={4} color="#81d4fa">
+            <Box mt={8} width="100%">
+              <Heading size="lg" mb={4} color="#81d4fa" textAlign="left">
                 Evolution History for {selectedExplorerInfo?.name}
               </Heading>
-              <Table variant="simple" size="lg" colorScheme="blue">
-                <Thead>
+              <Table
+                variant="simple"
+                size="lg"
+                colorScheme="blue"
+                width="100%"
+                borderRadius="md"
+                overflow="hidden"
+              >
+                <Thead
+                  bg="#333"
+                  borderTopRadius="md"
+                  display={{ base: "none", md: "table-header-group" }}
+                >
                   <Tr>
                     <Th color="#e0e0e0">Evolution</Th>
-                    <Th color="#e0e0e0">Backroom</Th>
+                    <Th color="#e0e0e0" display={{ base: "none", md: "table-cell" }}>
+                      Backroom
+                    </Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {selectedExplorerEvolutions.map((evolution, index) => (
-                    <Tr key={index}>
-                      <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
+                    <Tr
+                      key={index}
+                      as="a"
+                      href={`/backrooms?expanded=${evolution?.backroomId}`}
+                      _hover={{ bg: "#333", textDecoration: "none" }}
+                      cursor="pointer"
+                      bg={index % 2 === 0 ? "#2d2d2d" : "#424242"}
+                      display="flex"
+                      flexDirection={{ base: "column", md: "row" }}
+                      width="100%"
+                      p={{ base: 4, md: 0 }}
+                      alignItems="center"
+                    >
+                      <Td
+                        fontFamily="Arial, sans-serif"
+                        color="#e0e0e0"
+                        p={{ base: 2, md: 4 }}
+                        width="100%"
+                        whiteSpace="pre-line"
+                        borderBottom="none"
+                      >
                         {evolution.description}
                       </Td>
-                      <Td fontFamily="Arial, sans-serif" color="#e0e0e0">
-                        <Link
-                          href={`/backrooms?expanded=${evolution?.backroomId}`}
-                        >
-                          View Backroom
-                        </Link>
+                      <Td
+                        fontFamily="Arial, sans-serif"
+                        color="#81d4fa"
+                        textAlign="center"
+                        display={{ base: "none", md: "table-cell" }}
+                        fontWeight="bold"
+                        p={4}
+                        width="200px"
+                      >
+                        View Backroom
                       </Td>
                     </Tr>
                   ))}

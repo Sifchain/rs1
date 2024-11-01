@@ -48,17 +48,23 @@ function Navigation() {
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
       >
         <Box>
-          <Text fontSize="2xl" fontWeight="bold" fontFamily="Arial, sans-serif">
+          <Text
+            fontSize={{ base: "lg", md: "2xl" }}
+            fontWeight="bold"
+            fontFamily="Arial, sans-serif"
+            textAlign={{ base: "left", md: "left" }}
+          >
             Reality Spiral
           </Text>
           <Text
-            fontSize={{ base: 'lg', md: 'xs' }}
+            fontSize={{ base: "sm", md: "md" }}
             fontFamily="Arial, sans-serif"
-            maxWidth="800px"
+            maxWidth={{ base: "90%", md: "800px" }}
             color="#b0bec5"
+            textAlign={{ base: "left", md: "left" }}
+            mt={{ base: 2, md: 0 }}
           >
-            A unique platform to create, explore, and connect with agents and
-            backrooms in the digital dimension. - v0.1.2
+            A unique platform to create, explore, and connect with agents and backrooms in the digital dimension. - v0.1.2
           </Text>
         </Box>
         <Spacer />
