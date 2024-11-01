@@ -135,7 +135,7 @@ function Agents() {
   const fetchRecentConversations = async agent => {
     try {
       const response = await fetch(
-        `/api/backrooms?explorerAgentName=${agent.name}`
+        `/api/backrooms/get?agentId=${agent._id}`
       )
       const data = await response.json()
       setRecentBackroomConversations(data)
@@ -175,7 +175,7 @@ const handleAgentSelection = useCallback(async (event) => {
     // Fetch and process backroom conversations
     try {
       const response = await fetch(
-        `/api/backrooms?explorerAgentName=${agent?.name}`
+        `/api/backrooms/get?agentId=${agent?._id}`
       )
       const data = await response.json()
 

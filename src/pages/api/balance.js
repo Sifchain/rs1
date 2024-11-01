@@ -21,12 +21,10 @@ export default async function handler(req, res) {
 
     // Get token metadata
     const metadata = await alchemy.core.getTokenMetadata(contractAddress)
-    console.log(metadata)
     // Get token balance
     const response = await alchemy.core.getTokenBalances(address, [
       contractAddress,
     ])
-    console.log(response)
 
     if (!response.tokenBalances[0]) {
       return res.status(404).json({ message: 'No token balance found' })
@@ -35,18 +33,9 @@ export default async function handler(req, res) {
     const rawBalance = response.tokenBalances[0].tokenBalance
     // Format the balance using the token's decimals
     const formattedBalance = Utils.formatUnits(rawBalance, metadata.decimals)
-    // Get transfer events
-    // const transferEvents = await alchemy.core.getAssetTransfers({
-    //   fromBlock: '0x0',
-    //   toBlock: 'latest',
-    //   toAddress: address,
-    //   contractAddresses: [contractAddress],
-    //   category: ['erc20'],
-    // })
 
     return res.status(200).json({
       formattedBalance,
-      // transferEvents,
     })
   } catch (error) {
     console.error('API Error:', error)
