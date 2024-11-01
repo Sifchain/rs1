@@ -3,7 +3,11 @@ import Agent from '../../../models/Agent'
 import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { getFullURL, shortenURL } from '@/utils/urls'
-import { OPENAI_MODEL, DEFAULT_HASHTAGS, MAX_TOKENS } from '../../../constants/constants'
+import {
+  OPENAI_MODEL,
+  DEFAULT_HASHTAGS,
+  MAX_TOKENS,
+} from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
 
 mongoose.set('strictQuery', false)
@@ -67,24 +71,17 @@ export default async function handler(req, res) {
         explorer,
         responder
       )
-
+      await interactionStage.generateCustomStory()
       let explorerMessageHistory = [
         await interactionStage.generateExplorerSystemPrompt(),
       ]
       let responderMessageHistory = [
         await interactionStage.generateResponderSystemPrompt(),
       ]
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 1; i++) {
         // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
-        // Generate explorer response using the current InteractionStage state
+        // Generate explorer response using the current InteractionStage state + update state
         const explorerMessage = await interactionStage.generateExplorerMessage()
-
-        await interactionStage.updateStageBasedOffOfExplorer(explorerMessage)
-        // Add explorer's response to conversation histories
-        interactionStage.conversationHistory.push({
-          agent: 'explorer',
-          response: explorerMessage,
-        })
         explorerMessageHistory.push({
           role: 'assistant',
           content: explorerMessage,
@@ -93,17 +90,8 @@ export default async function handler(req, res) {
           role: 'user',
           content: explorerMessage,
         })
-
-        // Generate responder response using the updated InteractionStage state
         const responderMessage =
           await interactionStage.generateResponderMessage()
-
-        await interactionStage.updateStageBasedOffOfResponder(responderMessage)
-        // Add responder's response to conversation histories
-        interactionStage.conversationHistory.push({
-          agent: 'responder',
-          response: responderMessage,
-        })
         explorerMessageHistory.push({
           role: 'user',
           content: responderMessage,
@@ -121,9 +109,8 @@ export default async function handler(req, res) {
             `${entry.role === 'user' ? responder.name : explorer.name}: ${entry.content}`
         )
         .join('\n')
-
       // Generate relevant hashtags based on the conversation
-      const hashtagPrompt = `Based on the following conversation, generate the top 50 relevant hashtags and of those select the 3 most appropriate hashtags summarizing the following conversation:\n\n${conversationContent}`
+      const hashtagPrompt = `Based on the following conversation, generate the top 3 most appropriate hashtags summarizing the following conversation:\n\n${conversationContent}  in the following format #hashtag1, #hashtag2, #hashtag3`
       const hashtagResponse = await openai.chat.completions.create({
         model: OPENAI_MODEL,
         messages: [{ role: 'user', content: hashtagPrompt }],

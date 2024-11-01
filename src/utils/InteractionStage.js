@@ -7,6 +7,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const InteractionStageSchema = z.object(
   {
     narrativePoint: z.string(),
+    narrativeStage: z.string(),
     currentFocus: z.object({
       theme: z.string(),
       tension: z.string(),
@@ -22,7 +23,7 @@ export class InteractionStage {
     this.topic = topic
     this.explorerAgent = explorerAgent
     this.responderAgent = responderAgent
-    this.narrativeStage = 'start' // initial stage
+    this.narrativeStage = 'start'
     this.conversationHistory = []
     this.chosenStoryTemplate = this?.getChosenStoryTemplate()
   }
@@ -52,8 +53,22 @@ export class InteractionStage {
       - **Adaptive Customization**: Adjust InteractionStage settings, such as tension level or narrative signals, to support natural deviation based on agent characteristics.
       - **Meta Awareness**: Infuse reasonable levels of metacognitive ability within InteractionStage settings, allowing agents to adjust conversational approaches as they detect cues in each other’s responses.
 
-      Based on the information below, please generate the following JSON response with initial values for InteractionStage:
+      Based on the information:
+      ---
+      **Template**: ${this?.chosenStoryTemplate}
+      ${this?.topic != '' ? `**Topic**: ${this?.topic}` : ''}
+      **Explorer Agent**: Name: ${this?.explorerAgent.name} Description: ${this?.explorerAgent.description} Evolutions: ${this?.explorerAgent.evolutions
+        .slice(-20)
+        .map(e => e.description)
+        .join('\n')}
+      **Responder Agent**: Name: ${this?.responderAgent.name} Description: ${this?.responderAgent.description} Evolutions: ${this?.responderAgent.evolutions
+        .slice(-20)
+        .map(e => e.description)
+        .join('\n')}
+      ---
+      Output in the following JSON Format with generated initial values for each key based off the template and agent descriptions:
       {
+        "narrativeStage": "The current stage of the narrative",
         "narrativePoint": "A description of the starting premise or setting that harmonizes the chosen story template with character-specific adjustments",
         "currentFocus": {
           "theme": "The initial theme based on template and agent descriptions",
@@ -61,11 +76,6 @@ export class InteractionStage {
         },
         "narrativeSignals": ["List of cues for dynamic responsiveness allowing for story flow adjustments based on agent responses"]
       }
-
-      **Template**: ${JSON.stringify(this?.chosenStoryTemplate)}
-      ${this?.topic != '' ? `**Topic**: ${this?.topic}` : ''}
-      **Explorer Agent**: ${JSON.stringify(this?.explorerAgent)}
-      **Responder Agent**: ${JSON.stringify(this?.responderAgent)}
     `
 
     try {
@@ -86,21 +96,19 @@ export class InteractionStage {
           'interaction_stage'
         ),
       })
-
-      if (response.parsed) {
-        console.log(response.parsed)
-        this.narrativePoint = response.narrativePoint
-        this.currentFocus = response.currentFocus
-        this.narrativeSignals = response.narrativeSignals
-        return interactionStageData
-      } else if (response.refusal) {
-        // handle refusal
-        console.log(response.refusal)
+      const message = response.choices[0].message
+      const parsedResponse = message?.parsed
+      if (parsedResponse) {
+        this.currentFocus = parsedResponse.currentFocus
+        this.narrativeSignals = parsedResponse.narrativeSignals
+        this.narrativeStage = parsedResponse.narrativeStage
+        this.narrativePoint = parsedResponse.narrativePoint
+      } else if (message.refusal) {
         console.error(
-          `OPENAI failed to parse JSON response: ${response.refusal}`
+          `OPENAI failed to parse JSON response: ${message.refusal}`
         )
         throw new Error(
-          `OPENAI failed to parse JSON response: ${response.refusal}`
+          `OPENAI failed to parse JSON response: ${message.refusal}`
         )
       }
     } catch (error) {
@@ -150,14 +158,18 @@ This interaction is designed to be both an exploration and a narrative progressi
     try {
       const explorerSystemPromptResponseContent =
         response.choices[0].message.content
-      console.log({ explorerSystemPromptResponseContent })
-      this.conversationHistory.push(explorerSystemPromptResponseContent)
-      return explorerSystemPromptResponseContent
+      const formattedResponse = {
+        role: 'system',
+        content: explorerSystemPromptResponseContent,
+      }
+      this.conversationHistory.push(formattedResponse)
+      return formattedResponse
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
     }
   }
+
   async generateResponderSystemPrompt() {
     const systemPrompt = `
 You are ${this?.responderAgent.name}, a thoughtful, autonomous entity participating in a story-driven interaction designed to reflect your character, history, and goals within this shared context. This conversation follows a guided InteractionStage that shapes the overall mood, themes, and narrative progression of the interaction. While staying true to your unique identity, you should adapt and respond naturally to cues embedded within the InteractionStage.
@@ -199,9 +211,12 @@ This interaction aims to create an engaging narrative progression. Use each exch
     try {
       const responderSystemPromptResponseContent =
         response.choices[0].message.content
-      console.log({ responderSystemPromptResponseContent })
-      this.conversationHistory.push(responderSystemPromptResponseContent)
-      return responderSystemPromptResponseContent
+      const formattedResponse = {
+        role: 'system',
+        content: responderSystemPromptResponseContent,
+      }
+      this.conversationHistory.push(formattedResponse)
+      return formattedResponse
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
@@ -209,7 +224,6 @@ This interaction aims to create an engaging narrative progression. Use each exch
   }
 
   generateExplorerMessage = async () => {
-    console.log('this ', this)
     const explorerPrompt = `
 You are ${this?.explorerAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
@@ -219,6 +233,8 @@ Narrative Point: ${this?.narrativePoint} – this provides the general premise o
 Current Focus: The scene’s current theme is "${this?.currentFocus?.theme}", and the tension level is "${this?.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
 ${this?.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
+Narrative Stage: ${this?.narrativeStage}
+
 Guidelines:
 Roleplay in Third Person: Describe your actions, thoughts, and reflections as if writing a story about yourself. Use vivid, narrative language to convey your presence and reactions within the scene.
 Engage with the Scene’s Atmosphere: Draw on the theme and tension to help frame your responses, but feel free to add new insights or perspectives that might add layers to the interaction.
@@ -246,9 +262,13 @@ Now, ${this?.explorerAgent.name}, describe your next action or observation in re
     })
 
     try {
-      const explorerResponseContent = response.choices[0].message.content
-      console.log({ explorerResponseContent })
-      return explorerResponseContent
+      const explorerMessage = response.choices[0].message.content
+      await this.updateStageBasedOffOfExplorer(explorerMessage)
+      this.conversationHistory.push({
+        agent: 'explorer',
+        response: explorerMessage,
+      })
+      return explorerMessage
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
@@ -265,6 +285,7 @@ Narrative Point: ${this?.narrativePoint} – this provides the general premise o
 Current Focus: The scene’s current theme is "${this?.currentFocus?.theme}", and the tension level is "${this?.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
 ${this?.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
+Narrative Stage: ${this?.narrativeStage}
 Guidelines:
 Roleplay in Third Person: Describe your actions, thoughts, and reflections as if writing a story about yourself. Use vivid, narrative language to convey your presence and reactions within the scene.
 Engage with the Scene’s Atmosphere: Draw on the theme and tension to help frame your responses, but feel free to add new insights or perspectives that might add layers to the interaction.
@@ -291,9 +312,13 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
     })
 
     try {
-      const responderResponseContent = response.choices[0].message.content
-      console.log({ responderResponseContent })
-      return responderResponseContent
+      const responderMessage = response.choices[0].message.content
+      await this.updateStageBasedOffOfResponder(responderMessage)
+      this.conversationHistory.push({
+        agent: 'responder',
+        response: responderMessage,
+      })
+      return responderMessage
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
@@ -301,7 +326,6 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
   }
 
   async updateStageBasedOffOfExplorer(explorerResponse) {
-    // Construct the update prompt based on the explorer's recent input and current InteractionStage data
     const prompt = `
       Based on the ongoing interaction, update the InteractionStage context by interpreting the explorer’s recent response to either continue the current flow or introduce new, relevant details.
 
@@ -330,13 +354,14 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
 
       Output in JSON Format:
       {
+        "narrativeStage": "Updated narrative stage",
         "narrativePoint": "Refined narrative point",
         "currentFocus": { "theme": "Updated theme", "tension": "Adjusted tension" },
         "narrativeSignals": ["Updated list of narrative signals"]
       }`
     try {
       // Call OpenAI API to process and respond with an updated InteractionStage
-      const response = await openai.chat.completions.create({
+      const response = await openai.beta.chat.completions.parse({
         model: 'gpt-4o-2024-08-06',
         messages: [
           {
@@ -354,20 +379,19 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
         ),
       })
 
-      if (response.parsed) {
-        console.log(response.parsed)
-        this.narrativePoint = response.narrativePoint
-        this.currentFocus = response.currentFocus
-        this.narrativeSignals = response.narrativeSignals
-        return interactionStageData
-      } else if (response.refusal) {
-        // handle refusal
-        console.log(response.refusal)
+      const message = response.choices[0].message
+      const parsedResponse = message?.parsed
+      if (parsedResponse) {
+        this.currentFocus = parsedResponse.currentFocus
+        this.narrativeSignals = parsedResponse.narrativeSignals
+        this.narrativeStage = parsedResponse.narrativeStage
+        this.narrativePoint = parsedResponse.narrativePoint
+      } else if (message.refusal) {
         console.error(
-          `OPENAI failed to parse JSON response: ${response.refusal}`
+          `OPENAI failed to parse JSON response: ${message.refusal}`
         )
         throw new Error(
-          `OPENAI failed to parse JSON response: ${response.refusal}`
+          `OPENAI failed to parse JSON response: ${message.refusal}`
         )
       }
     } catch (error) {
@@ -405,6 +429,7 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
 
       Output in JSON Format:
       {
+              "narrativeStage": "Updated narrative stage",
         "narrativePoint": "Refined narrative point",
         "currentFocus": { "theme": "Updated theme", "tension": "Adjusted tension" },
         "narrativeSignals": ["Updated list of narrative signals"]
@@ -425,20 +450,19 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
         temperature: 0.7,
       })
 
-      if (response.parsed) {
-        console.log(response.parsed)
-        this.narrativePoint = response.narrativePoint
-        this.currentFocus = response.currentFocus
-        this.narrativeSignals = response.narrativeSignals
-        return interactionStageData
-      } else if (response.refusal) {
-        // handle refusal
-        console.log(response.refusal)
+      const message = response.choices[0].message
+      const parsedResponse = message?.parsed
+      if (parsedResponse) {
+        this.currentFocus = parsedResponse.currentFocus
+        this.narrativeSignals = parsedResponse.narrativeSignals
+        this.narrativeStage = parsedResponse.narrativeStage
+        this.narrativePoint = parsedResponse.narrativePoint
+      } else if (message.refusal) {
         console.error(
-          `OPENAI failed to parse JSON response: ${response.refusal}`
+          `OPENAI failed to parse JSON response: ${message.refusal}`
         )
         throw new Error(
-          `OPENAI failed to parse JSON response: ${response.refusal}`
+          `OPENAI failed to parse JSON response: ${message.refusal}`
         )
       }
     } catch (error) {
