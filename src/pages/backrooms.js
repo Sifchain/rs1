@@ -25,7 +25,7 @@ import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
-  backroomTypes
+  backroomTypes,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 
@@ -270,7 +270,7 @@ function Backrooms() {
       </ChakraProvider>
     )
   }
-  console.log('backrooms ',backrooms)
+  console.log('backrooms ', backrooms)
   return (
     <ChakraProvider>
       <SEO
@@ -461,19 +461,6 @@ function Backrooms() {
                     </Tag>
                   ))}
                 </Flex>
-                {/* Added Topic Display */}
-
-                {backroom?.topic && (
-                  <Flex wrap="wrap">
-                    <Text fontSize="md" color="#b0bec5" mt={2}>
-                      <Text as="span" fontWeight="bold" color="#81d4fa">
-                        Topic:{' '}
-                      </Text>
-                      {backroom.topic}
-                    </Text>
-                  </Flex>
-                )}
-
                 {/* Added Backroom Type Display */}
                 {backroom?.backroomType && (
                   <Flex wrap="wrap">
@@ -484,6 +471,17 @@ function Backrooms() {
                       {backroomTypes.find(
                         type => type.id === backroom.backroomType
                       )?.name || backroom.backroomType}
+                    </Text>
+                  </Flex>
+                )}
+                {/* Added Topic Display */}
+                {backroom?.topic && (
+                  <Flex wrap="wrap">
+                    <Text fontSize="md" color="#b0bec5" mt={2}>
+                      <Text as="span" fontWeight="bold" color="#81d4fa">
+                        Topic:{' '}
+                      </Text>
+                      {backroom.topic}
                     </Text>
                   </Flex>
                 )}
