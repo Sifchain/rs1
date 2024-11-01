@@ -45,7 +45,7 @@ const nextConfig = {
             value:
               "default-src 'self'; " +
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.walletconnect.org https://*.walletconnect.com; " +
-              "connect-src 'self' https://*.walletconnect.org wss://*.walletconnect.org https://*.walletconnect.com wss://*.walletconnect.com; " +
+              "connect-src 'self' https://cloudflare-eth.com https://*.walletconnect.org wss://*.walletconnect.org https://*.walletconnect.com wss://*.walletconnect.com; " +
               "img-src 'self' data: https://*.walletconnect.com https://*.walletconnect.org https://registry.walletconnect.com https://explorer-api.walletconnect.com; " +
               "style-src 'self' 'unsafe-inline'; " +
               "font-src 'self'; " +

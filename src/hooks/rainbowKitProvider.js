@@ -6,7 +6,7 @@ import '@rainbow-me/rainbowkit/styles.css';
 
 export const config = getDefaultConfig({
   appName: 'RealitySpiral',
-  projectId: '81960af0b67e231931085f566f12d6d4',
+  projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT,
   chains: [
     mainnet,
   ],

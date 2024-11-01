@@ -38,7 +38,7 @@ function Navigation() {
             Reality Spiral
           </Text>
           <Text
-            fontSize={{ base: 'lg', md: 'xs' }}
+            fontSize={{ base: 'md', md: 'xs' }}
             fontFamily="Arial, sans-serif"
             maxWidth="800px"
             color="#b0bec5"
@@ -175,12 +175,15 @@ function Navigation() {
         <IconButton
           aria-label="Toggle navigation"
           icon={isOpen ? <FiX /> : <FiMenu />}
-          display={{ base: 'block', md: 'none' }}
+          display={{ base: 'flex', md: 'flex' }}
           onClick={onToggle}
           fontSize="24px"
           bg="transparent"
           _hover={{ bg: 'transparent' }}
           _active={{ bg: 'transparent' }}
+          alignItems="center"
+          justifyContent="center"
+          p="0"
         />
       </Flex>
 

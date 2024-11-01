@@ -270,7 +270,6 @@ function Backrooms() {
       </ChakraProvider>
     )
   }
-  console.log('backrooms ',backrooms)
   return (
     <ChakraProvider>
       <SEO
@@ -279,7 +278,7 @@ function Backrooms() {
         url="/"
       />
       <Navigation />
-      <Box bg="#424242" color="#e0e0e0" minHeight="100vh" py={10} px={6}>
+      <Box bg="#424242" color="#e0e0e0" minHeight="100vh" py={6} px={6}>
         <Flex justifyContent="space-between" alignItems="center" mb={10}>
           <Heading
             textAlign="center"
@@ -381,7 +380,7 @@ function Backrooms() {
                 border="2px solid #757575"
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Flex justifyContent="space-between" alignItems="center">
+                <Flex justifyContent="space-between" alignItems="center" flexWrap="wrap" pb="3">
                   <Box>
                     <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                       <Link
