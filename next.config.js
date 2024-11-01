@@ -43,7 +43,14 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self';",
+              "default-src 'self'; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.walletconnect.org https://*.walletconnect.com; " +
+              "connect-src 'self' https://*.walletconnect.org wss://*.walletconnect.org https://*.walletconnect.com wss://*.walletconnect.com; " +
+              "img-src 'self' data: https://*.walletconnect.com https://*.walletconnect.org https://registry.walletconnect.com https://explorer-api.walletconnect.com; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "font-src 'self'; " +
+              "frame-src 'self' https://verify.walletconnect.com https://verify.walletconnect.org; " +
+              "frame-ancestors 'self';",
           },
           {
             key: 'X-Frame-Options',
