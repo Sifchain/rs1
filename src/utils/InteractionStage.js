@@ -1,7 +1,20 @@
 import OpenAI from 'openai'
 import { backroomTypes, MAX_TOKENS, OPENAI_MODEL } from '@/constants/constants'
-
+import { zodResponseFormat } from 'openai/helpers/zod'
+import { z } from 'zod'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+
+const InteractionStageSchema = z.object(
+  {
+    narrativePoint: z.string(),
+    currentFocus: z.object({
+      theme: z.string(),
+      tension: z.string(),
+    }),
+    narrativeSignals: z.array(z.string()),
+  },
+  'interaction_stage'
+)
 
 export class InteractionStage {
   constructor(backroomType, topic, explorerAgent, responderAgent) {
@@ -55,28 +68,41 @@ export class InteractionStage {
       **Responder Agent**: ${JSON.stringify(this?.responderAgent)}
     `
 
-    const response = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Generate a structured JSON response based on the following prompt.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: MAX_TOKENS,
-      temperature: 0.7,
-    })
-
     try {
-      const interactionStageData = JSON.parse(
-        response.choices[0].message.content
-      )
-      this.narrativePoint = interactionStageData.narrativePoint
-      this.currentFocus = interactionStageData.currentFocus
-      this.narrativeSignals = interactionStageData.narrativeSignals
-      return interactionStageData
+      const response = await openai.beta.chat.completions.parse({
+        model: 'gpt-4o-2024-08-06',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Generate a structured JSON response based on the following prompt.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: MAX_TOKENS,
+        temperature: 0.7,
+        response_format: zodResponseFormat(
+          InteractionStageSchema,
+          'interaction_stage'
+        ),
+      })
+
+      if (response.parsed) {
+        console.log(response.parsed)
+        this.narrativePoint = response.narrativePoint
+        this.currentFocus = response.currentFocus
+        this.narrativeSignals = response.narrativeSignals
+        return interactionStageData
+      } else if (response.refusal) {
+        // handle refusal
+        console.log(response.refusal)
+        console.error(
+          `OPENAI failed to parse JSON response: ${response.refusal}`
+        )
+        throw new Error(
+          `OPENAI failed to parse JSON response: ${response.refusal}`
+        )
+      }
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
@@ -308,31 +334,42 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
         "currentFocus": { "theme": "Updated theme", "tension": "Adjusted tension" },
         "narrativeSignals": ["Updated list of narrative signals"]
       }`
-
-    // Call OpenAI API to process and respond with an updated InteractionStage
-    const response = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Generate a structured JSON response based on the following prompt.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: MAX_TOKENS,
-      temperature: 0.7,
-    })
-
     try {
-      // Parse and return the updated InteractionStage data from OpenAI's JSON response
-      const interactionStageData = JSON.parse(
-        response.choices[0].message.content
-      )
-      this.narrativePoint = interactionStageData.narrativePoint
-      this.currentFocus = interactionStageData.currentFocus
-      this.narrativeSignals = interactionStageData.narrativeSignals
-      return interactionStageData
+      // Call OpenAI API to process and respond with an updated InteractionStage
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-2024-08-06',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Generate a structured JSON response based on the following prompt.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: MAX_TOKENS,
+        temperature: 0.7,
+        response_format: zodResponseFormat(
+          InteractionStageSchema,
+          'interaction_stage'
+        ),
+      })
+
+      if (response.parsed) {
+        console.log(response.parsed)
+        this.narrativePoint = response.narrativePoint
+        this.currentFocus = response.currentFocus
+        this.narrativeSignals = response.narrativeSignals
+        return interactionStageData
+      } else if (response.refusal) {
+        // handle refusal
+        console.log(response.refusal)
+        console.error(
+          `OPENAI failed to parse JSON response: ${response.refusal}`
+        )
+        throw new Error(
+          `OPENAI failed to parse JSON response: ${response.refusal}`
+        )
+      }
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
@@ -372,31 +409,38 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
         "currentFocus": { "theme": "Updated theme", "tension": "Adjusted tension" },
         "narrativeSignals": ["Updated list of narrative signals"]
       }`
-
-    // Call OpenAI API to process and respond with an updated InteractionStage
-    const response = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Generate a structured JSON response based on the following prompt.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: MAX_TOKENS,
-      temperature: 0.7,
-    })
-
     try {
-      // Parse and return the updated InteractionStage data from OpenAI's JSON response
-      const interactionStageData = JSON.parse(
-        response.choices[0].message.content
-      )
-      this.narrativePoint = interactionStageData.narrativePoint
-      this.currentFocus = interactionStageData.currentFocus
-      this.narrativeSignals = interactionStageData.narrativeSignals
-      return interactionStageData
+      // Call OpenAI API to process and respond with an updated InteractionStage
+      const response = await openai.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Generate a structured JSON response based on the following prompt.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: MAX_TOKENS,
+        temperature: 0.7,
+      })
+
+      if (response.parsed) {
+        console.log(response.parsed)
+        this.narrativePoint = response.narrativePoint
+        this.currentFocus = response.currentFocus
+        this.narrativeSignals = response.narrativeSignals
+        return interactionStageData
+      } else if (response.refusal) {
+        // handle refusal
+        console.log(response.refusal)
+        console.error(
+          `OPENAI failed to parse JSON response: ${response.refusal}`
+        )
+        throw new Error(
+          `OPENAI failed to parse JSON response: ${response.refusal}`
+        )
+      }
     } catch (error) {
       console.error('Failed to parse JSON response:', error)
       throw new Error('Invalid JSON format in OpenAI response')
