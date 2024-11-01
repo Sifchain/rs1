@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     responderAgentId,
     tags = [],
     backroomType = 'cli',
+    topic = '',
   } = req.body
 
   const explorer = await Agent.findById(explorerAgentId)
@@ -62,6 +63,7 @@ export default async function handler(req, res) {
 
       const interactionStage = new InteractionStage(
         backroomType,
+        topic,
         explorer,
         responder
       )
@@ -93,7 +95,8 @@ export default async function handler(req, res) {
         })
 
         // Generate responder response using the updated InteractionStage state
-        const responderMessage = await interactionStage.generateResponderMessage()
+        const responderMessage =
+          await interactionStage.generateResponderMessage()
 
         await interactionStage.updateStageBasedOffOfResponder(responderMessage)
         // Add responder's response to conversation histories
@@ -145,6 +148,8 @@ export default async function handler(req, res) {
         snippetContent,
         tags: [...new Set([...tags, ...generatedHashtags])],
         createdAt: Date.now(),
+        backroomType,
+        topic,
       })
 
       await newBackroom.save()

@@ -28,7 +28,7 @@ import { useAccount } from '../hooks/useMetaMask'
 import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
-  backroomTypes
+  backroomTypes,
 } from '../constants/constants'
 import { genIsBalanceEnough } from '../utils/balance'
 
@@ -47,6 +47,7 @@ function CreateBackroom() {
   const router = useRouter()
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
+  const [topic, setTopic] = useState('')
   const fetchAgents = async () => {
     try {
       const response = await fetch('/api/agents')
@@ -110,7 +111,7 @@ function CreateBackroom() {
   }
 
   const handleResponderChange = e => {
-     const selectedAgentId = e.target.value
+    const selectedAgentId = e.target.value
     setResponderAgent(selectedAgentId)
     const selectedResponder = agents.find(ag => ag._id === selectedAgentId)
     if (selectedResponder) {
@@ -123,6 +124,11 @@ function CreateBackroom() {
   const handleBackroomType = e => {
     const backroomType = e.target.value
     setBackroomType(backroomType)
+  }
+
+  const handleTopic = e => {
+    const backroomTopic = e.target.value
+    setTopic(backroomTopic)
   }
   // Form validation
   const handleValidation = () => {
@@ -147,6 +153,10 @@ function CreateBackroom() {
       errors.explorerAgent = 'Explorer and Responder agents cannot be the same'
       valid = false
     }
+    if (topic?.trim().length > 1000) {
+      errors.topic = 'Topic must be less than 1000 characters'
+      valid = false
+    }
 
     setErrors(errors)
     return valid
@@ -166,6 +176,7 @@ function CreateBackroom() {
           explorerAgentId: explorerAgent,
           responderAgentId: responderAgent,
           backroomType,
+          topic,
         }),
       })
 
@@ -340,6 +351,33 @@ function CreateBackroom() {
               )}
             </Box>
           </Flex>
+          <FormControl isInvalid={errors.topic}>
+            <Text
+              fontSize="lg"
+              fontWeight="bold"
+              minWidth="150px"
+              color="#81d4fa"
+              mb={2}
+            >
+              Topic(s):
+            </Text>
+            <Textarea
+              placeholder="Optional Topic(s):"
+              value={topic}
+              onChange={handleTopic}
+              bg="#424242"
+              color="#e0e0e0"
+              border="2px solid"
+              borderColor={'#757575'}
+              _hover={{ borderColor: '#81d4fa' }}
+              mb={4}
+              minHeight="200px"
+              p={4}
+            />
+            {errors.topic && (
+              <FormErrorMessage mb={2}>{errors.topic}</FormErrorMessage>
+            )}
+          </FormControl>
           <Tooltip
             label={
               !enoughFunds

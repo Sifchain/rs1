@@ -4,8 +4,9 @@ import { backroomTypes } from '@/constants/constants'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export class InteractionStage {
-  constructor(backroomType, explorerAgent, responderAgent) {
+  constructor(backroomType, topic, explorerAgent, responderAgent) {
     this.backroomType = backroomType
+    this.topic = topic
     this.explorerAgent = explorerAgent
     this.responderAgent = responderAgent
     this.narrativeStage = 'start' // initial stage
@@ -49,6 +50,7 @@ export class InteractionStage {
       }
 
       **Template**: ${JSON.stringify(this.chosenStoryTemplate)}
+      ${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
       **Explorer Agent**: ${JSON.stringify(this.explorerAgent)}
       **Responder Agent**: ${JSON.stringify(this.responderAgent)}
     `
@@ -186,6 +188,7 @@ This interaction aims to create an engaging narrative progression. Use each exch
 You are ${this.explorerAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
 Context:
+${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
 Narrative Point: ${this.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
 Current Focus: The scene’s current theme is "${this.currentFocus?.theme}", and the tension level is "${this.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
@@ -231,6 +234,7 @@ Now, ${this.explorerAgent.name}, describe your next action or observation in res
 You are ${this.responderAgent.name}, and in this scene, you are an active participant navigating the ongoing story in a way that blends your unique perspective with the narrative setting.
 
 Context:
+${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
 Narrative Point: ${this.narrativePoint} – this provides the general premise or thematic starting point for the interaction.
 Current Focus: The scene’s current theme is "${this.currentFocus?.theme}", and the tension level is "${this.currentFocus?.tension}". Use this focus to help shape the mood and tone of your responses.
 Narrative Signals: Subtle cues to guide the flow include:
@@ -276,6 +280,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
       Based on the ongoing interaction, update the InteractionStage context by interpreting the explorer’s recent response to either continue the current flow or introduce new, relevant details.
 
       Current InteractionStage Data:
+      ${this.topic != '' ? `**Topic**: ${this.topic}` : ""}
       Narrative Point: "${this.narrativePoint}"
       Current Focus:
       Theme: "${this.currentFocus?.theme}"
@@ -333,7 +338,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
       throw new Error('Invalid JSON format in OpenAI response')
     }
   }
-  // TODO: // You may need to create a slightly different prompt for this than for the explorerResponse
+
   async updateStageBasedOffOfResponder(responderResponse) {
     // Construct the update prompt based on the explorer's recent input and current InteractionStage data
     const prompt = `
@@ -348,18 +353,18 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
       ${this.narrativeSignals?.map(signal => `- ${signal}`).join('\n')}
 
       Full Conversation History: ${this.conversationHistory.join('\n')}
-      Explorer's Recent Response:
+      Responder's Recent Response:
       "${responderResponse}"
 
       Task:
       Update the InteractionStage by refining existing context or making natural shifts that advance the storyline, incorporating the following:
 
-      - Adjust the Narrative Point: Evolve the narrative point if the explorer’s response suggests a new direction, maintaining coherence with the established plot.
+      - Adjust the Narrative Point: Evolve the narrative point if the responder's response suggests a new direction, maintaining coherence with the established plot.
       - Update the Current Focus:
-        - Theme: Reflect any new elements or shifts in the theme based on the explorer’s response.
-        - Tension Level: Adjust the tension to keep the interaction dynamic and engaging, as suggested by the explorer’s tone or circumstances.
+        - Theme: Reflect any new elements or shifts in the theme based on the responder’s response.
+        - Tension Level: Adjust the tension to keep the interaction dynamic and engaging, as suggested by the responder’s tone or circumstances.
       - Expand Narrative Signals:
-        - Add new cues or context that build upon the explorer’s input, such as subtle environmental changes, mood hints, or potential events.
+        - Add new cues or context that build upon the responder’s input, such as subtle environmental changes, mood hints, or potential events.
 
       Output in JSON Format:
       {

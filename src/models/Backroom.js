@@ -21,6 +21,8 @@ const BackroomSchema = new mongoose.Schema({
     ref: 'Agent', // Reference the Agent model
     default: null,
   },
+  backroomType: { type: String, default: '' },
+  topic: { type: String, default: '' },
 })
 
 // Middleware to auto-update the `updatedAt` field on each save
