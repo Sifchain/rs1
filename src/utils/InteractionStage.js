@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { backroomTypes, MAX_TOKENS } from '@/constants/constants'
+import { backroomTypes, MAX_TOKENS, OPENAI_MODEL } from '@/constants/constants'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -110,7 +110,7 @@ This interaction is designed to be both an exploration and a narrative progressi
 `
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'system',
@@ -159,7 +159,7 @@ This interaction aims to create an engaging narrative progression. Use each exch
 `
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'system',
@@ -207,7 +207,7 @@ Now, ${this.explorerAgent.name}, describe your next action or observation in res
 
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'assistant',
@@ -252,7 +252,7 @@ Your response should feel like part of an unfolding short story, where each sent
 Now, ${this.responderAgent.name}, describe your next action or observation in response to this setting.`
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'assistant',
@@ -311,7 +311,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
 
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'system',
@@ -375,7 +375,7 @@ Now, ${this.responderAgent.name}, describe your next action or observation in re
 
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'system',
