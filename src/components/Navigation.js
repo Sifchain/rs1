@@ -10,31 +10,17 @@ import {
   useDisclosure,
   VStack,
   Collapse,
-} from '@chakra-ui/react'
-import { useAccount, useConnect } from '../hooks/useMetaMask'
-import { useRouter } from 'next/router'
-import { FiLogOut, FiMenu, FiX } from 'react-icons/fi'
-import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
+} from '@chakra-ui/react';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useRouter } from 'next/router';
+import { FiMenu, FiX } from 'react-icons/fi';
+import Jazzicon, { jsNumberForAddress } from 'react-jazzicon';
 
 function Navigation() {
-  const { address, isConnected } = useAccount()
-  const connect = useConnect()
-  const router = useRouter()
-  const { isOpen, onToggle } = useDisclosure()
-
-  const handleLogout = async () => {
-    if (window.ethereum && window.ethereum.request) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_requestPermissions',
-          params: [{ eth_accounts: {} }],
-        })
-      } catch (error) {
-        console.error('Failed to disconnect wallet', error)
-      }
-    }
-    window.location.reload()
-  }
+  const { address, isConnected } = useAccount();
+  const router = useRouter();
+  const { isOpen, onToggle } = useDisclosure();
 
   return (
     <Box>
@@ -48,23 +34,17 @@ function Navigation() {
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
       >
         <Box>
-          <Text
-            fontSize={{ base: "lg", md: "2xl" }}
-            fontWeight="bold"
-            fontFamily="Arial, sans-serif"
-            textAlign={{ base: "left", md: "left" }}
-          >
+          <Text fontSize="2xl" fontWeight="bold" fontFamily="Arial, sans-serif">
             Reality Spiral
           </Text>
           <Text
-            fontSize={{ base: "sm", md: "md" }}
+            fontSize={{ base: 'lg', md: 'xs' }}
             fontFamily="Arial, sans-serif"
-            maxWidth={{ base: "90%", md: "800px" }}
+            maxWidth="800px"
             color="#b0bec5"
-            textAlign={{ base: "left", md: "left" }}
-            mt={{ base: 2, md: 0 }}
           >
-            A unique platform to create, explore, and connect with agents and backrooms in the digital dimension. - v0.1.2
+            A unique platform to create, explore, and connect with agents and
+            backrooms in the digital dimension. - v0.1.2
           </Text>
         </Box>
         <Spacer />
@@ -119,23 +99,76 @@ function Navigation() {
           >
             Chart
           </Link>
-          {isConnected ? (
-            <HStack spacing={4} alignItems="center">
-              <Jazzicon diameter={30} seed={jsNumberForAddress(address)} />
-              <Text fontFamily="Arial, sans-serif">
-                {address && `${address.slice(0, 6)}...${address.slice(-4)}`}
-              </Text>
-            </HStack>
-          ) : (
-            <Button
-              onClick={connect}
-              colorScheme="blue"
-              variant="solid"
-              _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
-            >
-              Connect Wallet
-            </Button>
-          )}
+
+          {/* Customized ConnectButton */}
+          <ConnectButton.Custom>
+            {({
+              account,
+              chain,
+              openAccountModal,
+              openChainModal,
+              openConnectModal,
+              mounted,
+            }) => {
+              return (
+                <div
+                  {...(!mounted && {
+                    'aria-hidden': true,
+                    style: {
+                      opacity: 0,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    },
+                  })}
+                >
+                  {(() => {
+                    if (!mounted || !account || !chain) {
+                      return (
+                        <Button
+                          onClick={openConnectModal}
+                          colorScheme="blue"
+                          variant="solid"
+                          _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
+                        >
+                          Connect Wallet
+                        </Button>
+                      );
+                    }
+                    if (chain.unsupported) {
+                      return (
+                        <Button
+                          onClick={openChainModal}
+                          colorScheme="red"
+                          variant="solid"
+                          _hover={{ bg: '#e53935', boxShadow: '0 0 15px #e53935' }}
+                        >
+                          Wrong network
+                        </Button>
+                      );
+                    }
+                    return (
+                      <Button
+                        onClick={openAccountModal}
+                        variant="ghost"
+                        _hover={{ bg: 'transparent' }}
+                        _active={{ bg: 'transparent' }}
+                      >
+                        <HStack spacing={2} alignItems="center">
+                          <Jazzicon
+                            diameter={30}
+                            seed={jsNumberForAddress(account.address)}
+                          />
+                          <Text fontFamily="Arial, sans-serif">
+                            {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                          </Text>
+                        </HStack>
+                      </Button>
+                    );
+                  })()}
+                </div>
+              );
+            }}
+          </ConnectButton.Custom>
         </HStack>
 
         {/* Mobile Hamburger Menu */}
@@ -174,6 +207,7 @@ function Navigation() {
             <Link
               href="https://t.me/reality_spiral"
               fontFamily="Arial, sans-serif"
+              color="#e0e0e0"
               target="_blank"
               rel="noopener noreferrer"
               _hover={{ color: '#81d4fa' }}
@@ -183,6 +217,7 @@ function Navigation() {
             <Link
               href="https://x.com/reality_spiral"
               fontFamily="Arial, sans-serif"
+              color="#e0e0e0" 
               target="_blank"
               rel="noopener noreferrer"
               _hover={{ color: '#81d4fa' }}
@@ -192,34 +227,88 @@ function Navigation() {
             <Link
               href="https://www.dextools.io/app/en/ether/pair-explorer/0xa909be631bf794346b6dee19db1d98b6dc0eaf70?t=1730150465235"
               fontFamily="Arial, sans-serif"
+              color="#e0e0e0" 
               target="_blank"
               rel="noopener noreferrer"
               _hover={{ color: '#81d4fa' }}
             >
-              Chart
+              Charts
             </Link>
-            {isConnected ? (
-              <HStack spacing={4} alignItems="center">
-                <Jazzicon diameter={30} seed={jsNumberForAddress(address)} />
-                <Text fontFamily="Arial, sans-serif">
-                  {address && `${address.slice(0, 6)}...${address.slice(-4)}`}
-                </Text>
-              </HStack>
-            ) : (
-              <Button
-                onClick={connect}
-                colorScheme="blue"
-                variant="solid"
-                _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
-              >
-                Connect Wallet
-              </Button>
-            )}
+
+            {/* Mobile Customized ConnectButton */}
+            <ConnectButton.Custom>
+              {({
+                account,
+                chain,
+                openAccountModal,
+                openChainModal,
+                openConnectModal,
+                mounted,
+              }) => {
+                return (
+                  <div
+                    {...(!mounted && {
+                      'aria-hidden': true,
+                      style: {
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      },
+                    })}
+                  >
+                    {(() => {
+                      if (!mounted || !account || !chain) {
+                        return (
+                          <Button
+                            onClick={openConnectModal}
+                            colorScheme="blue"
+                            variant="solid"
+                            _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
+                          >
+                            Connect Wallet
+                          </Button>
+                        );
+                      }
+                      if (chain.unsupported) {
+                        return (
+                          <Button
+                            onClick={openChainModal}
+                            colorScheme="red"
+                            variant="solid"
+                            _hover={{ bg: '#e53935', boxShadow: '0 0 15px #e53935' }}
+                          >
+                            Wrong network
+                          </Button>
+                        );
+                      }
+                      return (
+                        <Button
+                          onClick={openAccountModal}
+                          variant="ghost"
+                          _hover={{ bg: 'transparent' }}
+                          _active={{ bg: 'transparent' }}
+                        >
+                          <HStack spacing={2} alignItems="center">
+                            <Jazzicon
+                              diameter={30}
+                              seed={jsNumberForAddress(account.address)}
+                            />
+                            <Text fontFamily="Arial, sans-serif">
+                              {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                            </Text>
+                          </HStack>
+                        </Button>
+                      );
+                    })()}
+                  </div>
+                );
+              }}
+            </ConnectButton.Custom>
           </VStack>
         </Box>
       </Collapse>
     </Box>
-  )
+  );
 }
 
-export default Navigation
+export default Navigation;
