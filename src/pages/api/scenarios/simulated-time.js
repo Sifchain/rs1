@@ -1,18 +1,9 @@
 import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
-import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
 import { OPENAI_MODEL } from '../../../constants/constants'
-
-// Connect to MongoDB
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return
-  return mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-}
+import { connectDB } from '@/utils/db'
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -343,7 +334,7 @@ Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentH
         backroom: newBackroom._id,
         description: recapResponse.choices[0].message.content
           .replace(/Updated Description/g, '')
-          .trim(),
+          ?.trim(),
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
@@ -381,7 +372,7 @@ Now, please generate the tweet.`
         temperature: 0.7,
       })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim()
+      const tweetContent = tweetResponse.choices[0].message.content?.trim()
 
       // Check if the agent has a Twitter Auth Token
       if (explorer.twitterAuthToken?.accessToken) {

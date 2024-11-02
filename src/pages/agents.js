@@ -35,7 +35,7 @@ import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
   TOKEN_CONTRACT_ADDRESS,
-  MINIMUM_TOKENS_TO_CREATE_BACKROOM
+  MINIMUM_TOKENS_TO_CREATE_BACKROOM,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 
@@ -71,7 +71,7 @@ function Agents() {
   }
 
   const countWords = text => {
-    return text.trim().split(/\s+/).length
+    return text?.trim().split(/\s+/).length
   }
   const handleCancelEdit = () => {
     setEditTweetId(null) // Clear edit state
@@ -138,9 +138,7 @@ function Agents() {
   // Fetch recent conversations for the selected agent
   const fetchRecentConversations = async agent => {
     try {
-      const response = await fetch(
-        `/api/backrooms/get?agentId=${agent._id}`
-      )
+      const response = await fetch(`/api/backrooms/get?agentId=${agent._id}`)
       const data = await response.json()
       setRecentBackroomConversations(data)
     } catch (error) {
@@ -166,49 +164,50 @@ function Agents() {
     fetchBackrooms()
   }, [])
 
-  const handleAgentSelection = useCallback(async (event) => {
-    const agentId = event.target.value
-    const agent = agents.find(agent => agent?._id === agentId)
+  const handleAgentSelection = useCallback(
+    async event => {
+      const agentId = event.target.value
+      const agent = agents.find(agent => agent?._id === agentId)
 
-    selectAgentById(agentId, agents)
-    setSelectedAgent(agent)
-    setAgentName(agent?.name)
-    setDescription(agent?.description || '')
-    setEditMode(false)
+      selectAgentById(agentId, agents)
+      setSelectedAgent(agent)
+      setAgentName(agent?.name)
+      setDescription(agent?.description || '')
+      setEditMode(false)
 
-    // Fetch and process backroom conversations
-    try {
-      const response = await fetch(
-        `/api/backrooms/get?agentId=${agent?._id}`
-      )
-      const data = await response.json()
+      // Fetch and process backroom conversations
+      try {
+        const response = await fetch(`/api/backrooms/get?agentId=${agent?._id}`)
+        const data = await response.json()
 
-      // Filter relevant conversations
-      const filteredConversations = data.filter(
-        backroom =>
-          backroom?.explorerId === agent?._id ||
-          backroom?.responderId === agent?._id
-      )
-      setRecentBackroomConversations(filteredConversations)
+        // Filter relevant conversations
+        const filteredConversations = data.filter(
+          backroom =>
+            backroom?.explorerId === agent?._id ||
+            backroom?.responderId === agent?._id
+        )
+        setRecentBackroomConversations(filteredConversations)
 
-      // Process and set unique tags
-      const tagsFromConversations = filteredConversations.flatMap(
-        backroom => backroom?.tags || []
-      )
-      setBackroomTags(Array.from(new Set(tagsFromConversations)))
-    } catch (error) {
-      console.error('Error fetching recent backroom conversations:', error)
-    }
-  }, [
-    agentId,
-    agents,
-    setSelectedAgent,
-    setAgentName,
-    setDescription,
-    setEditMode,
-    setRecentBackroomConversations,
-    setBackroomTags
-  ])
+        // Process and set unique tags
+        const tagsFromConversations = filteredConversations.flatMap(
+          backroom => backroom?.tags || []
+        )
+        setBackroomTags(Array.from(new Set(tagsFromConversations)))
+      } catch (error) {
+        console.error('Error fetching recent backroom conversations:', error)
+      }
+    },
+    [
+      agentId,
+      agents,
+      setSelectedAgent,
+      setAgentName,
+      setDescription,
+      setEditMode,
+      setRecentBackroomConversations,
+      setBackroomTags,
+    ]
+  )
 
   const handleEditClick = () => {
     setEditMode(true)
@@ -219,7 +218,7 @@ function Agents() {
     let errors = {}
 
     // Agent Name Validation
-    if (!agentName.trim()) {
+    if (!agentName?.trim()) {
       errors.agentName = 'Name is required'
       valid = false
     } else if (agentName.length < 3 || agentName.length > 50) {
@@ -228,7 +227,7 @@ function Agents() {
     }
 
     // Description Validation
-    if (!description.trim()) {
+    if (!description?.trim()) {
       errors.description = 'Description is required'
       valid = false
     } else if (description.length < 10 || description.length > 10000) {
@@ -323,7 +322,7 @@ function Agents() {
               <Text fontWeight="bold" mb={1}>
                 <Link
                   color="#81d4fa"
-                  href={`/backrooms?expanded=${evolution?.backroomId}`}
+                  href={`/backrooms/${evolution?.backroomId}`}
                 >
                   View Backroom
                 </Link>
@@ -340,7 +339,9 @@ function Agents() {
     return user && selectedAgent && user?._id === selectedAgent?.user
   }, [selectedAgent])
   const handleCreateBackroom = () => {
-    router.push(`/create-backroom${agentId != null ? `?agentId=${agentId}` : ''}`)
+    router.push(
+      `/create-backroom${agentId != null ? `?agentId=${agentId}` : ''}`
+    )
   }
   const displayRecentBackrooms = () => {
     if (recentBackroomConversations.length === 0) {
@@ -358,7 +359,7 @@ function Agents() {
         boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
         mb={3}
         cursor="pointer"
-        onClick={() => router.push(`/backrooms?expanded=${backroom?._id}`)}
+        onClick={() => router.push(`/backrooms/${backroom?._id}`)}
       >
         <Text
           as="a"
@@ -747,11 +748,13 @@ function Agents() {
               gap={{ base: 2, md: 4 }}
             >
               <Select
-                placeholder={selectedAgent == null ? "Select Agent" : selectedAgent?.name}
+                placeholder={
+                  selectedAgent == null ? 'Select Agent' : selectedAgent?.name
+                }
                 onChange={handleAgentSelection}
                 value={selectedAgent?.name}
                 width="100%"
-                maxW={{ base: "100%", md: "400px" }}
+                maxW={{ base: '100%', md: '400px' }}
                 bg="#424242"
                 color="#e0e0e0"
                 border="1px solid #757575"
@@ -841,7 +844,10 @@ function Agents() {
                 border="2px solid #757575"
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Flex direction={{ base: 'column', md: 'row' }} alignItems="flex-start">
+                <Flex
+                  direction={{ base: 'column', md: 'row' }}
+                  alignItems="flex-start"
+                >
                   <Box flex="1" mb={{ base: 4, md: 0 }}>
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
@@ -863,11 +869,6 @@ function Agents() {
                               fontWeight="bold"
                               color="#81d4fa"
                             >
-                          selectedAgent.description ||
-                          'No description provided'
-                        ).map((section, index) => (
-                          <Box key={index} mt={4}>
-                            <Text fontSize="medium" fontWeight="bold" color="#81d4fa">
                               {section.title}
                             </Text>
                             <List spacing={2} mt={2} color="#e0e0e0">
@@ -911,7 +912,9 @@ function Agents() {
                           }
                           alignSelf="flex-start"
                         >
-                          {isDescriptionExpanded ? 'Hide Full Description' : 'View Full Description'}
+                          {isDescriptionExpanded
+                            ? 'Hide Full Description'
+                            : 'View Full Description'}
                         </Button>
                       </Box>
                     </Box>
@@ -941,7 +944,10 @@ function Agents() {
                       </Box>
                     </Box>
                   </Box>
-                  <Box textAlign={{ base: "left", md: "right" }} mt={{ base: 0, md: 0 }}>
+                  <Box
+                    textAlign={{ base: 'left', md: 'right' }}
+                    mt={{ base: 0, md: 0 }}
+                  >
                     <Tooltip
                       label={
                         !hasEditPermission()
@@ -955,10 +961,12 @@ function Agents() {
                         as="span"
                         cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
                         display="flex"
-                        justifyContent={{ base: "center", md: "flex-end" }}
+                        justifyContent={{ base: 'center', md: 'flex-end' }}
                       >
                         <Button
-                          onClick={hasEditPermission() ? handleEditClick : undefined}
+                          onClick={
+                            hasEditPermission() ? handleEditClick : undefined
+                          }
                           colorScheme="blue"
                           mb={4}
                           isDisabled={!hasEditPermission()}
@@ -969,12 +977,16 @@ function Agents() {
                       </Box>
                     </Tooltip>
                   </Box>
-
-
                 </Flex>
               </Box>
 
-              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
+              <Box
+                p={4}
+                bg="#424242"
+                borderRadius="lg"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+              >
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Agent Journey
                 </Text>
@@ -994,10 +1006,15 @@ function Agents() {
                 >
                   {displayJourney(selectedAgent.evolutions)}
                 </Box>
-
               </Box>
 
-              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
+              <Box
+                p={4}
+                bg="#424242"
+                borderRadius="lg"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+              >
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Recent Backroom Conversations
                 </Text>
@@ -1005,7 +1022,13 @@ function Agents() {
                 {displayRecentBackrooms()}
               </Box>
 
-              <Box p={4} bg="#424242" borderRadius="lg" border="2px solid #757575" boxShadow="0 0 15px rgba(0, 0, 0, 0.2)">
+              <Box
+                p={4}
+                bg="#424242"
+                borderRadius="lg"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+              >
                 <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                   Tweets
                 </Text>
@@ -1031,7 +1054,6 @@ function Agents() {
           )}
         </Box>
       </Box>
-
     </ChakraProvider>
   )
 }

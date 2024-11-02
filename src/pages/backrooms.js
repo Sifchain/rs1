@@ -32,13 +32,16 @@ import {
 import { useAccount } from '../hooks/useMetaMask'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
+  // Escape agent names to handle special characters
+  const escapeRegex = name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
   // Define regex to match each agent's messages
   const agentRegex = new RegExp(
-    `(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`,
+    `(${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):\\s*([\\s\\S]*?)(?=(?:${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):|$)`,
     'g'
   )
   const agentRegex = new RegExp(
-    `(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`,
+    `(${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):\\s*([\\s\\S]*?)(?=(?:${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):|$)`,
     'g'
   )
 
@@ -47,13 +50,13 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 
   // Helper function to clean up code block indicators
   const cleanMessage = message => {
-    return message.replace(/```(shell|bash)?\s*/g, '').trim()
+    return message?.replace(/```(shell|bash)?\s*/g, '')?.trim()
   }
 
   // Loop through each match and assign it to the respective agent
   while ((match = agentRegex.exec(content)) !== null) {
-    const username = match[1].trim() // Captures either agentOne or agentTwo
-    let message = cleanMessage(match[2].trim()) // Clean up the message
+    const username = match[1]?.trim() // Captures either agentOne or agentTwo
+    let message = cleanMessage(match[2]?.trim()) // Clean up the message
 
     parsedContent.push({ username, message })
   }
@@ -243,7 +246,7 @@ function Backrooms() {
   })
 
   const handleShare = backroomId => {
-    const shareUrl = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const shareUrl = `${window.location.origin}/backrooms/${backroomId}`
     if (navigator.share) {
       navigator
         .share({
@@ -260,7 +263,7 @@ function Backrooms() {
   }
 
   const handleCopyToClipboard = backroomId => {
-    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const link = `${window.location.origin}/backrooms/${backroomId}`
     navigator.clipboard.writeText(link).then(() => {
       alert('Link copied to clipboard!')
     })
