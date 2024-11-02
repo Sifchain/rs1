@@ -35,6 +35,7 @@ import {
   DESCRIPTION_TEMPLATE,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
+import LoadingOverlay from '../components/LoadingOverlay'
 
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
@@ -381,14 +382,7 @@ function CreateAgent() {
           )}
 
           {loadingStep > 0 && loadingStep < 3 && (
-            <Box textAlign="center" mt={6}>
-              <Spinner size="xl" color="blue.500" />
-              <Heading fontSize={{ base: 'md', md: 'lg' }} mt={4}>
-                {loadingStep === 1
-                  ? 'Contacting Spiral Reality AI...'
-                  : 'Validating Agent Details...'}
-              </Heading>
-            </Box>
+            <LoadingOverlay loading={loadingStep} />
           )}
 
           {loadingStep === 3 && (

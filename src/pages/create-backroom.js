@@ -31,6 +31,7 @@ import {
   backroomTypes,
 } from '../constants/constants'
 import { genIsBalanceEnough } from '../utils/balance'
+import LoadingOverlay from '../components/LoadingOverlay'
 
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
@@ -48,28 +49,6 @@ function CreateBackroom() {
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
   const [topic, setTopic] = useState('')
-
-  const loadingMessages = [
-    'Processing',
-    'Analyzing',
-    'Connecting',
-    'Finalizing',
-    'Completing',
-  ]
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (loading) {
-        setCurrentMessageIndex(
-          prevIndex => (prevIndex + 1) % loadingMessages.length
-        )
-      }
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [loading])
-
-  const currentMessage = loadingMessages[currentMessageIndex]
 
   const fetchAgents = async () => {
     try {
@@ -216,47 +195,9 @@ function CreateBackroom() {
     }
   }
 
-  const LoadingOverlay = () => (
-    <Box
-      position="fixed"
-      top="0"
-      left="0"
-      width="100%"
-      height="100%"
-      bg="rgba(0, 0, 0, 0.8)"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      flexDirection="column"
-      zIndex="1000"
-      color="#81d4fa"
-    >
-      <Box mb={6}>
-        <video
-          src="/gifs/blue-spiral.mp4"
-          autoPlay
-          loop
-          muted
-          style={{ width: '150px', height: '150px' }}
-        />
-      </Box>
-      <Text
-        fontSize="2xl"
-        fontWeight="bold"
-        fontFamily="Arial, sans-serif"
-        mb={2}
-      >
-        {currentMessage}...
-      </Text>
-      <Text fontSize="md" color="#b0bec5">
-        Please wait while we process your request.
-      </Text>
-    </Box>
-  )
-
   return (
     <ChakraProvider>
-      {loading && <LoadingOverlay />}
+      {loading && <LoadingOverlay loading={loading} />}
       <SEO
         title="Reality Spiral - Create a Backroom"
         description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
