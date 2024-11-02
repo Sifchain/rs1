@@ -43,7 +43,7 @@ export default async function handler(req, res) {
           .status(400)
           .json({ error: 'All fields are required: name, description' })
       }
-      const imagePrompt = `Create an avatar image for the following agent name: ${name}`
+      const imagePrompt = `Create an avatar image for the following agent name: ${name} and description: ${description} focus on the physcial description of the agent, if given otherwise use other attributes to generate the image. The image should be in the style of a cartoon or anime. If the person is a celebrity, use their real image.`
       let imageUrl = await generateImage(imagePrompt)
       console.log('imageUrl', imageUrl)
       // Create a new agent with optional prompts
