@@ -318,7 +318,7 @@ function Agents() {
               <Text fontWeight="bold" mb={1}>
                 <Link
                   color="#81d4fa"
-                  href={`/backrooms?expanded=${evolution?.backroomId}`}
+                  href={`/backrooms/${evolution?.backroomId}`}
                 >
                   View Backroom
                 </Link>
@@ -355,7 +355,7 @@ function Agents() {
         boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
         mb={3}
         cursor="pointer"
-        onClick={() => router.push(`/backrooms?expanded=${backroom?._id}`)}
+        onClick={() => router.push(`/backrooms/${backroom?._id}`)}
       >
         <Text
           as="a"

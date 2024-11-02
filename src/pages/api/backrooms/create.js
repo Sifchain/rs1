@@ -206,7 +206,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
       await explorer.save()
 
       const fullBackroomURL = getFullURL(
-        `/backrooms?expanded=${newBackroom._id}`,
+        `/backrooms/${newBackroom._id}`,
         `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
       )
       const shortenedUrl = await shortenURL(fullBackroomURL)

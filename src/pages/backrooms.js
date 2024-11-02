@@ -234,7 +234,7 @@ function Backrooms() {
   })
 
   const handleShare = backroomId => {
-    const shareUrl = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const shareUrl = `${window.location.origin}/backrooms/${backroomId}`
     if (navigator.share) {
       navigator
         .share({
@@ -251,7 +251,7 @@ function Backrooms() {
   }
 
   const handleCopyToClipboard = backroomId => {
-    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const link = `${window.location.origin}/backrooms/${backroomId}`
     navigator.clipboard.writeText(link).then(() => {
       alert('Link copied to clipboard!')
     })

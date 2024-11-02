@@ -207,7 +207,7 @@ function CreateBackroom() {
 
       if (res.ok) {
         const newBackroom = await res.json()
-        router.push(`/backrooms?expanded=${newBackroom._id}`)
+        router.push(`/backrooms/${newBackroom._id}`)
       }
     } catch (error) {
       console.error('Error creating backroom:', error)
@@ -501,7 +501,7 @@ function CreateBackroom() {
                     <Tr
                       key={index}
                       as="a"
-                      href={`/backrooms?expanded=${evolution?.backroomId}`}
+                      href={`/backrooms/${evolution?.backroomId}`}
                       _hover={{ bg: '#333', textDecoration: 'none' }}
                       cursor="pointer"
                       bg={index % 2 === 0 ? '#2d2d2d' : '#424242'}
