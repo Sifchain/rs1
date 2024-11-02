@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       const agents = await Agent.find(
         {},
         '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
-      )
+      ).lean()
       res.status(200).json(agents)
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch agents' })
