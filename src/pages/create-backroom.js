@@ -231,7 +231,15 @@ function CreateBackroom() {
       zIndex="1000"
       color="#81d4fa"
     >
-      <Spinner size="xl" thickness="4px" color="#81d4fa" mb={6} speed="0.8s" />
+      <Box mb={6}>
+        <video
+          src="/gifs/blue-spiral.mp4"
+          autoPlay
+          loop
+          muted
+          style={{ width: '150px', height: '150px' }}
+        />
+      </Box>
       <Text
         fontSize="2xl"
         fontWeight="bold"
