@@ -1,6 +1,5 @@
 import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
-import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import {
@@ -9,16 +8,7 @@ import {
   MAX_TOKENS,
 } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
-
-mongoose.set('strictQuery', false)
-
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return
-  return mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-}
+import { connectDB } from '@/utils/db'
 
 const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
 
@@ -216,7 +206,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
       await explorer.save()
 
       const fullBackroomURL = getFullURL(
-        `/backrooms?expanded=${newBackroom._id}`,
+        `/backrooms/${newBackroom._id}`,
         `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
       )
       const shortenedUrl = await shortenURL(fullBackroomURL)

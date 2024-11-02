@@ -234,7 +234,7 @@ function Backrooms() {
   })
 
   const handleShare = backroomId => {
-    const shareUrl = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const shareUrl = `${window.location.origin}/backrooms/${backroomId}`
     if (navigator.share) {
       navigator
         .share({
@@ -251,7 +251,7 @@ function Backrooms() {
   }
 
   const handleCopyToClipboard = backroomId => {
-    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const link = `${window.location.origin}/backrooms/${backroomId}`
     navigator.clipboard.writeText(link).then(() => {
       alert('Link copied to clipboard!')
     })
@@ -438,13 +438,11 @@ function Backrooms() {
                       size="sm"
                       colorScheme="blue"
                       variant="outline"
-                      onClick={() =>
-                        setExpandedIndex(expandedIndex === index ? null : index)
-                      }
+                      onClick={() => {
+                        router.push(`/backrooms/${backroom._id}`)
+                      }}
                     >
-                      {expandedIndex === index
-                        ? 'Collapse'
-                        : 'View Full Conversation'}
+                      View Full Conversation
                     </Button>
                   </Flex>
                 </Flex>
@@ -492,17 +490,6 @@ function Backrooms() {
                     </Text>
                   </Flex>
                 )}
-                {/* Collapse component for full conversation */}
-                <Collapse in={expandedIndex === index} animateOpacity>
-                  <Box mt={4}>
-                    <BackroomConversation
-                      conversationContent={backroom.content}
-                      agentOne={backroom.explorerAgentName}
-                      agentTwo={backroom.responderAgentName}
-                      isExpanded={expandedIndex === index}
-                    />
-                  </Box>
-                </Collapse>
               </Box>
             ))
           ) : (

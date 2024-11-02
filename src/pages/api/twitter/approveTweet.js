@@ -1,16 +1,7 @@
 import Agent from '../../../models/Agent'
-import mongoose from 'mongoose'
 import { TwitterApi } from 'twitter-api-v2'
 import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
-
-// Connect to MongoDB
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return
-  return mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-}
+import { connectDB } from '@/utils/db'
 
 export default async function handler(req, res) {
   await connectDB()
