@@ -157,17 +157,9 @@ function Backrooms() {
       try {
         const response = await fetch('/api/backrooms/get')
         const data = await response.json()
-
-        // Ensure each backroom has a snippet if not, generate from the content
-        const updatedBackrooms = data.map(backroom => ({
-          ...backroom,
-          snippet: backroom.snippet || backroom.content.slice(0, 100) + '...', // Trim content if no snippet is available
-        }))
-
-        setBackrooms(updatedBackrooms)
-
+        setBackrooms(data)
         // Handle tags and expanded states as before
-        const tagCounts = updatedBackrooms
+        const tagCounts = data
           .flatMap(backroom => backroom.tags || [])
           .reduce((counts, tag) => {
             counts[tag] = (counts[tag] || 0) + 1
@@ -181,9 +173,7 @@ function Backrooms() {
         setTags(sortedTags)
 
         if (expanded) {
-          const index = updatedBackrooms.findIndex(
-            backroom => backroom._id === expanded
-          )
+          const index = data.findIndex(backroom => backroom._id === expanded)
           if (index !== -1) setExpandedIndex(index)
         }
 
