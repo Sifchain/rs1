@@ -41,13 +41,13 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 
   // Helper function to clean up code block indicators
   const cleanMessage = message => {
-    return message.replace(/```(shell|bash)?\s*/g, '').trim()
+    return message?.replace(/```(shell|bash)?\s*/g, '')?.trim()
   }
 
   // Loop through each match and assign it to the respective agent
   while ((match = agentRegex.exec(content)) !== null) {
-    const username = match[1].trim() // Captures either agentOne or agentTwo
-    let message = cleanMessage(match[2].trim()) // Clean up the message
+    const username = match[1]?.trim() // Captures either agentOne or agentTwo
+    let message = cleanMessage(match[2]?.trim()) // Clean up the message
 
     parsedContent.push({ username, message })
   }
@@ -380,7 +380,12 @@ function Backrooms() {
                 border="2px solid #757575"
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Flex justifyContent="space-between" alignItems="center" flexWrap="wrap" pb="3">
+                <Flex
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flexWrap="wrap"
+                  pb="3"
+                >
                   <Box>
                     <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                       <Link

@@ -39,7 +39,9 @@ function CreateBackroom() {
   const [agents, setAgents] = useState([])
   const [selectedExplorerInfo, setSelectedExplorerInfo] = useState(null)
   const [selectedResponderInfo, setSelectedResponderInfo] = useState(null)
-  const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState([])
+  const [selectedExplorerEvolutions, setSelectedExplorerEvolutions] = useState(
+    []
+  )
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const router = useRouter()
@@ -47,13 +49,21 @@ function CreateBackroom() {
   const { address } = useAccount()
   const [topic, setTopic] = useState('')
 
-  const loadingMessages = ["Processing", "Analyzing", "Connecting", "Finalizing", "Completing"]
+  const loadingMessages = [
+    'Processing',
+    'Analyzing',
+    'Connecting',
+    'Finalizing',
+    'Completing',
+  ]
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (loading) {
-        setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length)
+        setCurrentMessageIndex(
+          prevIndex => (prevIndex + 1) % loadingMessages.length
+        )
       }
     }, 3000)
     return () => clearInterval(interval)
@@ -67,7 +77,7 @@ function CreateBackroom() {
       const data = await response.json()
       setAgents([...data])
     } catch (error) {
-      setAgents([]) 
+      setAgents([])
     }
   }
 
@@ -222,7 +232,12 @@ function CreateBackroom() {
       color="#81d4fa"
     >
       <Spinner size="xl" thickness="4px" color="#81d4fa" mb={6} speed="0.8s" />
-      <Text fontSize="2xl" fontWeight="bold" fontFamily="Arial, sans-serif" mb={2}>
+      <Text
+        fontSize="2xl"
+        fontWeight="bold"
+        fontFamily="Arial, sans-serif"
+        mb={2}
+      >
         {currentMessage}...
       </Text>
       <Text fontSize="md" color="#b0bec5">
@@ -399,7 +414,7 @@ function CreateBackroom() {
               )}
             </Box>
           </Flex>
-          
+
           <FormControl isInvalid={errors.topic}>
             <Text
               fontSize="lg"
@@ -469,11 +484,14 @@ function CreateBackroom() {
                 <Thead
                   bg="#333"
                   borderTopRadius="md"
-                  display={{ base: "none", md: "table-header-group" }}
+                  display={{ base: 'none', md: 'table-header-group' }}
                 >
                   <Tr>
                     <Th color="#e0e0e0">Evolution</Th>
-                    <Th color="#e0e0e0" display={{ base: "none", md: "table-cell" }}>
+                    <Th
+                      color="#e0e0e0"
+                      display={{ base: 'none', md: 'table-cell' }}
+                    >
                       Backroom
                     </Th>
                   </Tr>
@@ -484,11 +502,11 @@ function CreateBackroom() {
                       key={index}
                       as="a"
                       href={`/backrooms?expanded=${evolution?.backroomId}`}
-                      _hover={{ bg: "#333", textDecoration: "none" }}
+                      _hover={{ bg: '#333', textDecoration: 'none' }}
                       cursor="pointer"
-                      bg={index % 2 === 0 ? "#2d2d2d" : "#424242"}
+                      bg={index % 2 === 0 ? '#2d2d2d' : '#424242'}
                       display="flex"
-                      flexDirection={{ base: "column", md: "row" }}
+                      flexDirection={{ base: 'column', md: 'row' }}
                       width="100%"
                       p={{ base: 4, md: 0 }}
                       alignItems="center"
@@ -507,7 +525,7 @@ function CreateBackroom() {
                         fontFamily="Arial, sans-serif"
                         color="#81d4fa"
                         textAlign="center"
-                        display={{ base: "none", md: "table-cell" }}
+                        display={{ base: 'none', md: 'table-cell' }}
                         fontWeight="bold"
                         p={4}
                         width="200px"

@@ -325,7 +325,7 @@ The summary should start with a brief introduction of the agent and end with a r
         backroom: newBackroom._id,
         description: recapResponse.choices[0].message.content
           .replace(/Updated Description/g, '')
-          .trim(),
+          ?.trim(),
       }
 
       explorer.evolutions.push(newEvolution)
@@ -364,7 +364,7 @@ Now, please generate the tweet.`
         temperature: 0.7,
       })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim()
+      const tweetContent = tweetResponse.choices[0].message.content?.trim()
 
       // Check if the agent has a Twitter Auth Token
       if (explorer.twitterAuthToken?.accessToken) {

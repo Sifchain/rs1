@@ -343,7 +343,7 @@ Ensure that the time block (Day ${explorer.currentDay}, Hour ${explorer.currentH
         backroom: newBackroom._id,
         description: recapResponse.choices[0].message.content
           .replace(/Updated Description/g, '')
-          .trim(),
+          ?.trim(),
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
@@ -381,7 +381,7 @@ Now, please generate the tweet.`
         temperature: 0.7,
       })
 
-      const tweetContent = tweetResponse.choices[0].message.content.trim()
+      const tweetContent = tweetResponse.choices[0].message.content?.trim()
 
       // Check if the agent has a Twitter Auth Token
       if (explorer.twitterAuthToken?.accessToken) {

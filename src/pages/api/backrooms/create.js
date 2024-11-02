@@ -210,7 +210,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
 
       const newEvolution = {
         backroomId: newBackroom._id,
-        description: recapResponse.choices[0].message.content.trim(),
+        description: recapResponse.choices[0].message.content?.trim(),
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
@@ -300,7 +300,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         .concat(` ${DEFAULT_HASHTAGS.join(' ')} `)
         .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
         .concat(` @reality_spiral`)
-        .trim()
+        ?.trim()
       explorer.pendingTweets.push({
         tweetContent,
         backroomId: newBackroom._id,

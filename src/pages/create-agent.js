@@ -63,7 +63,7 @@ function CreateAgent() {
         body: JSON.stringify({
           name: agentName ?? '',
           description: desc ?? '', // Pass current description if it exists
-          isRandom
+          isRandom,
         }),
       })
 
@@ -119,7 +119,7 @@ function CreateAgent() {
     let errors = {}
 
     // Validation for agent name
-    if (!agentName.trim()) {
+    if (!agentName?.trim()) {
       errors.agentName = 'Name is required'
       valid = false
     } else if (agentName.length < 3 || agentName.length > 50) {
@@ -128,7 +128,7 @@ function CreateAgent() {
     }
 
     // Validation for description
-    if (!description.trim()) {
+    if (!description?.trim()) {
       errors.description = 'Description is required'
       valid = false
     } else if (description.length < 10 || description.length > 10000) {
@@ -208,7 +208,12 @@ function CreateAgent() {
       />
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box py={{ base: 6, md: 10 }} px={{ base: 4, md: 6 }} maxW="800px" mx="auto">
+        <Box
+          py={{ base: 6, md: 10 }}
+          px={{ base: 4, md: 6 }}
+          maxW="800px"
+          mx="auto"
+        >
           <Flex justifyContent="space-between" alignItems="center" mb={3}>
             {/* Back Button */}
             <Button
@@ -222,14 +227,14 @@ function CreateAgent() {
             <Heading
               textAlign="center"
               mb={{ base: 6, md: 10 }}
-              fontSize={{ base: "2xl", md: "4xl" }}
+              fontSize={{ base: '2xl', md: '4xl' }}
               color="#81d4fa"
             >
               Create Agent
             </Heading>
             <Box width="60px" />
           </Flex>
-  
+
           {loadingStep === 0 && (
             <Flex direction="column" gap={4}>
               <VStack spacing={4} align="stretch">
@@ -240,18 +245,18 @@ function CreateAgent() {
                   <Input
                     placeholder="Enter agent name"
                     value={agentName}
-                    onChange={(e) => setAgentName(e.target.value)}
+                    onChange={e => setAgentName(e.target.value)}
                     bg="#424242"
                     color="#e0e0e0"
                     border="2px solid"
-                    borderColor={errors.agentName ? "red.500" : "#757575"}
-                    size={{ base: "sm", md: "md" }}
+                    borderColor={errors.agentName ? 'red.500' : '#757575'}
+                    size={{ base: 'sm', md: 'md' }}
                   />
                   {errors.agentName && (
                     <FormErrorMessage>{errors.agentName}</FormErrorMessage>
                   )}
                 </FormControl>
-  
+
                 {/* Description Section */}
                 <FormControl isInvalid={errors.description}>
                   <Flex justify="space-between" align="center">
@@ -264,7 +269,7 @@ function CreateAgent() {
                       size="sm"
                       onClick={onToggle}
                     >
-                      Template Guide {isOpen ? "▲" : "▼"}
+                      Template Guide {isOpen ? '▲' : '▼'}
                     </Button>
                   </Flex>
                   <Collapse in={isOpen} animateOpacity>
@@ -287,20 +292,20 @@ function CreateAgent() {
                     mt={4}
                     placeholder="Describe your agent... (Use the template above or create your own format)"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={e => setDescription(e.target.value)}
                     rows={6}
                     bg="#424242"
                     color="#e0e0e0"
                     border="2px solid"
-                    borderColor={errors.description ? "red.500" : "#757575"}
+                    borderColor={errors.description ? 'red.500' : '#757575'}
                     resize="vertical"
-                    size={{ base: "sm", md: "md" }}
+                    size={{ base: 'sm', md: 'md' }}
                   />
                   {errors.description && (
                     <FormErrorMessage>{errors.description}</FormErrorMessage>
                   )}
                 </FormControl>
-  
+
                 {/* Buttons */}
                 <Flex wrap="wrap" gap={2} mt={4}>
                   <Button
@@ -334,7 +339,7 @@ function CreateAgent() {
                     Copy Template
                   </Button>
                   <Button
-                    onClick={() => setDescription("")}
+                    onClick={() => setDescription('')}
                     variant="solid"
                     colorScheme="red"
                     size="sm"
@@ -343,20 +348,20 @@ function CreateAgent() {
                     Clear Description
                   </Button>
                 </Flex>
-  
+
                 {/* Create Agent Button */}
                 <Tooltip
                   label={
                     !enoughFunds
                       ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RSP to create a new agent.`
-                      : ""
+                      : ''
                   }
                   hasArrow
                   placement="top"
                 >
                   <Box
                     as="span"
-                    cursor={!enoughFunds ? "pointer" : "not-allowed"}
+                    cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
                     width="100%"
                   >
                     <Button
@@ -367,25 +372,25 @@ function CreateAgent() {
                       mt={4}
                       size="md"
                     >
-                      {agentId ? "Agent Created" : "Create Agent"}
+                      {agentId ? 'Agent Created' : 'Create Agent'}
                     </Button>
                   </Box>
                 </Tooltip>
               </VStack>
             </Flex>
           )}
-  
+
           {loadingStep > 0 && loadingStep < 3 && (
             <Box textAlign="center" mt={6}>
               <Spinner size="xl" color="blue.500" />
-              <Heading fontSize={{ base: "md", md: "lg" }} mt={4}>
+              <Heading fontSize={{ base: 'md', md: 'lg' }} mt={4}>
                 {loadingStep === 1
-                  ? "Contacting Spiral Reality AI..."
-                  : "Validating Agent Details..."}
+                  ? 'Contacting Spiral Reality AI...'
+                  : 'Validating Agent Details...'}
               </Heading>
             </Box>
           )}
-  
+
           {loadingStep === 3 && (
             <Box textAlign="center" mt={6}>
               <Alert
@@ -402,7 +407,8 @@ function CreateAgent() {
                     Agent Successfully Created!
                   </AlertTitle>
                   <AlertDescription textAlign="center" color="#e0e0e0">
-                    Your agent has been created and is ready for further actions.
+                    Your agent has been created and is ready for further
+                    actions.
                   </AlertDescription>
                 </Box>
               </Alert>
@@ -434,21 +440,21 @@ function CreateAgent() {
                 disabled={twitterLinked}
               >
                 {twitterLinked
-                  ? "Twitter Account Linked"
-                  : "Link Twitter Account"}
+                  ? 'Twitter Account Linked'
+                  : 'Link Twitter Account'}
               </Button>
               <Tooltip
                 label={
                   !enoughFunds
                     ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
-                    : ""
+                    : ''
                 }
                 hasArrow
                 placement="top"
               >
                 <Box
                   as="span"
-                  cursor={!enoughFunds ? "pointer" : "not-allowed"}
+                  cursor={!enoughFunds ? 'pointer' : 'not-allowed'}
                   width="100%"
                 >
                   <Button
@@ -469,7 +475,6 @@ function CreateAgent() {
       </Box>
     </ChakraProvider>
   )
-  
 }
 
 export default withMetaMaskCheck(CreateAgent)
