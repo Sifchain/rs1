@@ -20,8 +20,9 @@ import {
   List,
   ListItem,
   Collapse,
+  useClipboard,
 } from '@chakra-ui/react'
-import { ArrowBackIcon } from '@chakra-ui/icons'
+import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
 import { useState, useEffect, useCallback } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
@@ -32,8 +33,10 @@ import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
   TOKEN_CONTRACT_ADDRESS,
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
+  DESCRIPTION_TEMPLATE,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
+import { FiCopy } from 'react-icons/fi'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -46,6 +49,7 @@ function Agents() {
   const [errors, setErrors] = useState({})
   const router = useRouter()
   const { agentId } = router.query
+  const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
 
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
@@ -715,6 +719,41 @@ function Agents() {
       )
     )
   }
+  const onGenerateDescription = async (isRandom, desc) => {
+    try {
+      // Show loading state
+      setDescription('Generating description...')
+
+      const response = await fetch('/api/agent/generate-description', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: agentName ?? '',
+          description: desc ?? '', // Pass current description if it exists
+          isRandom,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      // Update the description field with the generated content
+      setDescription(data.description)
+    } catch (error) {
+      console.error('Error generating description:', error)
+      // Restore previous description if there was an error
+      if (description === 'Generating description...') {
+        setDescription('')
+      }
+      // Could add error toast/alert here
+    }
+  }
+
   return (
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
@@ -732,85 +771,94 @@ function Agents() {
               fontSize={{ base: '3xl', md: '4xl' }}
               color="#81d4fa"
               fontFamily="'Arial', sans-serif"
+              mb={2}
             >
               Agents
             </Heading>
 
-            <Flex
-              direction={{ base: 'column', md: 'row' }}
-              alignItems="center"
-              justifyContent="center"
-              width="100%"
-              gap={{ base: 2, md: 4 }}
-            >
-              <Select
-                placeholder={
-                  selectedAgent == null ? 'Select Agent' : selectedAgent?.name
-                }
-                onChange={handleAgentSelection}
-                value={selectedAgent?.name}
+            {!editMode && (
+              <Flex
+                direction={{ base: 'column', md: 'row' }}
+                alignItems="center"
+                justifyContent="center"
                 width="100%"
-                maxW={{ base: '100%', md: '400px' }}
-                bg="#424242"
-                color="#e0e0e0"
-                border="1px solid #757575"
-                _hover={{ borderColor: '#81d4fa' }}
+                gap={{ base: 2, md: 4 }}
               >
-                {Array.isArray(agents) && agents.length > 0 ? (
-                  agents.map(agent => (
-                    <option key={agent?._id} value={agent?._id}>
-                      {agent?.name}
-                    </option>
-                  ))
-                ) : (
-                  <option disabled>No agents available</option>
-                )}
-              </Select>
+                <Select
+                  placeholder={
+                    selectedAgent == null ? 'Select Agent' : selectedAgent?.name
+                  }
+                  onChange={handleAgentSelection}
+                  value={selectedAgent?.name}
+                  width="100%"
+                  maxW={{ base: '100%', md: '400px' }}
+                  bg="#424242"
+                  color="#e0e0e0"
+                  border="1px solid #757575"
+                  _hover={{ borderColor: '#81d4fa' }}
+                >
+                  {Array.isArray(agents) && agents.length > 0 ? (
+                    agents.map(agent => (
+                      <option key={agent?._id} value={agent?._id}>
+                        {agent?.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No agents available</option>
+                  )}
+                </Select>
 
-              <Tooltip
-                label={
-                  !enoughFunds
-                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RSP to create a new agent.`
-                    : ''
-                }
-                hasArrow
-                placement="top"
-              >
-                <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
-                  <Button
-                    onClick={() => router.push('/create-agent')}
-                    colorScheme="blue"
-                    size="md"
-                    fontWeight="bold"
-                    isDisabled={!enoughFunds}
-                    width={{ base: '100%', md: 'auto' }}
+                <Tooltip
+                  label={
+                    !enoughFunds
+                      ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RSP to create a new agent.`
+                      : ''
+                  }
+                  hasArrow
+                  placement="top"
+                >
+                  <Box
+                    as="span"
+                    cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
-                    + New Agent
-                  </Button>
-                </Box>
-              </Tooltip>
+                    <Button
+                      onClick={() => router.push('/create-agent')}
+                      colorScheme="blue"
+                      size="md"
+                      fontWeight="bold"
+                      isDisabled={!enoughFunds}
+                      width={{ base: '100%', md: 'auto' }}
+                    >
+                      + New Agent
+                    </Button>
+                  </Box>
+                </Tooltip>
 
-              <Tooltip
-                label={
-                  !enoughFunds
-                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
-                    : ''
-                }
-                hasArrow
-                placement="top"
-              >
-                <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
-                  <Button
-                    onClick={handleCreateBackroom}
-                    isDisabled={!enoughFunds}
-                    colorScheme="green"
-                    width={{ base: '100%', md: 'auto' }}
+                <Tooltip
+                  label={
+                    !enoughFunds
+                      ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
+                      : ''
+                  }
+                  hasArrow
+                  placement="top"
+                >
+                  <Box
+                    as="span"
+                    cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
-                    Create Backroom
-                  </Button>
-                </Box>
-              </Tooltip>
-            </Flex>
+                    <Button
+                      onClick={handleCreateBackroom}
+                      isDisabled={!enoughFunds}
+                      colorScheme="green"
+                      width={{ base: '100%', md: 'auto' }}
+                    >
+                      Create Backroom
+                    </Button>
+                  </Box>
+                </Tooltip>
+              </Flex>
+            )}
           </Flex>
 
           {/* Agent details */}
@@ -1098,8 +1146,35 @@ function Agents() {
                     </FormErrorMessage>
                   )}
                 </FormControl>
-                <Flex justifyContent="flex-end" mt={4}>
-                  <Button colorScheme="blue" onClick={handleUpdateAgent} mt={4}>
+                <Flex wrap="wrap" gap={2} mt={4} justifyContent="end">
+                  <Button
+                    onClick={() => onGenerateDescription(false, description)}
+                    variant="solid"
+                    colorScheme="blue"
+                    leftIcon={<RepeatIcon />}
+                    mb={2}
+                  >
+                    Generate Description
+                  </Button>
+                  <Button
+                    onClick={() => onGenerateDescription(true, description)}
+                    variant="solid"
+                    colorScheme="purple"
+                    leftIcon={<StarIcon />}
+                    mb={2}
+                  >
+                    I'm feeling lucky
+                  </Button>
+                  <Button
+                    onClick={onCopy}
+                    variant="outline"
+                    colorScheme="blue"
+                    leftIcon={<FiCopy />}
+                    mb={2}
+                  >
+                    Copy Template
+                  </Button>
+                  <Button colorScheme="blue" onClick={handleUpdateAgent}>
                     Update Agent
                   </Button>
                 </Flex>
