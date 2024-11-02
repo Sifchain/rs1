@@ -151,7 +151,29 @@ function BackroomDetail() {
       </ChakraProvider>
     )
   }
+  const handleShare = backroomId => {
+    const shareUrl = `${window.location.origin}/backrooms/${backroomId}`
+    if (navigator.share) {
+      navigator
+        .share({
+          title: 'Check out this Backroom Conversation',
+          url: shareUrl,
+        })
+        .catch(console.error)
+    } else {
+      // Fallback for older browsers
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Link copied to clipboard!')
+      })
+    }
+  }
 
+  const handleCopyToClipboard = backroomId => {
+    const link = `${window.location.origin}/backrooms/${backroomId}`
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Link copied to clipboard!')
+    })
+  }
   return (
     <ChakraProvider>
       <SEO title={`Backroom Details`} />
