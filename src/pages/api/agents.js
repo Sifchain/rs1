@@ -81,15 +81,7 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'PUT') {
     try {
-      const {
-        name,
-        agentId,
-        userId,
-        description = '',
-        conversationPrompt = '',
-        recapPrompt = '',
-        tweetPrompt = '',
-      } = req.body
+      const { name, agentId, userId, description = '' } = req.body
       if (!agentId || !name || !description) {
         return res.status(400).json({
           error: 'All fields are required: id, name',
@@ -103,9 +95,6 @@ export default async function handler(req, res) {
         agentId,
         {
           name,
-          conversationPrompt,
-          recapPrompt,
-          tweetPrompt,
           description,
           // should we update the original description?
           // originalDescription: description,

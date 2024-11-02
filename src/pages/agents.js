@@ -837,8 +837,8 @@ function Agents() {
                       </Text>
                       <Collapse in={isDescriptionExpanded} startingHeight={200}>
                         {handleParseDescription(
-                          selectedAgent.originalDescription ||
-                            selectedAgent.description ||
+                          selectedAgent.description ||
+                            selectedAgent.originalDescription ||
                             'No description provided'
                         ).map((section, index) => (
                           <Box key={index} mt={4}>
@@ -1005,7 +1005,107 @@ function Agents() {
               </Box>
             </VStack>
           )}
+          {selectedAgent && editMode && (
+            <VStack spacing={6} align="stretch">
+              <Box
+                p={4}
+                bg="#424242"
+                borderRadius="lg"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+              >
+                <Flex justifyContent="space-between" alignItems="center" mb={5}>
+                  {/* Back Button */}
+                  <Button
+                    leftIcon={<ArrowBackIcon />}
+                    colorScheme="blue"
+                    onClick={() => router.push('/agents')}
+                  >
+                    Back
+                  </Button>
 
+                  {/* Center-aligned heading */}
+                  <Heading
+                    textAlign="center"
+                    fontSize="4xl"
+                    color="#81d4fa"
+                    fontFamily="'Arial', sans-serif"
+                    flex="1"
+                  >
+                    Edit Agent Details
+                  </Heading>
+
+                  {/* Spacer to keep the heading centered */}
+                  <Box width="60px" />
+                </Flex>
+                {/* Name */}
+                <FormControl isInvalid={errors.agentName}>
+                  <Flex alignItems="center" mb={4}>
+                    {/* Label */}
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#81d4fa"
+                    >
+                      Name:
+                    </Text>
+                    {/* Input */}
+                    <Input
+                      placeholder="Name"
+                      value={agentName}
+                      onChange={e => setAgentName(e.target.value)}
+                      bg="#424242"
+                      color="#e0e0e0"
+                      border="2px solid"
+                      borderColor={errors.agentName ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
+                    />
+                  </Flex>
+                  {errors.agentName && (
+                    <FormErrorMessage mb={4}>
+                      {errors.agentName}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
+                {/* Description */}
+                <FormControl isInvalid={errors.description}>
+                  <Flex alignItems="center" mb={4}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#81d4fa"
+                    >
+                      Description:
+                    </Text>
+                    <Textarea
+                      placeholder="Description"
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      bg="#424242"
+                      color="#e0e0e0"
+                      border="2px solid"
+                      borderColor={errors.description ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
+                      minHeight="500px"
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.description && (
+                    <FormErrorMessage mb={4}>
+                      {errors.description}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
+                <Flex justifyContent="flex-end" mt={4}>
+                  <Button colorScheme="blue" onClick={handleUpdateAgent} mt={4}>
+                    Update Agent
+                  </Button>
+                </Flex>
+              </Box>
+            </VStack>
+          )}
           {loading && (
             <Flex justifyContent="center" mt={4}>
               <Text>Loading agents...</Text>
