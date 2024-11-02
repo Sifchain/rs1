@@ -1,16 +1,7 @@
 import Agent from '../../models/Agent'
 import User from '../../models/User'
 import { checkAgentOwnership } from '../../utils/permissions'
-import mongoose from 'mongoose'
-
-// Connect to MongoDB
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return
-  return mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-}
+import { connectDB } from '@/utils/db'
 
 // Helper function to sanitize agent data
 const sanitizeAgent = agent => {

@@ -1,6 +1,5 @@
 import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
-import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import {
@@ -9,16 +8,7 @@ import {
   MAX_TOKENS,
 } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
-
-mongoose.set('strictQuery', false)
-
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return
-  return mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-}
+import { connectDB } from '@/utils/db'
 
 const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
 
