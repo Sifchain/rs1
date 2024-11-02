@@ -40,10 +40,6 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
     `(${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):\\s*([\\s\\S]*?)(?=(?:${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):|$)`,
     'g'
   )
-  const agentRegex = new RegExp(
-    `(${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):\\s*([\\s\\S]*?)(?=(?:${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):|$)`,
-    'g'
-  )
 
   const parsedContent = []
   let match
