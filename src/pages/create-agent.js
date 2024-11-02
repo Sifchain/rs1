@@ -366,7 +366,7 @@ function CreateAgent() {
                     width="100%"
                   >
                     <Button
-                      isDisabled={!enoughFunds}
+                      isDisabled={enoughFunds}
                       onClick={handleSubmit}
                       colorScheme="blue"
                       width="100%"

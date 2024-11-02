@@ -17,10 +17,14 @@ import {
   Button,
   Tooltip,
   useToast,
+  AspectRatio,
+  Image,
   List,
   ListItem,
   Collapse,
+  IconButton,
 } from '@chakra-ui/react'
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect, useCallback } from 'react'
 import Navigation from '../components/Navigation'
@@ -816,6 +820,23 @@ function Agents() {
           {/* Agent details */}
           {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch" mt={8}>
+              {selectedAgent?.imageUrl && (
+                <Box
+                  minWidth={{ base: '100%', md: '200px' }}
+                  maxWidth={{ base: '100%', md: '300px' }}
+                  mt={3}
+                >
+                  <AspectRatio ratio={16 / 9}>
+                    <Image
+                      src={selectedAgent.imageUrl}
+                      alt={`Image for ${selectedAgent.name}'s backroom`}
+                      objectFit="cover"
+                      borderRadius="md"
+                      fallback={<Box bg="gray.600" borderRadius="md" />}
+                    />
+                  </AspectRatio>
+                </Box>
+              )}
               <Box
                 p={4}
                 bg="#424242"
@@ -831,6 +852,7 @@ function Agents() {
                     <Text fontSize="2xl" fontWeight="bold" color="#81d4fa">
                       {selectedAgent.name}
                     </Text>
+                    {/* Display Parsed Description with "View Full Description" Button */}
                     <Box mt={3}>
                       <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
                         Description
@@ -860,6 +882,25 @@ function Agents() {
                           </Box>
                         ))}
                       </Collapse>
+
+                      {/* Collapse/Expand Button */}
+                      <Box mt={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          variant="solid"
+                          onClick={() =>
+                            setIsDescriptionExpanded(!isDescriptionExpanded)
+                          }
+                          alignSelf="flex-start" // Align the button to the left
+                        >
+                          {isDescriptionExpanded
+                            ? 'Hide Full Description'
+                            : 'View Full Description'}
+                        </Button>
+                      </Box>
+                    </Box>
+                    {/* Display All Tags */}
 
                       <Box mt={2}>
                         <Button

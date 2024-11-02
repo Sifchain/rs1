@@ -8,6 +8,8 @@ import {
   MAX_TOKENS,
 } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
+
+import { generateImage } from '../../../utils/ai'
 import { connectDB } from '@/utils/db'
 
 const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
@@ -112,7 +114,9 @@ export default async function handler(req, res) {
         hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
       // To get a concise summary 1-2 sentences prompts
       const snippetContent = conversationContent.slice(0, 150) + '...'
-
+      const imagePrompt = `Create an image that represents the following conversation: ${conversationContent}`
+      const imageUrl = await generateImage(imagePrompt)
+      console.log('imageUrl', imageUrl)
       // Create and save the new backroom entry
       const newBackroom = new Backroom({
         role,
@@ -125,6 +129,7 @@ export default async function handler(req, res) {
         snippetContent,
         tags: [...new Set([...tags, ...generatedHashtags])],
         createdAt: Date.now(),
+        imageUrl,
         backroomType,
         topic,
       })

@@ -15,6 +15,8 @@ import {
   IconButton,
   Tooltip,
   Link,
+  AspectRatio,
+  Image,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -62,6 +64,8 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
   <Box mb={4} maxW="100%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
+      <Icon color={colorScheme.iconColor} />{' '}
+      {/* Use the icon passed in as a prop */}
       <Icon color={colorScheme.iconColor} />{' '}
       {/* Use the icon passed in as a prop */}
       <Text fontWeight="bold" ml={2} color="#e0e0e0">
@@ -184,6 +188,9 @@ function Backrooms() {
           const index = updatedBackrooms.findIndex(
             backroom => backroom._id === expanded
           )
+          const index = updatedBackrooms.findIndex(
+            backroom => backroom._id === expanded
+          )
           if (index !== -1) setExpandedIndex(index)
         }
 
@@ -199,6 +206,7 @@ function Backrooms() {
         setLoading(false)
       }
     }
+
     fetchBackrooms()
   }, [expanded, queryTags])
 
@@ -220,7 +228,7 @@ function Backrooms() {
 
   const filteredBackrooms = backrooms.filter(backroom => {
     const agentMatch =
-      selectedAgent === '' || backroom.explorerAgentName === selectedAgent
+      selectedAgent === 'All' || backroom.explorerAgentName === selectedAgent
     const tagMatch =
       selectedTags.length === 0 ||
       selectedTags.every(tag => backroom.tags?.includes(tag))
@@ -315,35 +323,35 @@ function Backrooms() {
           </Tooltip>
         </Flex>
 
-        <Flex
-          justifyContent="space-between"
-          mb={8}
-          flexDirection={{ base: 'column', md: 'row' }}
-        >
-          <Select
-            value={selectedAgent}
-            onChange={e => {
-              setSelectedAgent(e.target.value)
-              setSearchQuery('') // Clear searchQuery on agent change
-            }}
-            maxW="300px"
-            mb={{ base: 4, md: 0 }}
-            bg="#424242"
-            color="#e0e0e0"
-            borderColor="#757575"
-            _hover={{ borderColor: '#81d4fa' }}
+          <Flex
+            justifyContent="space-between"
+            mb={8}
+            flexDirection={{ base: 'column', md: 'row' }}
           >
-            <option value={''}>All Agents</option>
-            {Array.from(
-              new Set(backrooms.map(backroom => backroom.explorerAgentName))
-            )
-              .filter(agent => agent !== 'All')
-              .map((agent, index) => (
-                <option key={index} value={agent}>
-                  {agent}
-                </option>
-              ))}
-          </Select>
+            <Select
+              value={selectedAgent}
+              onChange={e => {
+                setSelectedAgent(e.target.value)
+                setSearchQuery('') // Clear searchQuery on agent change
+              }}
+              maxW="300px"
+              mb={{ base: 4, md: 0 }}
+              bg="#424242"
+              color="#e0e0e0"
+              borderColor="#757575"
+              _hover={{ borderColor: '#81d4fa' }}
+            >
+              <option value="All">All Agents</option>
+              {Array.from(
+                new Set(backrooms.map(backroom => backroom.explorerAgentName))
+              )
+                .filter(agent => agent !== 'All')
+                .map((agent, index) => (
+                  <option key={index} value={agent}>
+                    {agent}
+                  </option>
+                ))}
+            </Select>
 
           <Input
             placeholder="Search conversations via hashtags"
@@ -383,121 +391,144 @@ function Backrooms() {
                 border="2px solid #757575"
                 boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
-                <Flex
-                  justifyContent="space-between"
-                  alignItems="center"
-                  flexWrap="wrap"
-                  pb="3"
-                >
-                  <Box>
-                    <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
-                      <Link
-                        href={`/agents?agentId=${backroom.explorerId}`}
-                        color="#64b5f6"
-                        textDecoration="underline"
-                        _hover={{ color: '#29b6f6' }}
-                      >
-                        {backroom.explorerAgentName}
-                      </Link>
-                      {' → '}
-                      <Link
-                        href={`/agents?agentId=${backroom.responderId}`}
-                        color="#64b5f6"
-                        textDecoration="underline"
-                        _hover={{ color: '#29b6f6' }}
-                      >
-                        {backroom.responderAgentName}
-                      </Link>
-                    </Text>
-                  </Box>
+                <TagLabel>{tag}</TagLabel>
+              </Tag>
+            ))}
+          </Flex>
 
-                  <Flex>
-                    <Tooltip label="Share" hasArrow>
-                      <IconButton
-                        aria-label="Share Backroom"
-                        icon={<FiShare2 />}
-                        onClick={() => handleShare(backroom._id)}
+          <VStack spacing={6} align="stretch">
+            {filteredBackrooms.length > 0 ? (
+              filteredBackrooms.map((backroom, index) => (
+                <Box
+                  key={index}
+                  p={4}
+                  bg="#424242"
+                  borderRadius="lg"
+                  border="2px solid #757575"
+                  boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+                >
+                  <Flex justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Text fontSize="lg" fontWeight="bold" color="#81d4fa">
+                        <Link
+                          href={`/agents?agentId=${backroom.explorerId}`}
+                          color="#64b5f6"
+                          textDecoration="underline"
+                          _hover={{ color: '#29b6f6' }}
+                        >
+                          {backroom.explorerAgentName}
+                        </Link>
+                        {' → '}
+                        <Link
+                          href={`/agents?agentId=${backroom.responderId}`}
+                          color="#64b5f6"
+                          textDecoration="underline"
+                          _hover={{ color: '#29b6f6' }}
+                        >
+                          {backroom.responderAgentName}
+                        </Link>
+                      </Text>
+                      {/* Image Section */}
+                      {backroom?.imageUrl && (
+                        <Box
+                          minWidth={{ base: '100%', md: '200px' }}
+                          maxWidth={{ base: '100%', md: '300px' }}
+                        >
+                          <AspectRatio ratio={16 / 9}>
+                            <Image
+                              src={backroom.imageUrl}
+                              alt={`Image for ${backroom.explorerAgentName}'s backroom`}
+                              objectFit="cover"
+                              borderRadius="md"
+                              fallback={<Box bg="gray.600" borderRadius="md" />}
+                            />
+                          </AspectRatio>
+                        </Box>
+                      )}
+                    </Box>
+
+                    <Flex>
+                      <Tooltip label="Share" hasArrow>
+                        <IconButton
+                          aria-label="Share Backroom"
+                          icon={<FiShare2 />}
+                          onClick={() => handleShare(backroom._id)}
+                          colorScheme="blue"
+                          variant="outline"
+                          size="sm"
+                          mr={2}
+                        />
+                      </Tooltip>
+                      <Tooltip label="Copy Link" hasArrow>
+                        <IconButton
+                          aria-label="Copy Link"
+                          icon={<FiClipboard />}
+                          onClick={() => handleCopyToClipboard(backroom._id)}
+                          colorScheme="blue"
+                          variant="outline"
+                          size="sm"
+                          mr={2}
+                        />
+                      </Tooltip>
+                      <Button
+                        size="sm"
                         colorScheme="blue"
                         variant="outline"
-                        size="sm"
-                        mr={2}
-                      />
-                    </Tooltip>
-                    <Tooltip label="Copy Link" hasArrow>
-                      <IconButton
-                        aria-label="Copy Link"
-                        icon={<FiClipboard />}
-                        onClick={() => handleCopyToClipboard(backroom._id)}
-                        colorScheme="blue"
-                        variant="outline"
-                        size="sm"
-                        mr={2}
-                      />
-                    </Tooltip>
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      variant="outline"
-                      onClick={() => {
-                        router.push(`/backrooms/${backroom._id}`)
-                      }}
-                    >
-                      View Full Conversation
-                    </Button>
+                        onClick={() =>
+                          setExpandedIndex(
+                            expandedIndex === index ? null : index
+                          )
+                        }
+                      >
+                        {expandedIndex === index
+                          ? 'Collapse'
+                          : 'View Full Conversation'}
+                      </Button>
+                    </Flex>
                   </Flex>
-                </Flex>
 
                 <Text fontSize="sm" color="#b0bec5" mb={2}>
                   {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
                   {new Date(backroom.createdAt).toLocaleTimeString()}
                 </Text>
 
-                <Flex wrap="wrap">
-                  {backroom.tags.map((tag, tagIndex) => (
-                    <Tag
-                      size="md"
-                      key={tagIndex}
-                      m={1}
-                      cursor="pointer"
-                      colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
-                      onClick={() => handleTagSelection(tag)}
-                    >
-                      <TagLabel>{tag}</TagLabel>
-                    </Tag>
-                  ))}
-                </Flex>
-                {/* Added Backroom Type Display */}
-                {backroom?.backroomType && (
                   <Flex wrap="wrap">
-                    <Text fontSize="md" color="#b0bec5" mt={1}>
-                      <Text as="span" fontWeight="bold" color="#81d4fa">
-                        Type:{' '}
-                      </Text>
-                      {backroomTypes.find(
-                        type => type.id === backroom.backroomType
-                      )?.name || backroom.backroomType}
-                    </Text>
+                    {backroom.tags.map((tag, tagIndex) => (
+                      <Tag
+                        size="md"
+                        key={tagIndex}
+                        m={1}
+                        cursor="pointer"
+                        colorScheme={
+                          selectedTags.includes(tag) ? 'blue' : 'gray'
+                        }
+                        onClick={() => handleTagSelection(tag)}
+                      >
+                        <TagLabel>{tag}</TagLabel>
+                      </Tag>
+                    ))}
                   </Flex>
-                )}
-                {/* Added Topic Display */}
-                {backroom?.topic && (
-                  <Flex wrap="wrap">
-                    <Text fontSize="md" color="#b0bec5" mt={2}>
-                      <Text as="span" fontWeight="bold" color="#81d4fa">
-                        Topic:{' '}
-                      </Text>
-                      {backroom.topic}
-                    </Text>
-                  </Flex>
-                )}
-              </Box>
-            ))
-          ) : (
-            <Text textAlign="center" fontSize="xl" color="#e0e0e0">
-              No backroom conversations found.
-            </Text>
-          )}
-        </VStack>
+
+                  {/* Collapse component for full conversation */}
+                  <Collapse in={expandedIndex === index} animateOpacity>
+                    <Box mt={4}>
+                      <BackroomConversation
+                        conversationContent={backroom.content}
+                        agentOne={backroom.explorerAgentName}
+                        agentTwo={backroom.responderAgentName}
+                        isExpanded={expandedIndex === index}
+                      />
+                    </Box>
+                  </Collapse>
+                </Box>
+              ))
+            ) : (
+              <Text textAlign="center" fontSize="xl" color="#e0e0e0">
+                No backroom conversations found.
+              </Text>
+            )}
+          </VStack>
+        </Box>
       </Box>
     </ChakraProvider>
   )
