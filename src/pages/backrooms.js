@@ -30,9 +30,12 @@ import {
 import { useAccount } from '../hooks/useMetaMask'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
+  // Escape agent names to handle special characters
+  const escapeRegex = name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
   // Define regex to match each agent's messages
   const agentRegex = new RegExp(
-    `(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`,
+    `(${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):\\s*([\\s\\S]*?)(?=(?:${escapeRegex(agentOne)}|${escapeRegex(agentTwo)}):|$)`,
     'g'
   )
 
