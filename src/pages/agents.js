@@ -209,6 +209,10 @@ function Agents() {
     setEditMode(true)
   }
 
+  const handleTwitterAuth = () => {
+    return true
+  }
+
   const handleValidation = () => {
     let valid = true
     let errors = {}
@@ -916,12 +920,24 @@ function Agents() {
                       hasArrow
                       placement="top"
                     >
-                      <Box
+                      <Flex
                         as="span"
                         cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
                         display="flex"
                         justifyContent={{ base: 'center', md: 'flex-end' }}
+                        gap={2}
                       >
+                        <Button
+                          onClick={
+                            hasEditPermission() ? handleTwitterAuth : undefined
+                          }
+                          colorScheme="twitter"
+                          mb={4}
+                          isDisabled={!hasEditPermission()}
+                          pointerEvents={hasEditPermission() ? 'auto' : 'none'}
+                        >
+                          Link X
+                        </Button>
                         <Button
                           onClick={
                             hasEditPermission() ? handleEditClick : undefined
@@ -933,7 +949,7 @@ function Agents() {
                         >
                           Edit
                         </Button>
-                      </Box>
+                      </Flex>
                     </Tooltip>
                   </Box>
                 </Flex>
