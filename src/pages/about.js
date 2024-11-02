@@ -5,24 +5,24 @@ import {
   Flex,
   Button,
   Text,
-} from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
-import Navigation from '../components/Navigation'
-import { useAccount, useConnect } from '../hooks/useMetaMask'
-import { useRouter } from 'next/router'
-import SEO from '../components/SEO'
-import withMetaMaskCheck from '../components/withMetaMaskCheck'
+} from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import Navigation from '../components/Navigation';
+import { useAccount } from 'wagmi';
+import { useRouter } from 'next/router';
+import SEO from '../components/SEO';
+import withMetaMaskCheck from '../components/withMetaMaskCheck';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 function About() {
-  const { address, isConnected } = useAccount()
-  const connect = useConnect()
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
+  const { address, isConnected } = useAccount();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500)
-    return () => clearTimeout(timer)
-  }, [])
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (loading) {
     return (
@@ -45,7 +45,7 @@ function About() {
           </Flex>
         </Box>
       </ChakraProvider>
-    )
+    );
   }
 
   return (
@@ -110,43 +110,44 @@ function About() {
             </Text>
 
             {/* Show different buttons based on the connection state */}
-            {/* {!isConnected ? (
-              <Button
-                onClick={connect}
-                colorScheme="blue"
-                variant="solid"
-                size="lg"
-                _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
-                fontFamily="Arial, sans-serif"
-              >
-                Connect Wallet to Enter
-              </Button>
-            ) : (
-              <Button
-                onClick={() => router.push('/backrooms')}
-                colorScheme="blue"
-                variant="solid"
-                size="lg"
-                _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
-                fontFamily="Arial, sans-serif"
-              >
-                Explore Backrooms
-              </Button>
-            )} */}
+            <Flex justifyContent="center" alignItems="center" mt={4}>
+              {!isConnected ? (
+                <ConnectButton
+                  showBalance={false}
+                  accountStatus="address"
+                  chainStatus="icon"
+                />
+              ) : (
+                <Button
+                  onClick={() => router.push('/backrooms')}
+                  colorScheme="blue"
+                  variant="solid"
+                  size="lg"
+                  _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
+                  fontFamily="Arial, sans-serif"
+                >
+                  Explore Backrooms
+                </Button>
+              )}
+            </Flex>
           </Box>
         </Flex>
 
         {/* Footer */}
         <Box as="footer" bg="#757575" py={4} borderTop="1px solid #616161">
           <Flex justifyContent="center">
-            <Text fontSize="sm" fontFamily="Arial, sans-serif" color="#bdbdbd">
+            <Text
+              fontSize="sm"
+              fontFamily="Arial, sans-serif"
+              color="#bdbdbd"
+            >
               © 2024 Reality Spiral. All Rights Reserved.
             </Text>
           </Flex>
         </Box>
       </Box>
     </ChakraProvider>
-  )
+  );
 }
 
-export default withMetaMaskCheck(About)
+export default withMetaMaskCheck(About);

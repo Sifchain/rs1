@@ -11,19 +11,17 @@ const openai = new OpenAI({
 
 export default async function handler(req, res) {
   try {
-    const { description } = req.body
-    console.log('Generating description for: ', description)
+    const { description, name, isRandom } = req.body
     // Generate description based on whether one was provided
     const descriptionPrompt =
-      description == null || description?.length === 0
-        ? `Generate a random agent description based off of the following template: ${DESCRIPTION_TEMPLATE}`
-        : `Based on the following description: ${description} generate an agent description using the following template:\n\n${DESCRIPTION_TEMPLATE}`
-
+       isRandom || description?.length === 0 && name?.length === 0
+        ? `Please use the following template only: ${DESCRIPTION_TEMPLATE} and create an intriguing character. Similar to the I'm Feeling Lucky feature on Google`
+        : `Please create a character around the concept of ${name?.length !== 0  ? `name: ${name}`: ""} and description: ${description} and use this template:\n\n${DESCRIPTION_TEMPLATE}.`
     // Generate description using OpenAI
     const generateDescriptionResponse = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages: [{ role: 'user', content: descriptionPrompt }],
-      max_tokens: 750,
+      max_tokens: 1500,
       temperature: 0.7,
     })
 

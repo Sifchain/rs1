@@ -27,11 +27,16 @@ import { genIsBalanceEnough } from '../utils/balance'
 import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
+  backroomTypes,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Define regex to match each agent's messages
+  const agentRegex = new RegExp(
+    `(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`,
+    'g'
+  )
   const agentRegex = new RegExp(
     `(${agentOne}|${agentTwo}):\\s*([\\s\\S]*?)(?=(?:${agentOne}|${agentTwo}):|$)`,
     'g'
@@ -58,8 +63,10 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 
 // Component to render each message bubble
 const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
-  <Box mb={4} maxW="80%" alignSelf="flex-start">
+  <Box mb={4} maxW="100%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
+      <Icon color={colorScheme.iconColor} />{' '}
+      {/* Use the icon passed in as a prop */}
       <Icon color={colorScheme.iconColor} />{' '}
       {/* Use the icon passed in as a prop */}
       <Text fontWeight="bold" ml={2} color="#e0e0e0">
@@ -121,7 +128,7 @@ const BackroomConversation = ({ conversationContent, agentOne, agentTwo }) => {
 function Backrooms() {
   const [backrooms, setBackrooms] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedAgent, setSelectedAgent] = useState('All')
+  const [selectedAgent, setSelectedAgent] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedIndex, setExpandedIndex] = useState(null) // Tracks which conversation is expanded
   const [tags, setTags] = useState([])
@@ -179,6 +186,9 @@ function Backrooms() {
         setTags(sortedTags)
 
         if (expanded) {
+          const index = updatedBackrooms.findIndex(
+            backroom => backroom._id === expanded
+          )
           const index = updatedBackrooms.findIndex(
             backroom => backroom._id === expanded
           )
@@ -272,7 +282,6 @@ function Backrooms() {
       </ChakraProvider>
     )
   }
-
   return (
     <ChakraProvider>
       <SEO
@@ -281,40 +290,39 @@ function Backrooms() {
         url="/"
       />
       <Navigation />
-      <Box bg="#424242" color="#e0e0e0" minHeight="100vh" py={10} px={6}>
-        <Box maxW="container.xl" mx="auto">
-          <Flex justifyContent="space-between" alignItems="center" mb={10}>
-            <Heading
-              textAlign="center"
-              fontSize={{ base: '2xl', md: '4xl' }}
-              color="#81d4fa"
-              fontFamily="'Arial', sans-serif"
-            >
-              Backrooms
-            </Heading>
-            <Tooltip
-              label={
-                !enoughFunds
-                  ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new agent.`
-                  : ''
-              }
-              hasArrow
-              placement="top"
-            >
-              <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
-                <Button
-                  onClick={() => router.push('/create-backroom')}
-                  colorScheme="blue"
-                  ms={10}
-                  size="md"
-                  fontWeight="bold"
-                  isDisabled={!enoughFunds}
-                >
-                  + New Backroom
-                </Button>
-              </Box>
-            </Tooltip>
-          </Flex>
+      <Box bg="#424242" color="#e0e0e0" minHeight="100vh" py={6} px={6}>
+        <Flex justifyContent="space-between" alignItems="center" mb={10}>
+          <Heading
+            textAlign="center"
+            fontSize={{ base: '2xl', md: '4xl' }}
+            color="#81d4fa"
+            fontFamily="'Arial', sans-serif"
+          >
+            Backrooms
+          </Heading>
+          <Tooltip
+            label={
+              !enoughFunds
+                ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new agent.`
+                : ''
+            }
+            hasArrow
+            placement="top"
+          >
+            <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
+              <Button
+                onClick={() => router.push('/create-backroom')}
+                colorScheme="blue"
+                ms={10}
+                size="md"
+                fontWeight="bold"
+                isDisabled={!enoughFunds}
+              >
+                + New Backroom
+              </Button>
+            </Box>
+          </Tooltip>
+        </Flex>
 
           <Flex
             justifyContent="space-between"
@@ -346,27 +354,43 @@ function Backrooms() {
                 ))}
             </Select>
 
-            <Input
-              placeholder="Search conversations via hashtags"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              maxW="300px"
-              bg="#424242"
-              color="#e0e0e0"
-              borderColor="#757575"
-              _hover={{ borderColor: '#81d4fa' }}
-            />
-          </Flex>
+          <Input
+            placeholder="Search conversations via hashtags"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            maxW="300px"
+            bg="#424242"
+            color="#e0e0e0"
+            borderColor="#757575"
+            _hover={{ borderColor: '#81d4fa' }}
+          />
+        </Flex>
 
-          <Flex wrap="wrap" mb={8}>
-            {tags.map((tag, index) => (
-              <Tag
-                size="md"
+        <Flex wrap="wrap" mb={8}>
+          {tags.map((tag, index) => (
+            <Tag
+              size="md"
+              key={index}
+              m={1}
+              cursor="pointer"
+              colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
+              onClick={() => handleTagSelection(tag)}
+            >
+              <TagLabel>{tag}</TagLabel>
+            </Tag>
+          ))}
+        </Flex>
+
+        <VStack spacing={6} align="stretch">
+          {filteredBackrooms.length > 0 ? (
+            filteredBackrooms.map((backroom, index) => (
+              <Box
                 key={index}
-                m={1}
-                cursor="pointer"
-                colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
-                onClick={() => handleTagSelection(tag)}
+                p={4}
+                bg="#424242"
+                borderRadius="lg"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
               >
                 <TagLabel>{tag}</TagLabel>
               </Tag>
@@ -464,10 +488,10 @@ function Backrooms() {
                     </Flex>
                   </Flex>
 
-                  <Text fontSize="sm" color="#b0bec5" mb={2}>
-                    {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
-                    {new Date(backroom.createdAt).toLocaleTimeString()}
-                  </Text>
+                <Text fontSize="sm" color="#b0bec5" mb={2}>
+                  {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
+                  {new Date(backroom.createdAt).toLocaleTimeString()}
+                </Text>
 
                   <Flex wrap="wrap">
                     {backroom.tags.map((tag, tagIndex) => (

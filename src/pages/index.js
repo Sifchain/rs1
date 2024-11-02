@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
-import { useAccount, useConnect } from '../hooks/useMetaMask'
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import {
   Box,
   Button,
@@ -8,22 +9,21 @@ import {
   Heading,
   ChakraProvider,
   Text,
-} from '@chakra-ui/react'
-import Navigation from '../components/Navigation'
-import SEO from '../components/SEO'
+} from '@chakra-ui/react';
+import Navigation from '../components/Navigation';
+import SEO from '../components/SEO';
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
 
 function Home() {
-  const { isConnected } = useAccount()
-  const connect = useConnect()
-  const router = useRouter()
+  const { isConnected } = useAccount();
+  const router = useRouter();
 
   // If connected, redirect to backrooms
   useEffect(() => {
     if (isConnected) {
-      router.push('/backrooms')
+      router.push('/backrooms');
     }
-  }, [isConnected, router])
+  }, [isConnected, router]);
 
   if (!isConnected) {
     return (
@@ -86,38 +86,25 @@ function Home() {
                 Email: realityspiral.rs@gmail.com
               </Text>
 
-              {/* Show different buttons based on the connection state */}
-              {!isConnected ? (
-                <Button
-                  onClick={connect}
-                  colorScheme="blue"
-                  variant="solid"
-                  size="lg"
-                  _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
-                  fontFamily="Arial, sans-serif"
-                >
-                  Connect Wallet to Enter
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => router.push('/backrooms')}
-                  colorScheme="blue"
-                  variant="solid"
-                  size="lg"
-                  _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
-                  fontFamily="Arial, sans-serif"
-                >
-                  Explore Backrooms
-                </Button>
-              )}
+              {/* Use RainbowKit's ConnectButton */}
+              <Flex justifyContent="center" alignItems="center" mt={4}>
+              <ConnectButton
+                label="Connect Wallet to Enter"
+                showBalance={false}
+                accountStatus="address"
+                chainStatus="none"
+              />
+            </Flex>
+              
             </Box>
           </Flex>
         </Box>
       </ChakraProvider>
-    )
+    );
   }
 
-  return null // Return nothing if connected (as useEffect will redirect to /backrooms)
+  return null; // Return nothing if connected (as useEffect will redirect to /backrooms)
 }
+
 
 export default withMetaMaskCheck(Home)
