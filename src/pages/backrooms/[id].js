@@ -331,6 +331,7 @@ function BackroomDetail() {
                   m={1}
                   cursor="pointer"
                   colorScheme={'gray'}
+                  mb={2}
                 >
                   <TagLabel>{tag}</TagLabel>
                 </Tag>

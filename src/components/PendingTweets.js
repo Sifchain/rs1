@@ -29,7 +29,6 @@ const PendingTweets = ({
       ? selectedAgent?.pendingTweets.filter(t => t.backroomId === backroomId)
       : selectedAgent?.pendingTweets
   )
-  console.log('pendingTweets', pendingTweets)
   const toast = useToast()
 
   const countWords = text => {
