@@ -29,9 +29,11 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
+  URL,
 } from '../constants/constants'
 import { genIsBalanceEnough } from '../utils/balance'
 import LoadingOverlay from '../components/LoadingOverlay'
+import { fetchWithRetries } from '@/utils/urls'
 
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
@@ -52,7 +54,12 @@ function CreateBackroom() {
 
   const fetchAgents = async () => {
     try {
-      const response = await fetch('/api/agents')
+      const response = await fetchWithRetries(URL + '/api/agents')
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setAgents([...data])
     } catch (error) {
@@ -170,7 +177,7 @@ function CreateBackroom() {
     if (!handleValidation()) return
     setLoading(true)
     try {
-      const res = await fetch('/api/backrooms/create', {
+      const res = await fetchWithRetries(URL + '/api/backrooms/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +190,11 @@ function CreateBackroom() {
           topic,
         }),
       })
-
+      if (!res || !res.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       if (res.ok) {
         const newBackroom = await res.json()
         router.push(`/backrooms/${newBackroom._id}`)

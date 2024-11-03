@@ -4,7 +4,19 @@ export const TOKEN_CONTRACT_ADDRESS =
   '0x90e3532Cf06D567EF7E6385Be532311f10c30096'
 export const OPENAI_MODEL = 'gpt-4o'
 export const MAX_TOKENS = 16000
+export const URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3000'
+    : 'https://app.realityspiral.com'
+export const DEFAULT_TIMEOUT = 6
+export const DEFAULT_RETRIES = 3
+export const DEFAULT_RETRY_DELAY = 1000
 
+export const delay = async (seconds = DEFAULT_TIMEOUT) => {
+  return await new Promise(resolve =>
+    setTimeout(resolve, (seconds ?? DEFAULT_TIMEOUT) * 1000)
+  )
+}
 export const DESCRIPTION_TEMPLATE = `Demographics
 Name:
 Age:

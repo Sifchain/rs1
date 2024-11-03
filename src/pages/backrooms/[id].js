@@ -26,9 +26,11 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
+  URL,
 } from '@/constants/constants'
 import { useAccount } from '@/hooks/useMetaMask'
 import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
+import { fetchWithRetries } from '@/utils/urls'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Escape agent names to handle special characters
@@ -60,11 +62,19 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 }
 
 // Component to render each message bubble
-const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
+const UserBubble = ({
+  username,
+  message,
+  colorScheme = {
+    iconColor: 'gray.500',
+    bgColor: 'gray.700',
+    borderColor: 'gray.500',
+  },
+  icon: Icon,
+}) => (
   <Box mb={4} maxW="100%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
-      <Icon color={colorScheme.iconColor} />{' '}
-      {/* Use the icon passed in as a prop */}
+      <Icon color={colorScheme.iconColor} />
       <Text fontWeight="bold" ml={2} color="#e0e0e0">
         {username}
       </Text>
@@ -127,7 +137,7 @@ function BackroomDetail() {
 
   useEffect(() => {
     if (id) {
-      fetch(`/api/backrooms/${id}`)
+      fetchWithRetries(URL + `/api/backrooms/${id}`)
         .then(res => res.json())
         .then(data => {
           setBackroom(data)

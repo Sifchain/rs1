@@ -37,6 +37,8 @@ import {
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 import { FiCopy } from 'react-icons/fi'
+import { fetchWithRetries } from '@/utils/urls'
+import { URL } from '@/constants/constants'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -102,7 +104,12 @@ function Agents() {
   // Fetch agents
   const fetchAgents = async () => {
     try {
-      const response = await fetch('/api/agents')
+      const response = await fetchWithRetries(URL + '/api/agents')
+      if (!response) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setAgents(data)
 
@@ -138,7 +145,14 @@ function Agents() {
   // Fetch recent conversations for the selected agent
   const fetchRecentConversations = async agent => {
     try {
-      const response = await fetch(`/api/backrooms/get?agentId=${agent._id}`)
+      const response = await fetchWithRetries(
+        URL + `/api/backrooms/get?agentId=${agent._id}`
+      )
+      if (!response) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setRecentBackroomConversations(data)
     } catch (error) {
@@ -152,7 +166,12 @@ function Agents() {
 
   const fetchBackrooms = async () => {
     try {
-      const response = await fetch('/api/backrooms/get')
+      const response = await fetchWithRetries(URL + '/api/backrooms/get')
+      if (!response) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setBackrooms(data)
     } catch (error) {
@@ -177,7 +196,14 @@ function Agents() {
 
       // Fetch and process backroom conversations
       try {
-        const response = await fetch(`/api/backrooms/get?agentId=${agent?._id}`)
+        const response = await fetchWithRetries(
+          URL + `/api/backrooms/get?agentId=${agent?._id}`
+        )
+        if (!response) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
         const data = await response.json()
 
         // Filter relevant conversations
@@ -243,7 +269,7 @@ function Agents() {
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
-      const response = await fetch(`/api/agents`, {
+      const response = await fetchWithRetries(URL + `/api/agents`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -255,8 +281,10 @@ function Agents() {
           userId: JSON.parse(localStorage.getItem('user')),
         }),
       })
-      if (!response.ok) {
-        throw new Error('Failed to update agent')
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
       }
       const agent = await response.json()
       const updatedAgent = {
@@ -386,16 +414,24 @@ function Agents() {
   const handleDiscardTweet = async tweetId => {
     if (window.confirm('Are you sure you want to discard this tweet?')) {
       try {
-        const response = await fetch('/api/twitter/discardTweet', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            agentId: selectedAgent._id,
-            tweetId,
-          }),
-        })
+        const response = await fetchWithRetries(
+          URL + '/api/twitter/discardTweet',
+          {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              agentId: selectedAgent._id,
+              tweetId,
+            }),
+          }
+        )
+        if (!response || !response.ok) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
         if (response.ok) {
           const data = await response.json()
           setSelectedAgent(data.agent)
@@ -432,16 +468,24 @@ function Agents() {
 
   const handleApproveTweet = async tweet => {
     try {
-      const response = await fetch('/api/twitter/approveTweet', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          agentId: selectedAgent._id,
-          tweetId: tweet._id,
-        }),
-      })
+      const response = await fetchWithRetries(
+        URL + '/api/twitter/approveTweet',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: selectedAgent._id,
+            tweetId: tweet._id,
+          }),
+        }
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       if (response.ok) {
         const data = await response.json()
         setSelectedAgent(data.agent)
@@ -477,7 +521,7 @@ function Agents() {
 
   const handleSaveEdit = async (tweetId, promptValue) => {
     try {
-      const response = await fetch('/api/twitter/editTweet', {
+      const response = await fetchWithRetries(URL + '/api/twitter/editTweet', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -488,6 +532,11 @@ function Agents() {
           tweetContent: promptValue,
         }),
       })
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       if (response.ok) {
         const data = await response.json()
         setEditTweetId(null) // Clear edit state
@@ -724,22 +773,25 @@ function Agents() {
       // Show loading state
       setDescription('Generating description...')
 
-      const response = await fetch('/api/agent/generate-description', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: agentName ?? '',
-          description: desc ?? '', // Pass current description if it exists
-          isRandom,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      const response = await fetchWithRetries(
+        URL + '/api/agent/generate-description',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: agentName ?? '',
+            description: desc ?? '', // Pass current description if it exists
+            isRandom,
+          }),
+        }
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
       }
-
       const data = await response.json()
 
       // Update the description field with the generated content

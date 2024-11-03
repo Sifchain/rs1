@@ -1,36 +1,43 @@
 // components/withWalletCheck.js
-import { useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useRouter } from 'next/router';
+import { useEffect } from 'react'
+import { useAccount } from 'wagmi'
+import { useRouter } from 'next/router'
+import { fetchWithRetries } from '@/utils/urls'
+import { URL } from '@/constants/constants'
 
-const withWalletCheck = (WrappedComponent) => {
-  return (props) => {
-    const { address, isConnected } = useAccount();
-    const router = useRouter();
+const withWalletCheck = WrappedComponent => {
+  return props => {
+    const { address, isConnected } = useAccount()
+    const router = useRouter()
 
-    const createUser = async (address) => {
+    const createUser = async address => {
       try {
-        const response = await fetch('/api/users', {
+        const response = await fetchWithRetries(URL + '/api/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ address }),
-        });
-        const data = await response.json();
+        })
+        if (!response) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
+        const data = await response.json()
         if (response.ok) {
-          localStorage.setItem('user', JSON.stringify(data));
+          localStorage.setItem('user', JSON.stringify(data))
         } else {
-          console.error('Failed to create or fetch user', data);
+          console.error('Failed to create or fetch user', data)
         }
       } catch (error) {
-        console.error('Error creating or fetching user:', error);
+        console.error('Error creating or fetching user:', error)
       }
-    };
+    }
 
     useEffect(() => {
       if (isConnected && address) {
-        createUser(address);
+        createUser(address)
       } else {
         if (
           router.pathname !== '/' &&
@@ -38,10 +45,10 @@ const withWalletCheck = (WrappedComponent) => {
           router.pathname !== '/about' &&
           router.pathname !== '/agents'
         ) {
-          router.push('/');
+          router.push('/')
         }
       }
-    }, [isConnected, address, router]);
+    }, [isConnected, address, router])
 
     if (
       router.pathname === '/' ||
@@ -49,11 +56,11 @@ const withWalletCheck = (WrappedComponent) => {
       router.pathname === '/about' ||
       router.pathname === '/agents'
     ) {
-      return <WrappedComponent {...props} />;
+      return <WrappedComponent {...props} />
     }
 
-    return isConnected ? <WrappedComponent {...props} /> : null;
-  };
-};
+    return isConnected ? <WrappedComponent {...props} /> : null
+  }
+}
 
-export default withWalletCheck;
+export default withWalletCheck

@@ -28,6 +28,8 @@ import {
   backroomTypes,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
+import { fetchWithRetries } from '@/utils/urls'
+import { URL } from '@/constants/constants'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Escape agent names to handle special characters
@@ -59,11 +61,19 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 }
 
 // Component to render each message bubble
-const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
+const UserBubble = ({
+  username,
+  message,
+  colorScheme = {
+    iconColor: 'gray.500',
+    bgColor: 'gray.700',
+    borderColor: 'gray.500',
+  },
+  icon: Icon,
+}) => (
   <Box mb={4} maxW="100%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
-      <Icon color={colorScheme.iconColor} />{' '}
-      {/* Use the icon passed in as a prop */}
+      <Icon color={colorScheme.iconColor} />
       <Text fontWeight="bold" ml={2} color="#e0e0e0">
         {username}
       </Text>
@@ -155,9 +165,12 @@ function Backrooms() {
   useEffect(() => {
     const fetchBackrooms = async () => {
       try {
-        const response = await fetch(
-          'https://app.realityspiral.com/api/backrooms/get'
-        )
+        const response = await fetchWithRetries(URL + '/api/backrooms/get')
+        if (!response || !response.ok) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
         const data = await response.json()
         setBackrooms(data)
         // Handle tags and expanded states as before

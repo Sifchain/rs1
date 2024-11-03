@@ -1,5 +1,12 @@
+import {
+  DEFAULT_RETRIES,
+  DEFAULT_RETRY_DELAY,
+  URL,
+  delay,
+} from '@/constants/constants'
+
 const getFullURL = (url, basePath) => {
-  return new URL(url, `${basePath || 'http://localhost:3000'}`)?.href || ''
+  return new URL(url, `${URL}`)?.href || ''
 }
 
 const shortenURL = async fullURL => {
@@ -15,12 +22,16 @@ const shortenURL = async fullURL => {
   }
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithRetries(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
     })
-
+    if (!response || !response.ok) {
+      console.error('Failed to fetch data after multiple retries.')
+      // Handle the failure case here, e.g., show an error message to the user
+      return
+    }
     if (response.ok) {
       const data = await response.json()
       return data.short_url
@@ -38,4 +49,37 @@ const shortenURL = async fullURL => {
   }
 }
 
-export { getFullURL, shortenURL }
+const fetchWithRetries = async (
+  url,
+  options = {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  },
+  maxRetries = DEFAULT_RETRIES,
+  retryDelay = DEFAULT_RETRY_DELAY
+) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options)
+      if (!response.ok) {
+        console.log(
+          `ERROR: response= url attempted: ${url} attempt: ${attempt} maxRetries: ${maxRetries} retryDelay: ${retryDelay}`
+        )
+        continue
+      }
+      return response
+    } catch (error) {
+      console.error(
+        `Attempt ${attempt + 1} at ${url} failed: ${JSON.stringify(error)}`
+      )
+      if (attempt < maxRetries - 1) {
+        await delay(retryDelay)
+      }
+    }
+  }
+  console.error(`All ${maxRetries} attempts to fetch ${url} failed.`)
+  return null
+}
+
+export { getFullURL, shortenURL, fetchWithRetries }
