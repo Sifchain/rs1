@@ -783,6 +783,7 @@ function Agents() {
                 justifyContent="center"
                 width="100%"
                 gap={{ base: 2, md: 4 }}
+                mb={2}
               >
                 <Select
                   placeholder={
@@ -860,7 +861,9 @@ function Agents() {
               </Flex>
             )}
           </Flex>
-
+          {selectedAgent?.pendingTweets?.length > 0
+            ? displayPendingTweets()
+            : null}
           {/* Agent details */}
           {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch" mt={8}>
