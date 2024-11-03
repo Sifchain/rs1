@@ -70,14 +70,25 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'GET') {
     try {
-      // Fetch agents and include only the specified fields
-      const agents = await Agent.find(
-        {},
-        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
-      ).lean()
-      res.status(200).json(agents)
+      const { agentId } = req.query
+      if (agentId) {
+        const explorer = await Agent.findById(agentId).lean()
+        if (!explorer) {
+          return res.status(404).json({ error: 'Agent not found' })
+        }
+        return res.status(200).json([explorer])
+      } else {
+        const agents = await Agent.find(
+          {},
+          '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
+        ).lean()
+        return res.status(200).json(agents)
+      }
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch agents' })
+      console.error('Error in /api/agents:', error)
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch agents', details: error.message })
     }
   } else if (req.method === 'PUT') {
     try {

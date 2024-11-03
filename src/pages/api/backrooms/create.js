@@ -93,13 +93,13 @@ export default async function handler(req, res) {
         })
       }
       // Gather the entire conversation content from explorerMessageHistory
-      const conversationContent = explorerMessageHistory
+      const conversationContentArray = explorerMessageHistory
         .slice(1) // Start from the initial CLI prompt to include only conversation parts
         .map(
           entry =>
             `${entry.role === 'user' ? responder.name : explorer.name}: ${entry.content}`
         )
-        .join('\n')
+      const conversationContent = conversationContentArray.join('\n')
       // Generate relevant hashtags based on the conversation
       const hashtagPrompt = `Based on the following conversation, generate the top 3 most appropriate hashtags summarizing the following conversation:\n\n${conversationContent}  in the following format #hashtag1, #hashtag2, #hashtag3`
       const hashtagResponse = await openai.chat.completions.create({
@@ -131,7 +131,15 @@ export default async function handler(req, res) {
       })
 
       await newBackroom.save()
-
+      // Create tweets for each message in the conversation
+      conversationContentArray.map(message => {
+        explorer.pendingTweets.push({
+          tweetContent: message,
+          backroomId: newBackroom._id,
+          tweetType: 'MESSAGE',
+          createdAt: new Date(),
+        })
+      })
       // Generate an evolution summary for the explorer agent
       const recapPrompt = `
 System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
@@ -206,10 +214,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
       explorer.evolutions.push(newEvolution)
       await explorer.save()
 
-      const fullBackroomURL = getFullURL(
-        `/backrooms/${newBackroom._id}`,
-        `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
-      )
+      const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
       const shortenedUrl = await shortenURL(fullBackroomURL)
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
@@ -295,6 +300,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
       explorer.pendingTweets.push({
         tweetContent,
         backroomId: newBackroom._id,
+        tweetType: 'RECAP',
         createdAt: new Date(),
       })
       await explorer.save()

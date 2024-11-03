@@ -38,6 +38,10 @@ const AgentSchema = new mongoose.Schema({
           type: String,
           required: true,
         },
+        tweetType: {
+          type: String,
+          default: 'Recap',
+        },
         backroomId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Backroom', // Reference the Backroom model

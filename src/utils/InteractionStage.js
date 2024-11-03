@@ -253,7 +253,7 @@ Now, ${this?.explorerAgent.name}, describe your next action or observation in re
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this?.explorerAgent.name} in the third person, based on the following prompt.`,
+          content: `Generate a response as ${this?.explorerAgent.name} in the third person, based on the following prompt. Please limit your response to 250 words or less.`,
         },
         { role: 'user', content: explorerPrompt },
       ],
@@ -303,7 +303,7 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this?.responderAgent.name} in the third person, based on the following prompt.`,
+          content: `Generate a response as ${this?.responderAgent.name} in the third person, based on the following prompt. Please limit your response to 250 words or less.`,
         },
         { role: 'user', content: responderPrompt },
       ],

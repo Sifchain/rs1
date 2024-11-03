@@ -5,8 +5,8 @@ import {
   delay,
 } from '@/constants/constants'
 
-const getFullURL = (url, basePath) => {
-  return new URL(url, `${URL}`)?.href || ''
+const getFullURL = urlParams => {
+  return new URL(urlParams, `${URL}`)?.href || ''
 }
 
 const shortenURL = async fullURL => {
