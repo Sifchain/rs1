@@ -189,7 +189,7 @@ function Agents() {
         setRecentBackroomConversations(filteredConversations)
 
         // Process and set unique tags
-        const tagsFromConversations = filteredConversations.flatMap(
+        const tagsFromConversations = (filteredConversations ?? []).flatMap(
           backroom => backroom?.tags || []
         )
         setBackroomTags(Array.from(new Set(tagsFromConversations)))

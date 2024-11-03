@@ -159,7 +159,7 @@ function Backrooms() {
         const data = await response.json()
         setBackrooms(data)
         // Handle tags and expanded states as before
-        const tagCounts = data
+        const tagCounts = (data ?? [])
           .flatMap(backroom => backroom.tags || [])
           .reduce((counts, tag) => {
             counts[tag] = (counts[tag] || 0) + 1
@@ -195,7 +195,7 @@ function Backrooms() {
   const handleTagSelection = tag => {
     let updatedTags = [...selectedTags]
     if (updatedTags.includes(tag)) {
-      updatedTags = updatedTags.filter(t => t !== tag) // Remove tag if already selected
+      updatedTags = updatedTags?.filter(t => t !== tag) // Remove tag if already selected
     } else {
       updatedTags.push(tag) // Add tag if not selected
     }
@@ -208,7 +208,7 @@ function Backrooms() {
     router.push(`/backrooms?tags=${tagQueryString}`)
   }
 
-  const filteredBackrooms = backrooms.filter(backroom => {
+  const filteredBackrooms = backrooms?.filter(backroom => {
     const agentMatch =
       selectedAgent === '' || backroom.explorerAgentName === selectedAgent
     const tagMatch =
