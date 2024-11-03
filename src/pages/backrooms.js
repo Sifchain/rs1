@@ -155,7 +155,9 @@ function Backrooms() {
   useEffect(() => {
     const fetchBackrooms = async () => {
       try {
-        const response = await fetch('/api/backrooms/get')
+        const response = await fetch(
+          'https://app.realityspiral.com/api/backrooms/get'
+        )
         const data = await response.json()
         setBackrooms(data)
         // Handle tags and expanded states as before
