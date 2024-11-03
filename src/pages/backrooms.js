@@ -28,6 +28,8 @@ import {
   backroomTypes,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
+import { fetchWithRetries } from '@/utils/urls'
+import { URL } from '@/constants/constants'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Escape agent names to handle special characters
@@ -59,11 +61,19 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 }
 
 // Component to render each message bubble
-const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
+const UserBubble = ({
+  username,
+  message,
+  colorScheme = {
+    iconColor: 'gray.500',
+    bgColor: 'gray.700',
+    borderColor: 'gray.500',
+  },
+  icon: Icon,
+}) => (
   <Box mb={4} maxW="100%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
-      <Icon color={colorScheme.iconColor} />{' '}
-      {/* Use the icon passed in as a prop */}
+      <Icon color={colorScheme.iconColor} />
       <Text fontWeight="bold" ml={2} color="#e0e0e0">
         {username}
       </Text>
@@ -155,19 +165,16 @@ function Backrooms() {
   useEffect(() => {
     const fetchBackrooms = async () => {
       try {
-        const response = await fetch('/api/backrooms/get')
+        const response = await fetchWithRetries(URL + '/api/backrooms/get')
+        if (!response || !response.ok) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
         const data = await response.json()
-
-        // Ensure each backroom has a snippet if not, generate from the content
-        const updatedBackrooms = data.map(backroom => ({
-          ...backroom,
-          snippet: backroom.snippet || backroom.content.slice(0, 100) + '...', // Trim content if no snippet is available
-        }))
-
-        setBackrooms(updatedBackrooms)
-
+        setBackrooms(data)
         // Handle tags and expanded states as before
-        const tagCounts = updatedBackrooms
+        const tagCounts = (data ?? [])
           .flatMap(backroom => backroom.tags || [])
           .reduce((counts, tag) => {
             counts[tag] = (counts[tag] || 0) + 1
@@ -181,9 +188,7 @@ function Backrooms() {
         setTags(sortedTags)
 
         if (expanded) {
-          const index = updatedBackrooms.findIndex(
-            backroom => backroom._id === expanded
-          )
+          const index = data.findIndex(backroom => backroom._id === expanded)
           if (index !== -1) setExpandedIndex(index)
         }
 
@@ -205,7 +210,7 @@ function Backrooms() {
   const handleTagSelection = tag => {
     let updatedTags = [...selectedTags]
     if (updatedTags.includes(tag)) {
-      updatedTags = updatedTags.filter(t => t !== tag) // Remove tag if already selected
+      updatedTags = updatedTags?.filter(t => t !== tag) // Remove tag if already selected
     } else {
       updatedTags.push(tag) // Add tag if not selected
     }
@@ -218,7 +223,7 @@ function Backrooms() {
     router.push(`/backrooms?tags=${tagQueryString}`)
   }
 
-  const filteredBackrooms = backrooms.filter(backroom => {
+  const filteredBackrooms = backrooms?.filter(backroom => {
     const agentMatch =
       selectedAgent === '' || backroom.explorerAgentName === selectedAgent
     const tagMatch =

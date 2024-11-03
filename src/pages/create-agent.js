@@ -33,9 +33,11 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   DESCRIPTION_TEMPLATE,
+  URL,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 import LoadingOverlay from '../components/LoadingOverlay'
+import { fetchWithRetries } from '@/utils/urls'
 
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
@@ -51,25 +53,30 @@ function CreateAgent() {
 
   const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: false })
+
   const onGenerateDescription = async (isRandom, desc) => {
     try {
       // Show loading state
       setDescription('Generating description...')
 
-      const response = await fetch('/api/agent/generate-description', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: agentName ?? '',
-          description: desc ?? '', // Pass current description if it exists
-          isRandom,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      const response = await fetchWithRetries(
+        URL + '/api/agent/generate-description',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: agentName ?? '',
+            description: desc ?? '', // Pass current description if it exists
+            isRandom,
+          }),
+        }
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
       }
 
       const data = await response.json()
@@ -152,7 +159,7 @@ function CreateAgent() {
 
         const user = JSON.parse(localStorage.getItem('user'))
         const userId = user ? user._id : null
-        const response = await fetch('/api/agents', {
+        const response = await fetchWithRetries(URL + '/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -161,13 +168,12 @@ function CreateAgent() {
             user: userId,
           }),
         })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error('Failed to create agent')
+        if (!response || !response.ok) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
         }
-
+        const data = await response.json()
         setAgentId(data._id)
         setLoadingStep(3)
       }, 2000)
@@ -185,7 +191,14 @@ function CreateAgent() {
     }
 
     try {
-      const response = await fetch(`/api/auth/twitter?agentId=${agentId}`)
+      const response = await fetchWithRetries(
+        URL + `/api/auth/twitter?agentId=${agentId}`
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       if (data.url) {
         window.location.href = data.url

@@ -1,3 +1,6 @@
+import { fetchWithRetries } from '@/utils/urls'
+import { URL } from '@/constants/constants'
+
 /**
  * Fetches the token balance through the backend API
  * @param {string} address - The wallet address
@@ -6,12 +9,13 @@
  */
 export const getTokenBalance = async (address, contractAddress) => {
   try {
-    const response = await fetch(
-      `/api/balance?address=${address}&contractAddress=${contractAddress}`
+    const response = await fetchWithRetries(
+      URL + `/api/balance?address=${address}&contractAddress=${contractAddress}`
     )
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch token balance')
+    if (!response || !response.ok) {
+      console.error('Failed to fetch data after multiple retries.')
+      // Handle the failure case here, e.g., show an error message to the user
+      return
     }
 
     const data = await response.json()

@@ -10,19 +10,20 @@ import {
 import { InteractionStage } from '@/utils/InteractionStage'
 import { connectDB } from '@/utils/db'
 
-const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+// TODO: implement this across all routes in a generic way that deployments don't fail
+// const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
 
 export default async function handler(req, res) {
-  const origin = req.headers.origin || req.headers.referer || 'same-origin'
+  // const origin = req.headers.origin || req.headers.referer || 'same-origin'
 
-  const isAllowed =
-    allowedOrigins.some(pattern => pattern.test(origin)) ||
-    process.env.NODE_ENV === 'development' ||
-    origin === 'same-origin'
+  // const isAllowed =
+  //   allowedOrigins.some(pattern => pattern.test(origin)) ||
+  //   process.env.NODE_ENV === 'development' ||
+  //   origin === 'same-origin'
 
-  if (!isAllowed) {
-    return res.status(403).json({ error: 'Request origin not allowed' })
-  }
+  // if (!isAllowed) {
+  //   return res.status(403).json({ error: 'Request origin not allowed' })
+  // }
 
   await connectDB()
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })

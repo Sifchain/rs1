@@ -74,22 +74,14 @@ export default async function handler(req, res) {
       const agents = await Agent.find(
         {},
         '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
-      )
+      ).lean()
       res.status(200).json(agents)
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch agents' })
     }
   } else if (req.method === 'PUT') {
     try {
-      const {
-        name,
-        agentId,
-        userId,
-        description = '',
-        conversationPrompt = '',
-        recapPrompt = '',
-        tweetPrompt = '',
-      } = req.body
+      const { name, agentId, userId, description = '' } = req.body
       if (!agentId || !name || !description) {
         return res.status(400).json({
           error: 'All fields are required: id, name',
@@ -103,9 +95,6 @@ export default async function handler(req, res) {
         agentId,
         {
           name,
-          conversationPrompt,
-          recapPrompt,
-          tweetPrompt,
           description,
           // should we update the original description?
           // originalDescription: description,
