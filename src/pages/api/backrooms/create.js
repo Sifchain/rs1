@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       let responderMessageHistory = [
         await interactionStage.generateResponderSystemPrompt(),
       ]
-      for (let i = 0; i < 1; i++) {
+      for (let i = 0; i < 2; i++) {
         // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         // Generate explorer response using the current InteractionStage state + update state
         const explorerMessage = await interactionStage.generateExplorerMessage()
