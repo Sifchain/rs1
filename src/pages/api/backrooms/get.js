@@ -1,21 +1,21 @@
 import Backroom from '../../../models/Backroom'
 import { connectDB } from '@/utils/db'
 
-const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+// const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: `Method ${req.method} not allowed` })
   }
-  const origin = req.headers.origin || req.headers.referer || 'same-origin'
-  const isAllowed =
-    allowedOrigins.some(pattern => pattern.test(origin)) ||
-    process.env.NODE_ENV === 'development' ||
-    origin === 'same-origin'
+  // const origin = req.headers.origin || req.headers.referer || 'same-origin'
+  // const isAllowed =
+  //   allowedOrigins.some(pattern => pattern.test(origin)) ||
+  //   process.env.NODE_ENV === 'development' ||
+  //   origin === 'same-origin'
 
-  if (!isAllowed) {
-    return res.status(403).json({ error: 'Request origin not allowed' })
-  }
+  // if (!isAllowed) {
+  //   return res.status(403).json({ error: 'Request origin not allowed' })
+  // }
   try {
     await connectDB()
 
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
       const backrooms = await Backroom.find(
         query,
-        '_id tags explorerAgentName responderAgentName explorerId responderId createdAt content backroomType topic'
+        '_id tags explorerAgentName responderAgentName explorerId responderId createdAt content backroomType topic title'
       )
         .sort({ createdAt: -1 })
         .limit(50)

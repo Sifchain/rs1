@@ -29,7 +29,7 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
-  URL,
+  BASE_URL,
 } from '../constants/constants'
 import { genIsBalanceEnough } from '../utils/balance'
 import LoadingOverlay from '../components/LoadingOverlay'
@@ -54,7 +54,7 @@ function CreateBackroom() {
 
   const fetchAgents = async () => {
     try {
-      const response = await fetchWithRetries(URL + '/api/agents')
+      const response = await fetchWithRetries(BASE_URL + '/api/agents')
       if (!response || !response.ok) {
         console.error('Failed to fetch data after multiple retries.')
         // Handle the failure case here, e.g., show an error message to the user
@@ -177,7 +177,7 @@ function CreateBackroom() {
     if (!handleValidation()) return
     setLoading(true)
     try {
-      const res = await fetchWithRetries(URL + '/api/backrooms/create', {
+      const res = await fetchWithRetries(BASE_URL + '/api/backrooms/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { useRouter } from 'next/router'
 import { fetchWithRetries } from '@/utils/urls'
-import { URL } from '@/constants/constants'
+import { BASE_URL } from '@/constants/constants'
 
 const withWalletCheck = WrappedComponent => {
   return props => {
@@ -12,7 +12,7 @@ const withWalletCheck = WrappedComponent => {
 
     const createUser = async address => {
       try {
-        const response = await fetchWithRetries(URL + '/api/users', {
+        const response = await fetchWithRetries(BASE_URL + '/api/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

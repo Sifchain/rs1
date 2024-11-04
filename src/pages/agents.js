@@ -34,7 +34,7 @@ import {
   TOKEN_CONTRACT_ADDRESS,
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   DESCRIPTION_TEMPLATE,
-  URL,
+  BASE_URL,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 import { FiCopy } from 'react-icons/fi'
@@ -86,7 +86,7 @@ function Agents() {
   // Fetch agents
   const fetchAgents = async () => {
     try {
-      const response = await fetchWithRetries(URL + '/api/agents')
+      const response = await fetchWithRetries(BASE_URL + '/api/agents')
       if (!response) {
         console.error('Failed to fetch data after multiple retries.')
         // Handle the failure case here, e.g., show an error message to the user
@@ -95,7 +95,7 @@ function Agents() {
       const data = await response.json()
       setAgents(data)
 
-      // Automatically select agent if agentId is in the URL
+      // Automatically select agent if agentId is in the BASE_URL
       if (agentId) {
         selectAgentById(agentId, data)
         const agent = data.find(agent => agent._id === agentId)
@@ -128,7 +128,7 @@ function Agents() {
   const fetchRecentConversations = async agent => {
     try {
       const response = await fetchWithRetries(
-        URL + `/api/backrooms/get?agentId=${agent._id}`
+        BASE_URL + `/api/backrooms/get?agentId=${agent._id}`
       )
       if (!response) {
         console.error('Failed to fetch data after multiple retries.')
@@ -148,7 +148,7 @@ function Agents() {
 
   const fetchBackrooms = async () => {
     try {
-      const response = await fetchWithRetries(URL + '/api/backrooms/get')
+      const response = await fetchWithRetries(BASE_URL + '/api/backrooms/get')
       if (!response) {
         console.error('Failed to fetch data after multiple retries.')
         // Handle the failure case here, e.g., show an error message to the user
@@ -179,7 +179,7 @@ function Agents() {
       // Fetch and process backroom conversations
       try {
         const response = await fetchWithRetries(
-          URL + `/api/backrooms/get?agentId=${agent?._id}`
+          BASE_URL + `/api/backrooms/get?agentId=${agent?._id}`
         )
         if (!response) {
           console.error('Failed to fetch data after multiple retries.')
@@ -251,7 +251,7 @@ function Agents() {
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
-      const response = await fetchWithRetries(URL + `/api/agents`, {
+      const response = await fetchWithRetries(BASE_URL + `/api/agents`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -399,7 +399,7 @@ function Agents() {
       setDescription('Generating description...')
 
       const response = await fetchWithRetries(
-        URL + '/api/agent/generate-description',
+        BASE_URL + '/api/agent/generate-description',
         {
           method: 'POST',
           headers: {

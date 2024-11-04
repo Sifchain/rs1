@@ -26,7 +26,7 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
-  URL,
+  BASE_URL,
 } from '@/constants/constants'
 import { useAccount } from '@/hooks/useMetaMask'
 import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
@@ -289,9 +289,19 @@ function BackroomDetail() {
                   >
                     {backroom.responderAgentName}
                   </Link>
+                  {backroom?.title && (
+                    <Text ms={2} as="span" fontWeight="bold" color="#81d4fa">
+                      {backroom.title}
+                    </Text>
+                  )}
                 </Text>
+                <Flex>
+                  <Text fontSize="sm" color="#b0bec5">
+                    {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
+                    {new Date(backroom.createdAt).toLocaleTimeString()}
+                  </Text>
+                </Flex>
               </Box>
-
               <Flex>
                 <Tooltip label="Share" hasArrow>
                   <IconButton
@@ -318,35 +328,10 @@ function BackroomDetail() {
               </Flex>
             </Flex>
 
-            <Text fontSize="sm" color="#b0bec5" mb={2}>
-              {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
-              {new Date(backroom.createdAt).toLocaleTimeString()}
-            </Text>
-
-            <Flex wrap="wrap">
-              {backroom?.tags?.map((tag, tagIndex) => (
-                <Tag
-                  size="md"
-                  key={tagIndex}
-                  m={1}
-                  cursor="pointer"
-                  colorScheme={'gray'}
-                  mb={2}
-                >
-                  <TagLabel>{tag}</TagLabel>
-                </Tag>
-              ))}
-            </Flex>
-            <PendingTweets
-              selectedAgent={explorerAgent}
-              setSelectedAgent={setExplorerAgent}
-              hasEditPermission={hasEditPermission}
-              backroomId={id}
-            />
             {/* Added Backroom Type Display */}
             {backroom?.backroomType && (
               <Flex wrap="wrap">
-                <Text fontSize="md" color="#b0bec5" mt={1}>
+                <Text fontSize="md" color="#b0bec5">
                   <Text as="span" fontWeight="bold" color="#81d4fa">
                     Type:{' '}
                   </Text>
@@ -358,7 +343,7 @@ function BackroomDetail() {
             {/* Added Topic Display */}
             {backroom?.topic && (
               <Flex wrap="wrap">
-                <Text fontSize="md" color="#b0bec5" mt={2}>
+                <Text fontSize="md" color="#b0bec5" mt={1} mb={2}>
                   <Text as="span" fontWeight="bold" color="#81d4fa">
                     Topic:{' '}
                   </Text>
@@ -366,9 +351,28 @@ function BackroomDetail() {
                 </Text>
               </Flex>
             )}
+            <Flex wrap="wrap">
+              {backroom?.tags?.map((tag, tagIndex) => (
+                <Tag
+                  size="md"
+                  key={tagIndex}
+                  m={1}
+                  cursor="pointer"
+                  colorScheme={'gray'}
+                >
+                  <TagLabel>{tag}</TagLabel>
+                </Tag>
+              ))}
+            </Flex>
+            <PendingTweets
+              selectedAgent={explorerAgent}
+              setSelectedAgent={setExplorerAgent}
+              hasEditPermission={hasEditPermission}
+              backroomId={id}
+            />
             {/* Collapse component for full conversation */}
             <Collapse in={true} animateOpacity>
-              <Box mt={4}>
+              <Box mt={2}>
                 <BackroomConversation
                   conversationContent={backroom.content}
                   agentOne={backroom.explorerAgentName}

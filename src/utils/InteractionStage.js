@@ -1,5 +1,10 @@
 import OpenAI from 'openai'
-import { backroomTypes, MAX_TOKENS, OPENAI_MODEL } from '@/constants/constants'
+import {
+  backroomTypes,
+  MAX_TOKENS,
+  OPENAI_MODEL,
+  OPENAI_BETA_MODEL,
+} from '@/constants/constants'
 import { zodResponseFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -80,7 +85,7 @@ export class InteractionStage {
 
     try {
       const response = await openai.beta.chat.completions.parse({
-        model: 'gpt-4o-2024-08-06',
+        model: OPENAI_BETA_MODEL,
         messages: [
           {
             role: 'system',
@@ -362,7 +367,7 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
     try {
       // Call OpenAI API to process and respond with an updated InteractionStage
       const response = await openai.beta.chat.completions.parse({
-        model: 'gpt-4o-2024-08-06',
+        model: OPENAI_BETA_MODEL,
         messages: [
           {
             role: 'system',

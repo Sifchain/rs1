@@ -33,7 +33,7 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   DESCRIPTION_TEMPLATE,
-  URL,
+  BASE_URL,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 import LoadingOverlay from '../components/LoadingOverlay'
@@ -76,6 +76,7 @@ function CreateAgent() {
       if (!response || !response.ok) {
         console.error('Failed to fetch data after multiple retries.')
         // Handle the failure case here, e.g., show an error message to the user
+        setDescription(desc)
         return
       }
 
@@ -83,11 +84,12 @@ function CreateAgent() {
 
       // Update the description field with the generated content
       setDescription(data.description)
+      setAgentName(data.name)
     } catch (error) {
       console.error('Error generating description:', error)
       // Restore previous description if there was an error
       if (description === 'Generating description...') {
-        setDescription('')
+        setDescription(desc)
       }
       // Could add error toast/alert here
     }
@@ -257,7 +259,7 @@ function CreateAgent() {
                     Name
                   </Text>
                   <Input
-                    placeholder="Enter agent name"
+                    placeholder="  Enter agent name  "
                     value={agentName}
                     onChange={e => setAgentName(e.target.value)}
                     bg="#424242"
@@ -304,7 +306,7 @@ function CreateAgent() {
                   </Collapse>
                   <Textarea
                     mt={4}
-                    placeholder="Describe your agent... (Use the template above or create your own format)"
+                    placeholder="  Describe your agent... (Use the template above or create your own format) "
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={6}

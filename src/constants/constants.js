@@ -3,8 +3,9 @@ export const MINIMUM_TOKENS_TO_CREATE_AGENT = 0.0001 * 1000000000000
 export const TOKEN_CONTRACT_ADDRESS =
   '0x90e3532Cf06D567EF7E6385Be532311f10c30096'
 export const OPENAI_MODEL = 'gpt-4o'
+export const OPENAI_BETA_MODEL = 'gpt-4o-2024-08-06'
 export const MAX_TOKENS = 16000
-export const URL =
+export const BASE_URL =
   process.env.NODE_ENV === 'development'
     ? 'http://localhost:3000'
     : 'https://app.realityspiral.com'

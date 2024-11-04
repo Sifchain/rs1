@@ -9,9 +9,14 @@ import {
 } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
 import { connectDB } from '@/utils/db'
+import { getParsedOpenAIResponse } from '@/utils/ai'
+import { z } from 'zod'
 
 // TODO: implement this across all routes in a generic way that deployments don't fail
 // const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+const TitleSchema = z.object({
+  title: z.string(),
+})
 
 export default async function handler(req, res) {
   // const origin = req.headers.origin || req.headers.referer || 'same-origin'
@@ -108,12 +113,27 @@ export default async function handler(req, res) {
         max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
-
       const generatedHashtags =
         hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
       // To get a concise summary 1-2 sentences prompts
       const snippetContent = conversationContent.slice(0, 150) + '...'
 
+      // Generate title for the backroom conversation
+      const titlePrompt = `Generate a captivating, pithy title that if someone scrolled across would want to read more. Please use the backroom conversation content:\n\n${conversationContent}. Limit it to 1-10 words.`
+      let title = ''
+      // Generate title for the backroom conversation
+      try {
+        const parsedResponse = await getParsedOpenAIResponse(
+          titlePrompt,
+          TitleSchema
+        )
+        title = parsedResponse.title
+        console.log('Full Parsed Response:', parsedResponse)
+      } catch (error) {
+        console.error('Error fetching interaction data:', error)
+      }
+
+      // Generate a summary
       // Create and save the new backroom entry
       const newBackroom = new Backroom({
         role,
@@ -128,6 +148,7 @@ export default async function handler(req, res) {
         createdAt: Date.now(),
         backroomType,
         topic,
+        title,
       })
 
       await newBackroom.save()
@@ -213,10 +234,14 @@ Your task is to synthesize this information into a cohesive evolution summary th
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
-
-      const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
-      const shortenedUrl = await shortenURL(fullBackroomURL)
-
+      let shortenedUrl = ''
+      try {
+        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
+        shortenedUrl = await shortenURL(fullBackroomURL)
+      } catch (error) {
+        console.error('Error shortening URL:', error)
+        shortenedUrl = fullBackroomURL // Fallback to the full URL
+      }
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
 Context: You are ${explorer.name}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
