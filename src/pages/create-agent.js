@@ -153,7 +153,10 @@ function CreateAgent() {
 
   const handleSubmit = async () => {
     if (!handleValidation()) return
-
+    track('Submit Agent Creation', {
+      agentName,
+      description,
+    })
     setLoadingStep(1)
 
     try {
