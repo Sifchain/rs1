@@ -166,11 +166,11 @@ export default async function handler(req, res) {
 
       await newBackroom.save()
       // Create tweets for each message in the conversation
-      conversationContentArray.map(message => {
+      conversationContentArray.map((message, index) => {
         explorer.pendingTweets.push({
           tweetContent: message,
           backroomId: newBackroom._id,
-          tweetType: 'MESSAGE',
+          tweetType: `MESSAGE ${index + 1}`,
           createdAt: new Date(),
         })
       })
