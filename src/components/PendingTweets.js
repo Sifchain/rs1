@@ -7,12 +7,12 @@ import {
   Flex,
   Textarea,
   FormErrorMessage,
-  useToast,
   Tooltip,
 } from '@chakra-ui/react'
 import { FiTrash2 } from 'react-icons/fi'
 import { fetchWithRetries } from '@/utils/urls'
-import { URL } from '@/constants/constants'
+import { BASE_URL } from '@/constants/constants'
+import { useNotification } from '@/context/NotificationContext'
 
 const PendingTweets = ({
   selectedAgent,
@@ -20,20 +20,23 @@ const PendingTweets = ({
   hasEditPermission,
   backroomId,
 }) => {
+  const { showNotification } = useNotification()
   const [editTweetId, setEditTweetId] = useState(null)
   const [editTweetContent, setEditTweetContent] = useState('')
   const [wordCount, setWordCount] = useState(0)
   const [wordCountError, setWordCountError] = useState(false)
-  const [pendingTweets, setPendingTweets] = useState(
-    backroomId != null
-      ? selectedAgent?.pendingTweets.filter(t => t.backroomId === backroomId)
-      : selectedAgent?.pendingTweets
-  )
-  const toast = useToast()
-
-  const countWords = text => {
-    return text?.trim().split(/\s+/).length
-  }
+  const [pendingTweets, setPendingTweets] = useState([])
+  useEffect(() => {
+    setPendingTweets(
+      backroomId != null
+        ? (selectedAgent?.pendingTweets.filter(
+            t => t.backroomId === backroomId
+          ) ?? [])
+        : (selectedAgent?.pendingTweets ?? [])
+    )
+  }, [selectedAgent, backroomId])
+  console.log('pendingTweets', pendingTweets)
+  const countWords = text => text?.trim().split(/\s+/).length
 
   const handleEditTweet = (tweetId, tweetContent) => {
     setEditTweetId(tweetId)
@@ -49,60 +52,54 @@ const PendingTweets = ({
   }
 
   const handleDiscardTweet = async tweetId => {
-    if (window.confirm('Are you sure you want to discard this tweet?')) {
-      try {
-        const response = await fetchWithRetries(
-          URL + '/api/twitter/discardTweet',
-          {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              agentId: selectedAgent._id,
-              tweetId,
-            }),
-          }
-        )
-
-        if (response?.ok) {
-          const data = await response.json()
-          setSelectedAgent(data.agent)
-          toast({
-            title: 'Tweet Discarded',
-            description: 'The tweet has been successfully discarded.',
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          })
-        } else {
-          const error = await response?.json()
-          toast({
-            title: 'Error',
-            description:
-              error.error || 'Failed to discard the tweet. Please try again.',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
+    try {
+      const response = await fetchWithRetries(
+        BASE_URL + '/api/twitter/discardTweet',
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: selectedAgent._id,
+            tweetId,
+          }),
         }
-      } catch (error) {
-        console.error('Error discarding tweet:', error)
-        toast({
+      )
+
+      if (response?.ok) {
+        const data = await response.json()
+        setSelectedAgent(data.agent)
+        showNotification({
+          title: 'Tweet Discarded',
+          description: 'The tweet has been successfully discarded.',
+          actionText: 'Close',
+        })
+      } else {
+        const error = await response?.json()
+        showNotification({
           title: 'Error',
-          description: 'Failed to discard the tweet. Please try again.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
+          description:
+            error || 'Failed to discard the tweet. Please try again.',
+          actionText: 'Retry',
+          onAction: () => handleDiscardTweet(tweetId),
         })
       }
+    } catch (error) {
+      console.error('Error discarding tweet:', error)
+      showNotification({
+        title: 'Error',
+        description: 'Failed to discard the tweet. Please try again.',
+        actionText: 'Retry',
+        onAction: () => handleDiscardTweet(tweetId),
+      })
     }
   }
 
   const handleApproveTweet = async tweet => {
     try {
       const response = await fetchWithRetries(
-        URL + '/api/twitter/approveTweet',
+        BASE_URL + '/api/twitter/approveTweet',
         {
           method: 'PUT',
           headers: {
@@ -118,83 +115,74 @@ const PendingTweets = ({
       if (response?.ok) {
         const data = await response.json()
         setSelectedAgent(data.agent)
-        toast({
+        showNotification({
           title: 'Tweet Approved',
           description: 'The tweet has been successfully posted.',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
+          actionText: 'Close',
         })
       } else {
         const error = await response?.json()
-        toast({
+        showNotification({
           title: 'Error',
-          description:
-            error.error || 'Failed to post the tweet. Please try again.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
+          description: error || 'Failed to post the tweet. Please try again.',
+          actionText: 'Retry',
+          onAction: () => handleApproveTweet(tweet),
         })
       }
     } catch (error) {
       console.error('Error approving tweet:', error)
-      toast({
+      showNotification({
         title: 'Error',
         description: 'Failed to post the tweet. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+        actionText: 'Retry',
+        onAction: () => handleApproveTweet(tweet),
       })
     }
   }
 
   const handleSaveEdit = async (tweetId, promptValue) => {
     try {
-      const response = await fetchWithRetries(URL + '/api/twitter/editTweet', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          agentId: selectedAgent._id,
-          tweetId,
-          tweetContent: promptValue,
-        }),
-      })
+      const response = await fetchWithRetries(
+        BASE_URL + '/api/twitter/editTweet',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: selectedAgent._id,
+            tweetId,
+            tweetContent: promptValue,
+          }),
+        }
+      )
 
       if (response?.ok) {
         const data = await response.json()
         setEditTweetId(null)
         setEditTweetContent('')
         setSelectedAgent(data.agent)
-        toast({
+        showNotification({
           title: 'Tweet Updated',
           description: 'The tweet content has been updated.',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-          position: 'top-right',
-          variant: 'subtle',
+          actionText: 'Close',
         })
       } else {
         const error = await response?.json()
-        toast({
+        showNotification({
           title: 'Error',
-          description:
-            error.error || 'Failed to update the tweet. Please try again.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
+          description: error || 'Failed to update the tweet. Please try again.',
+          actionText: 'Retry',
+          onAction: () => handleSaveEdit(tweetId, promptValue),
         })
       }
     } catch (error) {
       console.error('Error updating tweet:', error)
-      toast({
+      showNotification({
         title: 'Error',
         description: 'Failed to update the tweet. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+        actionText: 'Retry',
+        onAction: () => handleSaveEdit(tweetId, promptValue),
       })
     }
   }
@@ -232,10 +220,10 @@ const PendingTweets = ({
               >
                 <Text fontSize="md" color="#b0bec5" mt={1}>
                   <Text as="span" fontWeight="bold" color="#81d4fa">
-                    Type:{` ${tweet?.tweetType ?? 'Recap'}`}
+                    Type: {tweet?.tweetType ?? 'Recap'}
                   </Text>
                 </Text>
-                {editTweetId === tweet._id ? ( // Check if tweet is being edited
+                {editTweetId === tweet._id ? (
                   <Flex justifyContent="space-between" mb={2}>
                     <Textarea
                       value={editTweetContent}
@@ -259,55 +247,6 @@ const PendingTweets = ({
                         Tweet exceeds 280 words
                       </FormErrorMessage>
                     )}
-                    <Tooltip
-                      label={
-                        !hasEditPermission()
-                          ? `You have to be the owner of the agent to edit it`
-                          : ''
-                      }
-                      hasArrow
-                      placement="top"
-                    >
-                      <Box
-                        as="span"
-                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
-                      >
-                        <Button
-                          size="sm"
-                          colorScheme="green"
-                          isDisabled={!hasEditPermission()}
-                          onClick={() => {
-                            handleSaveEdit(tweet._id, editTweetContent)
-                          }}
-                          mr={2}
-                        >
-                          Save
-                        </Button>
-                      </Box>
-                    </Tooltip>
-                    <Tooltip
-                      label={
-                        !hasEditPermission()
-                          ? `You have to be the owner of the agent to edit it`
-                          : ''
-                      }
-                      hasArrow
-                      placement="top"
-                    >
-                      <Box
-                        as="span"
-                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
-                      >
-                        <Button
-                          isDisabled={!hasEditPermission()}
-                          size="sm"
-                          colorScheme="blue"
-                          onClick={handleCancelEdit}
-                        >
-                          Cancel
-                        </Button>
-                      </Box>
-                    </Tooltip>
                   </Flex>
                 ) : (
                   <Flex justifyContent="space-between" mb={2}>
@@ -340,56 +279,31 @@ const PendingTweets = ({
                   </Flex>
                 )}
                 <Text fontSize="sm" color="#b0bec5" mb={2}>
-                  Generated on: {new Date(tweet.createdAt).toLocaleString()}
+                  Status: {tweet.postStatus || 'Pending'}
                 </Text>
+                {tweet.postStatus === 'Failed' && tweet.errorDetails && (
+                  <Text fontSize="sm" color="red.400" mb={2}>
+                    Error: {tweet.errorDetails}
+                  </Text>
+                )}
                 <Flex justifyContent="space-between" alignItems="center">
-                  <Tooltip
-                    label={
-                      !hasEditPermission()
-                        ? `You have to be the owner of the agent to edit it`
-                        : ''
-                    }
-                    hasArrow
-                    placement="top"
+                  <Button
+                    size="sm"
+                    isDisabled={!hasEditPermission()}
+                    colorScheme="red"
+                    onClick={() => handleDiscardTweet(tweet._id)}
+                    leftIcon={<FiTrash2 />}
                   >
-                    <Box
-                      as="span"
-                      cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
-                    >
-                      <Button
-                        size="sm"
-                        isDisabled={!hasEditPermission()}
-                        colorScheme="red"
-                        onClick={() => handleDiscardTweet(tweet._id)}
-                        leftIcon={<FiTrash2 />}
-                      >
-                        Discard
-                      </Button>
-                    </Box>
-                  </Tooltip>
-                  <Tooltip
-                    label={
-                      !hasEditPermission()
-                        ? `You have to be the owner of the agent to edit it`
-                        : ''
-                    }
-                    hasArrow
-                    placement="top"
+                    Discard
+                  </Button>
+                  <Button
+                    size="sm"
+                    isDisabled={!hasEditPermission()}
+                    colorScheme="green"
+                    onClick={() => handleApproveTweet(tweet)}
                   >
-                    <Box
-                      as="span"
-                      cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
-                    >
-                      <Button
-                        size="sm"
-                        isDisabled={!hasEditPermission()}
-                        colorScheme="green"
-                        onClick={() => handleApproveTweet(tweet)}
-                      >
-                        Approve and Post
-                      </Button>
-                    </Box>
-                  </Tooltip>
+                    Approve and Post
+                  </Button>
                 </Flex>
               </Box>
             ))}

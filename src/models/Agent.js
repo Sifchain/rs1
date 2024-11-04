@@ -47,6 +47,14 @@ const AgentSchema = new mongoose.Schema({
           ref: 'Backroom', // Reference the Backroom model
         },
         createdAt: { type: Date, default: Date.now },
+        postStatus: {
+          type: String,
+          enum: ['Pending', 'Posted', 'Failed'],
+          default: 'Pending',
+        },
+        postTimestamp: { type: Date, default: null },
+        retryCount: { type: Number, default: 0 },
+        errorDetails: { type: String, default: '' },
       },
     ],
     default: [],
