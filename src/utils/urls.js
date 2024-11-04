@@ -1,12 +1,12 @@
 import {
   DEFAULT_RETRIES,
   DEFAULT_RETRY_DELAY,
-  URL,
+  BASE_URL,
   delay,
 } from '@/constants/constants'
 
-const getFullURL = (url, basePath) => {
-  return new URL(url, `${URL}`)?.href || ''
+const getFullURL = urlParams => {
+  return new URL(urlParams, `${BASE_URL}`)?.href || ''
 }
 
 const shortenURL = async fullURL => {

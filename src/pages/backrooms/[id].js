@@ -26,7 +26,7 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
-  URL,
+  BASE_URL,
 } from '@/constants/constants'
 import { useAccount } from '@/hooks/useMetaMask'
 import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
@@ -137,7 +137,7 @@ function BackroomDetail() {
 
   useEffect(() => {
     if (id) {
-      fetchWithRetries(URL + `/api/backrooms/${id}`)
+      fetchWithRetries(BASE_URL + `/api/backrooms/${id}`)
         .then(res => res.json())
         .then(data => {
           setBackroom(data)
@@ -284,6 +284,17 @@ function BackroomDetail() {
                 </Tag>
               ))}
             </Flex>
+            {/* Added Title Display */}
+            {backroom?.title?.length > 0 && (
+              <Flex wrap="wrap">
+                <Text fontSize="md" color="#b0bec5" mt={2}>
+                  <Text as="span" fontWeight="bold" color="#81d4fa">
+                    Topic:{' '}
+                  </Text>
+                  {backroom.title}
+                </Text>
+              </Flex>
+            )}
             {/* Added Backroom Type Display */}
             {backroom?.backroomType && (
               <Flex wrap="wrap">

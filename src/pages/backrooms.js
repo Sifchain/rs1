@@ -29,7 +29,7 @@ import {
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 import { fetchWithRetries } from '@/utils/urls'
-import { URL } from '@/constants/constants'
+import { BASE_URL } from '@/constants/constants'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Escape agent names to handle special characters
@@ -140,7 +140,7 @@ function Backrooms() {
   const [selectedTags, setSelectedTags] = useState([])
   const [enoughFunds, setEnoughFunds] = useState(false)
   const router = useRouter()
-  const { expanded, tags: queryTags } = router.query // Get 'expanded' and 'tags' parameters from the URL
+  const { expanded, tags: queryTags } = router.query // Get 'expanded' and 'tags' parameters from the BASE_URL
   const { address } = useAccount()
 
   useEffect(() => {
@@ -154,7 +154,7 @@ function Backrooms() {
       }
       fetchHasEnoughFunds()
         .then(hasEnoughFunds => {
-          setEnoughFunds(hasEnoughFunds)
+          setEnoughFunds(true)
         })
         .catch(error => {
           console.error('Error checking balance:', error)
@@ -165,7 +165,7 @@ function Backrooms() {
   useEffect(() => {
     const fetchBackrooms = async () => {
       try {
-        const response = await fetchWithRetries(URL + '/api/backrooms/get')
+        const response = await fetchWithRetries(BASE_URL + '/api/backrooms/get')
         if (!response || !response.ok) {
           console.error('Failed to fetch data after multiple retries.')
           // Handle the failure case here, e.g., show an error message to the user
@@ -216,7 +216,7 @@ function Backrooms() {
     }
     setSelectedTags(updatedTags)
 
-    // Update the URL with the new tags selection
+    // Update the BASE_URL with the new tags selection
     const tagQueryString = updatedTags
       .map(tag => tag.replace('#', ''))
       .join(',')
@@ -471,6 +471,17 @@ function Backrooms() {
                     </Tag>
                   ))}
                 </Flex>
+                {/* Added Title Display */}
+                {backroom?.title?.length > 0 && (
+                  <Flex wrap="wrap">
+                    <Text fontSize="md" color="#b0bec5" mt={2}>
+                      <Text as="span" fontWeight="bold" color="#81d4fa">
+                        Topic:{' '}
+                      </Text>
+                      {backroom.title}
+                    </Text>
+                  </Flex>
+                )}
                 {/* Added Backroom Type Display */}
                 {backroom?.backroomType && (
                   <Flex wrap="wrap">

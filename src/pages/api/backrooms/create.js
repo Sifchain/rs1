@@ -1,7 +1,7 @@
 import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
 import OpenAI from 'openai'
-import { getFullURL, shortenURL } from '@/utils/urls'
+import { getFullBASE_URL, shortenBASE_URL } from '@/utils/urls'
 import {
   OPENAI_MODEL,
   DEFAULT_HASHTAGS,
@@ -9,9 +9,14 @@ import {
 } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
 import { connectDB } from '@/utils/db'
+import { getParsedOpenAIResponse } from '@/utils/ai'
+import { z } from 'zod'
 
 // TODO: implement this across all routes in a generic way that deployments don't fail
 // const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+const TitleSchema = z.object({
+  title: z.string(),
+})
 
 export default async function handler(req, res) {
   // const origin = req.headers.origin || req.headers.referer || 'same-origin'
@@ -69,7 +74,7 @@ export default async function handler(req, res) {
       let responderMessageHistory = [
         await interactionStage.generateResponderSystemPrompt(),
       ]
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 1; i++) {
         // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         // Generate explorer response using the current InteractionStage state + update state
         const explorerMessage = await interactionStage.generateExplorerMessage()
@@ -108,12 +113,27 @@ export default async function handler(req, res) {
         max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
-
       const generatedHashtags =
         hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
       // To get a concise summary 1-2 sentences prompts
       const snippetContent = conversationContent.slice(0, 150) + '...'
 
+      // Generate title for the backroom conversation
+      const titlePrompt = `Generate a captivating, pithy title that if someone scrolled across would want to read more. Please use the backroom conversation content:\n\n${conversationContent}. Limit it to 1-10 words.`
+      let title = ''
+      // Generate title for the backroom conversation
+      try {
+        const parsedResponse = await getParsedOpenAIResponse(
+          titlePrompt,
+          TitleSchema
+        )
+        title = parsedResponse.title
+        console.log('Full Parsed Response:', parsedResponse)
+      } catch (error) {
+        console.error('Error fetching interaction data:', error)
+      }
+
+      // Generate a summary
       // Create and save the new backroom entry
       const newBackroom = new Backroom({
         role,
@@ -128,6 +148,7 @@ export default async function handler(req, res) {
         createdAt: Date.now(),
         backroomType,
         topic,
+        title,
       })
 
       await newBackroom.save()
@@ -206,11 +227,11 @@ Your task is to synthesize this information into a cohesive evolution summary th
       explorer.evolutions.push(newEvolution)
       await explorer.save()
 
-      const fullBackroomURL = getFullURL(
+      const fullBackroomBASE_URL = getFullBASE_URL(
         `/backrooms/${newBackroom._id}`,
         `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
       )
-      const shortenedUrl = await shortenURL(fullBackroomURL)
+      const shortenedUrl = await shortenBASE_URL(fullBackroomBASE_URL)
 
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `

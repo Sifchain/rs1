@@ -36,14 +36,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const {
-        name,
-        user,
-        conversationPrompt,
-        recapPrompt,
-        description,
-        tweetPrompt,
-      } = req.body
+      const { name, user, description } = req.body
 
       if (!name || !description) {
         return res
@@ -55,10 +48,7 @@ export default async function handler(req, res) {
       const newAgent = new Agent({
         name,
         user,
-        conversationPrompt,
-        recapPrompt,
         description,
-        tweetPrompt,
         originalDescription: description,
       })
       await newAgent.save()
