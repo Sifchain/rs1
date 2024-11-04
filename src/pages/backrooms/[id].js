@@ -134,7 +134,6 @@ function BackroomDetail() {
   const { id } = router.query
   const [backroom, setBackroom] = useState(null)
   const [loading, setLoading] = useState(true)
-
   useEffect(() => {
     if (id) {
       fetchWithRetries(BASE_URL + `/api/backrooms/${id}`)
@@ -285,7 +284,7 @@ function BackroomDetail() {
               ))}
             </Flex>
             {/* Added Title Display */}
-            {backroom?.title?.length > 0 && (
+            {backroom?.title > 0 && (
               <Flex wrap="wrap">
                 <Text fontSize="md" color="#b0bec5" mt={2}>
                   <Text as="span" fontWeight="bold" color="#81d4fa">

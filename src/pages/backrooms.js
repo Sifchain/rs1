@@ -154,7 +154,7 @@ function Backrooms() {
       }
       fetchHasEnoughFunds()
         .then(hasEnoughFunds => {
-          setEnoughFunds(true)
+          setEnoughFunds(hasEnoughFunds)
         })
         .catch(error => {
           console.error('Error checking balance:', error)

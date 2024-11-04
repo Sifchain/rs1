@@ -1,7 +1,7 @@
 import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
 import OpenAI from 'openai'
-import { getFullBASE_URL, shortenBASE_URL } from '@/utils/urls'
+import { getFullURL, shortenURL } from '@/utils/urls'
 import {
   OPENAI_MODEL,
   DEFAULT_HASHTAGS,
@@ -152,7 +152,7 @@ export default async function handler(req, res) {
       })
 
       await newBackroom.save()
-
+      console.log('New Backroom:', newBackroom)
       // Generate an evolution summary for the explorer agent
       const recapPrompt = `
 System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
@@ -226,13 +226,14 @@ Your task is to synthesize this information into a cohesive evolution summary th
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
-
-      const fullBackroomBASE_URL = getFullBASE_URL(
-        `/backrooms/${newBackroom._id}`,
-        `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
-      )
-      const shortenedUrl = await shortenBASE_URL(fullBackroomBASE_URL)
-
+      let shortenedUrl = ''
+      try {
+        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
+        shortenedUrl = await shortenURL(fullBackroomURL)
+      } catch (error) {
+        console.error('Error shortening URL:', error)
+        shortenedUrl = fullBackroomURL // Fallback to the full URL
+      }
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
 Context: You are ${explorer.name}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
