@@ -239,10 +239,33 @@ function Agents() {
     setEditMode(true)
   }
 
-  const handleTwitterAuth = () => {
-    return true
-  }
+  // Handle Twitter OAuth flow
+  const handleTwitterAuth = async () => {
+    if (!agentId) {
+      console.error('Agent ID is required before linking Twitter account')
+      return
+    }
 
+    try {
+      const response = await fetchWithRetries(
+        BASE_URL + `/api/auth/twitter?agentId=${agentId}`
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
+      const data = await response.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        console.error('No URL returned from /api/auth/twitter')
+      }
+    } catch (error) {
+      console.error('Error during Twitter OAuth:', error)
+    }
+  }
+  console.log('selectedAgent', selectedAgent)
   const handleValidation = () => {
     let valid = true
     let errors = {}
@@ -1042,7 +1065,9 @@ function Agents() {
                           isDisabled={!hasEditPermission()}
                           pointerEvents={hasEditPermission() ? 'auto' : 'none'}
                         >
-                          Link X
+                          {selectedAgent?.twitterAuthState?.status != ''
+                            ? 'Update X'
+                            : 'Link X'}
                         </Button>
                         <Button
                           onClick={
