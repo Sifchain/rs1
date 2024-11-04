@@ -265,7 +265,7 @@ function Agents() {
       console.error('Error during Twitter OAuth:', error)
     }
   }
-  console.log('selectedAgent', selectedAgent)
+
   const handleValidation = () => {
     let valid = true
     let errors = {}
@@ -1065,9 +1065,7 @@ function Agents() {
                           isDisabled={!hasEditPermission()}
                           pointerEvents={hasEditPermission() ? 'auto' : 'none'}
                         >
-                          {selectedAgent?.twitterAuthState?.status != ''
-                            ? 'Update X'
-                            : 'Link X'}
+                          Link X
                         </Button>
                         <Button
                           onClick={
