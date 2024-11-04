@@ -33,8 +33,11 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   DESCRIPTION_TEMPLATE,
+  BASE_URL,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
+import LoadingOverlay from '../components/LoadingOverlay'
+import { fetchWithRetries } from '@/utils/urls'
 
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
@@ -50,36 +53,43 @@ function CreateAgent() {
 
   const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: false })
+
   const onGenerateDescription = async (isRandom, desc) => {
     try {
       // Show loading state
       setDescription('Generating description...')
 
-      const response = await fetch('/api/agent/generate-description', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: agentName ?? '',
-          description: desc ?? '', // Pass current description if it exists
-          isRandom,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      const response = await fetchWithRetries(
+        URL + '/api/agent/generate-description',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: agentName ?? '',
+            description: desc ?? '', // Pass current description if it exists
+            isRandom,
+          }),
+        }
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        setDescription(desc)
+        return
       }
 
       const data = await response.json()
 
       // Update the description field with the generated content
       setDescription(data.description)
+      setAgentName(data.name)
     } catch (error) {
       console.error('Error generating description:', error)
       // Restore previous description if there was an error
       if (description === 'Generating description...') {
-        setDescription('')
+        setDescription(desc)
       }
       // Could add error toast/alert here
     }
@@ -151,7 +161,7 @@ function CreateAgent() {
 
         const user = JSON.parse(localStorage.getItem('user'))
         const userId = user ? user._id : null
-        const response = await fetch('/api/agents', {
+        const response = await fetchWithRetries(URL + '/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -160,13 +170,12 @@ function CreateAgent() {
             user: userId,
           }),
         })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error('Failed to create agent')
+        if (!response || !response.ok) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
         }
-
+        const data = await response.json()
         setAgentId(data._id)
         setLoadingStep(3)
       }, 2000)
@@ -184,7 +193,14 @@ function CreateAgent() {
     }
 
     try {
-      const response = await fetch(`/api/auth/twitter?agentId=${agentId}`)
+      const response = await fetchWithRetries(
+        URL + `/api/auth/twitter?agentId=${agentId}`
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       if (data.url) {
         window.location.href = data.url
@@ -243,7 +259,7 @@ function CreateAgent() {
                     Name
                   </Text>
                   <Input
-                    placeholder="Enter agent name"
+                    placeholder="  Enter agent name  "
                     value={agentName}
                     onChange={e => setAgentName(e.target.value)}
                     bg="#424242"
@@ -290,7 +306,7 @@ function CreateAgent() {
                   </Collapse>
                   <Textarea
                     mt={4}
-                    placeholder="Describe your agent... (Use the template above or create your own format)"
+                    placeholder="  Describe your agent... (Use the template above or create your own format) "
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={6}
@@ -381,14 +397,7 @@ function CreateAgent() {
           )}
 
           {loadingStep > 0 && loadingStep < 3 && (
-            <Box textAlign="center" mt={6}>
-              <Spinner size="xl" color="blue.500" />
-              <Heading fontSize={{ base: 'md', md: 'lg' }} mt={4}>
-                {loadingStep === 1
-                  ? 'Contacting Spiral Reality AI...'
-                  : 'Validating Agent Details...'}
-              </Heading>
-            </Box>
+            <LoadingOverlay loading={loadingStep} />
           )}
 
           {loadingStep === 3 && (

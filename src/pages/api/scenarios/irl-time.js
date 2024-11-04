@@ -1,18 +1,9 @@
 import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
-import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { TwitterApi } from 'twitter-api-v2'
 import { OPENAI_MODEL } from '../../../constants/constants'
-
-// Connect to MongoDB
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return
-  return mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-}
+import { connectDB } from '@/utils/db'
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 

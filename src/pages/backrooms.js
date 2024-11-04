@@ -28,6 +28,8 @@ import {
   backroomTypes,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
+import { fetchWithRetries } from '@/utils/urls'
+import { BASE_URL } from '@/constants/constants'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Escape agent names to handle special characters
@@ -59,11 +61,19 @@ const parseConversationByAgents = (content, agentOne, agentTwo) => {
 }
 
 // Component to render each message bubble
-const UserBubble = ({ username, message, colorScheme, icon: Icon }) => (
+const UserBubble = ({
+  username,
+  message,
+  colorScheme = {
+    iconColor: 'gray.500',
+    bgColor: 'gray.700',
+    borderColor: 'gray.500',
+  },
+  icon: Icon,
+}) => (
   <Box mb={4} maxW="100%" alignSelf="flex-start">
     <Flex alignItems="center" mb={2}>
-      <Icon color={colorScheme.iconColor} />{' '}
-      {/* Use the icon passed in as a prop */}
+      <Icon color={colorScheme.iconColor} />
       <Text fontWeight="bold" ml={2} color="#e0e0e0">
         {username}
       </Text>
@@ -130,7 +140,7 @@ function Backrooms() {
   const [selectedTags, setSelectedTags] = useState([])
   const [enoughFunds, setEnoughFunds] = useState(false)
   const router = useRouter()
-  const { expanded, tags: queryTags } = router.query // Get 'expanded' and 'tags' parameters from the URL
+  const { expanded, tags: queryTags } = router.query // Get 'expanded' and 'tags' parameters from the BASE_URL
   const { address } = useAccount()
 
   useEffect(() => {
@@ -155,19 +165,16 @@ function Backrooms() {
   useEffect(() => {
     const fetchBackrooms = async () => {
       try {
-        const response = await fetch('/api/backrooms/get')
+        const response = await fetchWithRetries(BASE_URL + '/api/backrooms/get')
+        if (!response || !response.ok) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
         const data = await response.json()
-
-        // Ensure each backroom has a snippet if not, generate from the content
-        const updatedBackrooms = data.map(backroom => ({
-          ...backroom,
-          snippet: backroom.snippet || backroom.content.slice(0, 100) + '...', // Trim content if no snippet is available
-        }))
-
-        setBackrooms(updatedBackrooms)
-
+        setBackrooms(data)
         // Handle tags and expanded states as before
-        const tagCounts = updatedBackrooms
+        const tagCounts = (data ?? [])
           .flatMap(backroom => backroom.tags || [])
           .reduce((counts, tag) => {
             counts[tag] = (counts[tag] || 0) + 1
@@ -181,9 +188,7 @@ function Backrooms() {
         setTags(sortedTags)
 
         if (expanded) {
-          const index = updatedBackrooms.findIndex(
-            backroom => backroom._id === expanded
-          )
+          const index = data.findIndex(backroom => backroom._id === expanded)
           if (index !== -1) setExpandedIndex(index)
         }
 
@@ -205,20 +210,20 @@ function Backrooms() {
   const handleTagSelection = tag => {
     let updatedTags = [...selectedTags]
     if (updatedTags.includes(tag)) {
-      updatedTags = updatedTags.filter(t => t !== tag) // Remove tag if already selected
+      updatedTags = updatedTags?.filter(t => t !== tag) // Remove tag if already selected
     } else {
       updatedTags.push(tag) // Add tag if not selected
     }
     setSelectedTags(updatedTags)
 
-    // Update the URL with the new tags selection
+    // Update the BASE_URL with the new tags selection
     const tagQueryString = updatedTags
       .map(tag => tag.replace('#', ''))
       .join(',')
     router.push(`/backrooms?tags=${tagQueryString}`)
   }
 
-  const filteredBackrooms = backrooms.filter(backroom => {
+  const filteredBackrooms = backrooms?.filter(backroom => {
     const agentMatch =
       selectedAgent === '' || backroom.explorerAgentName === selectedAgent
     const tagMatch =
@@ -234,7 +239,7 @@ function Backrooms() {
   })
 
   const handleShare = backroomId => {
-    const shareUrl = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const shareUrl = `${window.location.origin}/backrooms/${backroomId}`
     if (navigator.share) {
       navigator
         .share({
@@ -251,7 +256,7 @@ function Backrooms() {
   }
 
   const handleCopyToClipboard = backroomId => {
-    const link = `${window.location.origin}/backrooms?expanded=${backroomId}`
+    const link = `${window.location.origin}/backrooms/${backroomId}`
     navigator.clipboard.writeText(link).then(() => {
       alert('Link copied to clipboard!')
     })
@@ -408,6 +413,16 @@ function Backrooms() {
                       >
                         {backroom.responderAgentName}
                       </Link>
+                      {backroom?.title && (
+                        <Text
+                          ms={2}
+                          as="span"
+                          fontWeight="bold"
+                          color="#81d4fa"
+                        >
+                          {backroom.title}
+                        </Text>
+                      )}
                     </Text>
                   </Box>
 
@@ -438,36 +453,18 @@ function Backrooms() {
                       size="sm"
                       colorScheme="blue"
                       variant="outline"
-                      onClick={() =>
-                        setExpandedIndex(expandedIndex === index ? null : index)
-                      }
+                      onClick={() => {
+                        router.push(`/backrooms/${backroom._id}`)
+                      }}
                     >
-                      {expandedIndex === index
-                        ? 'Collapse'
-                        : 'View Full Conversation'}
+                      View Full Conversation
                     </Button>
                   </Flex>
                 </Flex>
-
-                <Text fontSize="sm" color="#b0bec5" mb={2}>
+                <Text fontSize="sm" color="#b0bec5">
                   {new Date(backroom.createdAt).toLocaleDateString()} at{' '}
                   {new Date(backroom.createdAt).toLocaleTimeString()}
                 </Text>
-
-                <Flex wrap="wrap">
-                  {backroom.tags.map((tag, tagIndex) => (
-                    <Tag
-                      size="md"
-                      key={tagIndex}
-                      m={1}
-                      cursor="pointer"
-                      colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
-                      onClick={() => handleTagSelection(tag)}
-                    >
-                      <TagLabel>{tag}</TagLabel>
-                    </Tag>
-                  ))}
-                </Flex>
                 {/* Added Backroom Type Display */}
                 {backroom?.backroomType && (
                   <Flex wrap="wrap">
@@ -484,7 +481,7 @@ function Backrooms() {
                 {/* Added Topic Display */}
                 {backroom?.topic && (
                   <Flex wrap="wrap">
-                    <Text fontSize="md" color="#b0bec5" mt={2}>
+                    <Text fontSize="md" color="#b0bec5" mt={1}>
                       <Text as="span" fontWeight="bold" color="#81d4fa">
                         Topic:{' '}
                       </Text>
@@ -492,17 +489,20 @@ function Backrooms() {
                     </Text>
                   </Flex>
                 )}
-                {/* Collapse component for full conversation */}
-                <Collapse in={expandedIndex === index} animateOpacity>
-                  <Box mt={4}>
-                    <BackroomConversation
-                      conversationContent={backroom.content}
-                      agentOne={backroom.explorerAgentName}
-                      agentTwo={backroom.responderAgentName}
-                      isExpanded={expandedIndex === index}
-                    />
-                  </Box>
-                </Collapse>
+                <Flex wrap="wrap">
+                  {backroom.tags.map((tag, tagIndex) => (
+                    <Tag
+                      size="md"
+                      key={tagIndex}
+                      m={1}
+                      cursor="pointer"
+                      colorScheme={selectedTags.includes(tag) ? 'blue' : 'gray'}
+                      onClick={() => handleTagSelection(tag)}
+                    >
+                      <TagLabel>{tag}</TagLabel>
+                    </Tag>
+                  ))}
+                </Flex>
               </Box>
             ))
           ) : (

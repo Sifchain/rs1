@@ -20,8 +20,9 @@ import {
   List,
   ListItem,
   Collapse,
+  useClipboard,
 } from '@chakra-ui/react'
-import { ArrowBackIcon } from '@chakra-ui/icons'
+import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
 import { useState, useEffect, useCallback } from 'react'
 import Navigation from '../components/Navigation'
 import withMetaMaskCheck from '../components/withMetaMaskCheck'
@@ -32,8 +33,12 @@ import {
   MINIMUM_TOKENS_TO_CREATE_AGENT,
   TOKEN_CONTRACT_ADDRESS,
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
+  DESCRIPTION_TEMPLATE,
+  BASE_URL,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
+import { FiCopy } from 'react-icons/fi'
+import { fetchWithRetries } from '@/utils/urls'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -46,6 +51,7 @@ function Agents() {
   const [errors, setErrors] = useState({})
   const router = useRouter()
   const { agentId } = router.query
+  const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
 
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
@@ -98,11 +104,16 @@ function Agents() {
   // Fetch agents
   const fetchAgents = async () => {
     try {
-      const response = await fetch('/api/agents')
+      const response = await fetchWithRetries(BASE_URL + '/api/agents')
+      if (!response) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setAgents(data)
 
-      // Automatically select agent if agentId is in the URL
+      // Automatically select agent if agentId is in the BASE_URL
       if (agentId) {
         selectAgentById(agentId, data)
         const agent = data.find(agent => agent._id === agentId)
@@ -134,7 +145,14 @@ function Agents() {
   // Fetch recent conversations for the selected agent
   const fetchRecentConversations = async agent => {
     try {
-      const response = await fetch(`/api/backrooms/get?agentId=${agent._id}`)
+      const response = await fetchWithRetries(
+        BASE_URL + `/api/backrooms/get?agentId=${agent._id}`
+      )
+      if (!response) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setRecentBackroomConversations(data)
     } catch (error) {
@@ -148,7 +166,12 @@ function Agents() {
 
   const fetchBackrooms = async () => {
     try {
-      const response = await fetch('/api/backrooms/get')
+      const response = await fetchWithRetries(BASE_URL + '/api/backrooms/get')
+      if (!response) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setBackrooms(data)
     } catch (error) {
@@ -173,7 +196,14 @@ function Agents() {
 
       // Fetch and process backroom conversations
       try {
-        const response = await fetch(`/api/backrooms/get?agentId=${agent?._id}`)
+        const response = await fetchWithRetries(
+          BASE_URL + `/api/backrooms/get?agentId=${agent?._id}`
+        )
+        if (!response) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
         const data = await response.json()
 
         // Filter relevant conversations
@@ -185,7 +215,7 @@ function Agents() {
         setRecentBackroomConversations(filteredConversations)
 
         // Process and set unique tags
-        const tagsFromConversations = filteredConversations.flatMap(
+        const tagsFromConversations = (filteredConversations ?? []).flatMap(
           backroom => backroom?.tags || []
         )
         setBackroomTags(Array.from(new Set(tagsFromConversations)))
@@ -243,7 +273,7 @@ function Agents() {
   const handleUpdateAgent = async () => {
     if (!handleValidation()) return
     try {
-      const response = await fetch(`/api/agents`, {
+      const response = await fetchWithRetries(BASE_URL + `/api/agents`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -255,8 +285,10 @@ function Agents() {
           userId: JSON.parse(localStorage.getItem('user')),
         }),
       })
-      if (!response.ok) {
-        throw new Error('Failed to update agent')
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
       }
       const agent = await response.json()
       const updatedAgent = {
@@ -322,7 +354,7 @@ function Agents() {
               <Text fontWeight="bold" mb={1}>
                 <Link
                   color="#81d4fa"
-                  href={`/backrooms?expanded=${evolution?.backroomId}`}
+                  href={`/backrooms/${evolution?.backroomId}`}
                 >
                   View Backroom
                 </Link>
@@ -359,7 +391,7 @@ function Agents() {
         boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
         mb={3}
         cursor="pointer"
-        onClick={() => router.push(`/backrooms?expanded=${backroom?._id}`)}
+        onClick={() => router.push(`/backrooms/${backroom?._id}`)}
       >
         <Text
           as="a"
@@ -386,16 +418,24 @@ function Agents() {
   const handleDiscardTweet = async tweetId => {
     if (window.confirm('Are you sure you want to discard this tweet?')) {
       try {
-        const response = await fetch('/api/twitter/discardTweet', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            agentId: selectedAgent._id,
-            tweetId,
-          }),
-        })
+        const response = await fetchWithRetries(
+          BASE_URL + '/api/twitter/discardTweet',
+          {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              agentId: selectedAgent._id,
+              tweetId,
+            }),
+          }
+        )
+        if (!response || !response.ok) {
+          console.error('Failed to fetch data after multiple retries.')
+          // Handle the failure case here, e.g., show an error message to the user
+          return
+        }
         if (response.ok) {
           const data = await response.json()
           setSelectedAgent(data.agent)
@@ -432,16 +472,24 @@ function Agents() {
 
   const handleApproveTweet = async tweet => {
     try {
-      const response = await fetch('/api/twitter/approveTweet', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          agentId: selectedAgent._id,
-          tweetId: tweet._id,
-        }),
-      })
+      const response = await fetchWithRetries(
+        BASE_URL + '/api/twitter/approveTweet',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: selectedAgent._id,
+            tweetId: tweet._id,
+          }),
+        }
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       if (response.ok) {
         const data = await response.json()
         setSelectedAgent(data.agent)
@@ -477,17 +525,25 @@ function Agents() {
 
   const handleSaveEdit = async (tweetId, promptValue) => {
     try {
-      const response = await fetch('/api/twitter/editTweet', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          agentId: selectedAgent._id,
-          tweetId,
-          tweetContent: promptValue,
-        }),
-      })
+      const response = await fetchWithRetries(
+        BASE_URL + '/api/twitter/editTweet',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: selectedAgent._id,
+            tweetId,
+            tweetContent: promptValue,
+          }),
+        }
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       if (response.ok) {
         const data = await response.json()
         setEditTweetId(null) // Clear edit state
@@ -719,6 +775,44 @@ function Agents() {
       )
     )
   }
+  const onGenerateDescription = async (isRandom, desc) => {
+    try {
+      // Show loading state
+      setDescription('Generating description...')
+
+      const response = await fetchWithRetries(
+        BASE_URL + '/api/agent/generate-description',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: agentName ?? '',
+            description: desc ?? '', // Pass current description if it exists
+            isRandom,
+          }),
+        }
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
+      const data = await response.json()
+
+      // Update the description field with the generated content
+      setDescription(data.description)
+    } catch (error) {
+      console.error('Error generating description:', error)
+      // Restore previous description if there was an error
+      if (description === 'Generating description...') {
+        setDescription('')
+      }
+      // Could add error toast/alert here
+    }
+  }
+
   return (
     <ChakraProvider>
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
@@ -736,87 +830,99 @@ function Agents() {
               fontSize={{ base: '3xl', md: '4xl' }}
               color="#81d4fa"
               fontFamily="'Arial', sans-serif"
+              mb={2}
             >
               Agents
             </Heading>
 
-            <Flex
-              direction={{ base: 'column', md: 'row' }}
-              alignItems="center"
-              justifyContent="center"
-              width="100%"
-              gap={{ base: 2, md: 4 }}
-            >
-              <Select
-                placeholder={
-                  selectedAgent == null ? 'Select Agent' : selectedAgent?.name
-                }
-                onChange={handleAgentSelection}
-                value={selectedAgent?.name}
+            {!editMode && (
+              <Flex
+                direction={{ base: 'column', md: 'row' }}
+                alignItems="center"
+                justifyContent="center"
                 width="100%"
-                maxW={{ base: '100%', md: '400px' }}
-                bg="#424242"
-                color="#e0e0e0"
-                border="1px solid #757575"
-                _hover={{ borderColor: '#81d4fa' }}
+                gap={{ base: 2, md: 4 }}
+                mb={2}
               >
-                {Array.isArray(agents) && agents.length > 0 ? (
-                  agents.map(agent => (
-                    <option key={agent?._id} value={agent?._id}>
-                      {agent?.name}
-                    </option>
-                  ))
-                ) : (
-                  <option disabled>No agents available</option>
-                )}
-              </Select>
+                <Select
+                  placeholder={
+                    selectedAgent == null ? 'Select Agent' : selectedAgent?.name
+                  }
+                  onChange={handleAgentSelection}
+                  value={selectedAgent?.name}
+                  width="100%"
+                  maxW={{ base: '100%', md: '400px' }}
+                  bg="#424242"
+                  color="#e0e0e0"
+                  border="1px solid #757575"
+                  _hover={{ borderColor: '#81d4fa' }}
+                >
+                  {Array.isArray(agents) && agents.length > 0 ? (
+                    agents.map(agent => (
+                      <option key={agent?._id} value={agent?._id}>
+                        {agent?.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No agents available</option>
+                  )}
+                </Select>
 
-              <Tooltip
-                label={
-                  !enoughFunds
-                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RSP to create a new agent.`
-                    : ''
-                }
-                hasArrow
-                placement="top"
-              >
-                <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
-                  <Button
-                    onClick={() => router.push('/create-agent')}
-                    colorScheme="blue"
-                    size="md"
-                    fontWeight="bold"
-                    isDisabled={!enoughFunds}
-                    width={{ base: '100%', md: 'auto' }}
+                <Tooltip
+                  label={
+                    !enoughFunds
+                      ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_AGENT} RSP to create a new agent.`
+                      : ''
+                  }
+                  hasArrow
+                  placement="top"
+                >
+                  <Box
+                    as="span"
+                    cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
-                    + New Agent
-                  </Button>
-                </Box>
-              </Tooltip>
+                    <Button
+                      onClick={() => router.push('/create-agent')}
+                      colorScheme="blue"
+                      size="md"
+                      fontWeight="bold"
+                      isDisabled={!enoughFunds}
+                      width={{ base: '100%', md: 'auto' }}
+                    >
+                      + New Agent
+                    </Button>
+                  </Box>
+                </Tooltip>
 
-              <Tooltip
-                label={
-                  !enoughFunds
-                    ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
-                    : ''
-                }
-                hasArrow
-                placement="top"
-              >
-                <Box as="span" cursor={enoughFunds ? 'pointer' : 'not-allowed'}>
-                  <Button
-                    onClick={handleCreateBackroom}
-                    isDisabled={!enoughFunds}
-                    colorScheme="green"
-                    width={{ base: '100%', md: 'auto' }}
+                <Tooltip
+                  label={
+                    !enoughFunds
+                      ? `You need at least ${MINIMUM_TOKENS_TO_CREATE_BACKROOM} RSP to create a new backroom.`
+                      : ''
+                  }
+                  hasArrow
+                  placement="top"
+                >
+                  <Box
+                    as="span"
+                    cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
-                    Create Backroom
-                  </Button>
-                </Box>
-              </Tooltip>
-            </Flex>
+                    <Button
+                      onClick={handleCreateBackroom}
+                      isDisabled={!enoughFunds}
+                      colorScheme="green"
+                      width={{ base: '100%', md: 'auto' }}
+                    >
+                      Create Backroom
+                    </Button>
+                  </Box>
+                </Tooltip>
+              </Flex>
+            )}
           </Flex>
-
+          {selectedAgent?.pendingTweets?.length > 0
+            ? displayPendingTweets()
+            : null}
           {/* Agent details */}
           {selectedAgent && !editMode && (
             <VStack spacing={6} align="stretch" mt={8}>
@@ -841,8 +947,8 @@ function Agents() {
                       </Text>
                       <Collapse in={isDescriptionExpanded} startingHeight={200}>
                         {handleParseDescription(
-                          selectedAgent.originalDescription ||
-                            selectedAgent.description ||
+                          selectedAgent.description ||
+                            selectedAgent.originalDescription ||
                             'No description provided'
                         ).map((section, index) => (
                           <Box key={index} mt={4}>
@@ -1021,7 +1127,134 @@ function Agents() {
               </Box>
             </VStack>
           )}
+          {selectedAgent && editMode && (
+            <VStack spacing={6} align="stretch">
+              <Box
+                p={4}
+                bg="#424242"
+                borderRadius="lg"
+                border="2px solid #757575"
+                boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+              >
+                <Flex justifyContent="space-between" alignItems="center" mb={5}>
+                  {/* Back Button */}
+                  <Button
+                    leftIcon={<ArrowBackIcon />}
+                    colorScheme="blue"
+                    onClick={() => router.push('/agents')}
+                  >
+                    Back
+                  </Button>
 
+                  {/* Center-aligned heading */}
+                  <Heading
+                    textAlign="center"
+                    fontSize="4xl"
+                    color="#81d4fa"
+                    fontFamily="'Arial', sans-serif"
+                    flex="1"
+                  >
+                    Edit Agent Details
+                  </Heading>
+
+                  {/* Spacer to keep the heading centered */}
+                  <Box width="60px" />
+                </Flex>
+                {/* Name */}
+                <FormControl isInvalid={errors.agentName}>
+                  <Flex alignItems="center" mb={4}>
+                    {/* Label */}
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#81d4fa"
+                    >
+                      Name:
+                    </Text>
+                    {/* Input */}
+                    <Input
+                      placeholder="Name"
+                      value={agentName}
+                      onChange={e => setAgentName(e.target.value)}
+                      bg="#424242"
+                      color="#e0e0e0"
+                      border="2px solid"
+                      borderColor={errors.agentName ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
+                    />
+                  </Flex>
+                  {errors.agentName && (
+                    <FormErrorMessage mb={4}>
+                      {errors.agentName}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
+                {/* Description */}
+                <FormControl isInvalid={errors.description}>
+                  <Flex alignItems="center" mb={4}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      minWidth="150px"
+                      color="#81d4fa"
+                    >
+                      Description:
+                    </Text>
+                    <Textarea
+                      placeholder="Description"
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      bg="#424242"
+                      color="#e0e0e0"
+                      border="2px solid"
+                      borderColor={errors.description ? 'red.500' : '#757575'}
+                      _hover={{ borderColor: '#81d4fa' }}
+                      minHeight="500px"
+                      p={4}
+                    />
+                  </Flex>
+                  {errors.description && (
+                    <FormErrorMessage mb={4}>
+                      {errors.description}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
+                <Flex wrap="wrap" gap={2} mt={4} justifyContent="end">
+                  <Button
+                    onClick={() => onGenerateDescription(false, description)}
+                    variant="solid"
+                    colorScheme="blue"
+                    leftIcon={<RepeatIcon />}
+                    mb={2}
+                  >
+                    Generate Description
+                  </Button>
+                  <Button
+                    onClick={() => onGenerateDescription(true, description)}
+                    variant="solid"
+                    colorScheme="purple"
+                    leftIcon={<StarIcon />}
+                    mb={2}
+                  >
+                    I'm feeling lucky
+                  </Button>
+                  <Button
+                    onClick={onCopy}
+                    variant="outline"
+                    colorScheme="blue"
+                    leftIcon={<FiCopy />}
+                    mb={2}
+                  >
+                    Copy Template
+                  </Button>
+                  <Button colorScheme="blue" onClick={handleUpdateAgent}>
+                    Update Agent
+                  </Button>
+                </Flex>
+              </Box>
+            </VStack>
+          )}
           {loading && (
             <Flex justifyContent="center" mt={4}>
               <Text>Loading agents...</Text>

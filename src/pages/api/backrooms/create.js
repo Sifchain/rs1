@@ -1,6 +1,5 @@
 import Backroom from '../../../models/Backroom'
 import Agent from '../../../models/Agent'
-import mongoose from 'mongoose'
 import OpenAI from 'openai'
 import { getFullURL, shortenURL } from '@/utils/urls'
 import {
@@ -9,30 +8,27 @@ import {
   MAX_TOKENS,
 } from '../../../constants/constants'
 import { InteractionStage } from '@/utils/InteractionStage'
+import { connectDB } from '@/utils/db'
+import { getParsedOpenAIResponse } from '@/utils/ai'
+import { z } from 'zod'
 
-mongoose.set('strictQuery', false)
-
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return
-  return mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-}
-
-const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+// TODO: implement this across all routes in a generic way that deployments don't fail
+// const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+const TitleSchema = z.object({
+  title: z.string(),
+})
 
 export default async function handler(req, res) {
-  const origin = req.headers.origin || req.headers.referer || 'same-origin'
+  // const origin = req.headers.origin || req.headers.referer || 'same-origin'
 
-  const isAllowed =
-    allowedOrigins.some(pattern => pattern.test(origin)) ||
-    process.env.NODE_ENV === 'development' ||
-    origin === 'same-origin'
+  // const isAllowed =
+  //   allowedOrigins.some(pattern => pattern.test(origin)) ||
+  //   process.env.NODE_ENV === 'development' ||
+  //   origin === 'same-origin'
 
-  if (!isAllowed) {
-    return res.status(403).json({ error: 'Request origin not allowed' })
-  }
+  // if (!isAllowed) {
+  //   return res.status(403).json({ error: 'Request origin not allowed' })
+  // }
 
   await connectDB()
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -117,12 +113,27 @@ export default async function handler(req, res) {
         max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
-
       const generatedHashtags =
         hashtagResponse.choices[0].message.content.match(/#\w+/g) || []
       // To get a concise summary 1-2 sentences prompts
       const snippetContent = conversationContent.slice(0, 150) + '...'
 
+      // Generate title for the backroom conversation
+      const titlePrompt = `Generate a captivating, pithy title that if someone scrolled across would want to read more. Please use the backroom conversation content:\n\n${conversationContent}. Limit it to 1-10 words.`
+      let title = ''
+      // Generate title for the backroom conversation
+      try {
+        const parsedResponse = await getParsedOpenAIResponse(
+          titlePrompt,
+          TitleSchema
+        )
+        title = parsedResponse.title
+        console.log('Full Parsed Response:', parsedResponse)
+      } catch (error) {
+        console.error('Error fetching interaction data:', error)
+      }
+
+      // Generate a summary
       // Create and save the new backroom entry
       const newBackroom = new Backroom({
         role,
@@ -137,10 +148,11 @@ export default async function handler(req, res) {
         createdAt: Date.now(),
         backroomType,
         topic,
+        title,
       })
 
       await newBackroom.save()
-
+      console.log('New Backroom:', newBackroom)
       // Generate an evolution summary for the explorer agent
       const recapPrompt = `
 System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
@@ -214,13 +226,14 @@ Your task is to synthesize this information into a cohesive evolution summary th
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
-
-      const fullBackroomURL = getFullURL(
-        `/backrooms?expanded=${newBackroom._id}`,
-        `${req.headers['x-forwarded-proto'] || 'http'}://app.realityspiral.com`
-      )
-      const shortenedUrl = await shortenURL(fullBackroomURL)
-
+      let shortenedUrl = ''
+      try {
+        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
+        shortenedUrl = await shortenURL(fullBackroomURL)
+      } catch (error) {
+        console.error('Error shortening URL:', error)
+        shortenedUrl = fullBackroomURL // Fallback to the full URL
+      }
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
 Context: You are ${explorer.name}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
@@ -296,7 +309,8 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         temperature: 0.7,
       })
 
-      const tweetContent = tweetResponse.choices[0].message.content
+      const tweetContent = `${title ?? ''}
+      ${tweetResponse.choices[0].message?.content ?? ''}`
         .concat(` ${DEFAULT_HASHTAGS.join(' ')} `)
         .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
         .concat(` @reality_spiral`)

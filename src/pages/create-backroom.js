@@ -29,8 +29,11 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
+  BASE_URL,
 } from '../constants/constants'
 import { genIsBalanceEnough } from '../utils/balance'
+import LoadingOverlay from '../components/LoadingOverlay'
+import { fetchWithRetries } from '@/utils/urls'
 
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
@@ -49,31 +52,14 @@ function CreateBackroom() {
   const { address } = useAccount()
   const [topic, setTopic] = useState('')
 
-  const loadingMessages = [
-    'Processing',
-    'Analyzing',
-    'Connecting',
-    'Finalizing',
-    'Completing',
-  ]
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (loading) {
-        setCurrentMessageIndex(
-          prevIndex => (prevIndex + 1) % loadingMessages.length
-        )
-      }
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [loading])
-
-  const currentMessage = loadingMessages[currentMessageIndex]
-
   const fetchAgents = async () => {
     try {
-      const response = await fetch('/api/agents')
+      const response = await fetchWithRetries(BASE_URL + '/api/agents')
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       const data = await response.json()
       setAgents([...data])
     } catch (error) {
@@ -191,7 +177,7 @@ function CreateBackroom() {
     if (!handleValidation()) return
     setLoading(true)
     try {
-      const res = await fetch('/api/backrooms/create', {
+      const res = await fetchWithRetries(BASE_URL + '/api/backrooms/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,10 +190,14 @@ function CreateBackroom() {
           topic,
         }),
       })
-
+      if (!res || !res.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
       if (res.ok) {
         const newBackroom = await res.json()
-        router.push(`/backrooms?expanded=${newBackroom._id}`)
+        router.push(`/backrooms/${newBackroom._id}`)
       }
     } catch (error) {
       console.error('Error creating backroom:', error)
@@ -216,39 +206,9 @@ function CreateBackroom() {
     }
   }
 
-  const LoadingOverlay = () => (
-    <Box
-      position="fixed"
-      top="0"
-      left="0"
-      width="100%"
-      height="100%"
-      bg="rgba(0, 0, 0, 0.8)"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      flexDirection="column"
-      zIndex="1000"
-      color="#81d4fa"
-    >
-      <Spinner size="xl" thickness="4px" color="#81d4fa" mb={6} speed="0.8s" />
-      <Text
-        fontSize="2xl"
-        fontWeight="bold"
-        fontFamily="Arial, sans-serif"
-        mb={2}
-      >
-        {currentMessage}...
-      </Text>
-      <Text fontSize="md" color="#b0bec5">
-        Please wait while we process your request.
-      </Text>
-    </Box>
-  )
-
   return (
     <ChakraProvider>
-      {loading && <LoadingOverlay />}
+      {loading && <LoadingOverlay loading={loading} />}
       <SEO
         title="Reality Spiral - Create a Backroom"
         description="Welcome to Reality Spiral, a platform to create, explore, and connect with agents and backrooms in the digital dimension."
@@ -501,7 +461,7 @@ function CreateBackroom() {
                     <Tr
                       key={index}
                       as="a"
-                      href={`/backrooms?expanded=${evolution?.backroomId}`}
+                      href={`/backrooms/${evolution?.backroomId}`}
                       _hover={{ bg: '#333', textDecoration: 'none' }}
                       cursor="pointer"
                       bg={index % 2 === 0 ? '#2d2d2d' : '#424242'}
