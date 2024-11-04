@@ -317,7 +317,8 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         temperature: 0.7,
       })
 
-      const tweetContent = tweetResponse.choices[0].message.content
+      const tweetContent = `${title ?? ''}
+      ${tweetResponse.choices[0].message?.content ?? ''}`
         .concat(` ${DEFAULT_HASHTAGS.join(' ')} `)
         .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
         .concat(` @reality_spiral`)

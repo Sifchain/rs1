@@ -34,6 +34,7 @@ import {
 import { genIsBalanceEnough } from '../utils/balance'
 import LoadingOverlay from '../components/LoadingOverlay'
 import { fetchWithRetries } from '@/utils/urls'
+import { track } from '@vercel/analytics'
 
 function CreateBackroom() {
   const [explorerAgent, setExplorerAgent] = useState('')
@@ -176,6 +177,12 @@ function CreateBackroom() {
   const handleSubmit = async () => {
     if (!handleValidation()) return
     setLoading(true)
+    track('Submit Backroom Creation', {
+      explorerAgent,
+      responderAgent,
+      backroomType,
+      topicLength: topic.length,
+    })
     try {
       const res = await fetchWithRetries(BASE_URL + '/api/backrooms/create', {
         method: 'POST',
@@ -197,6 +204,7 @@ function CreateBackroom() {
       }
       if (res.ok) {
         const newBackroom = await res.json()
+        track('Backroom Created', { backroomId: newBackroom._id })
         router.push(`/backrooms/${newBackroom._id}`)
       }
     } catch (error) {

@@ -38,6 +38,7 @@ import {
 import { useAccount } from '../hooks/useMetaMask'
 import LoadingOverlay from '../components/LoadingOverlay'
 import { fetchWithRetries } from '@/utils/urls'
+import { track } from '@vercel/analytics'
 
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
@@ -60,7 +61,7 @@ function CreateAgent() {
       setDescription('Generating description...')
 
       const response = await fetchWithRetries(
-        URL + '/api/agent/generate-description',
+        BASE_URL + '/api/agent/generate-description',
         {
           method: 'POST',
           headers: {
@@ -152,7 +153,10 @@ function CreateAgent() {
 
   const handleSubmit = async () => {
     if (!handleValidation()) return
-
+    track('Submit Agent Creation', {
+      agentName,
+      description,
+    })
     setLoadingStep(1)
 
     try {
@@ -161,7 +165,7 @@ function CreateAgent() {
 
         const user = JSON.parse(localStorage.getItem('user'))
         const userId = user ? user._id : null
-        const response = await fetchWithRetries(URL + '/api/agents', {
+        const response = await fetchWithRetries(BASE_URL + '/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -194,7 +198,7 @@ function CreateAgent() {
 
     try {
       const response = await fetchWithRetries(
-        URL + `/api/auth/twitter?agentId=${agentId}`
+        BASE_URL + `/api/auth/twitter?agentId=${agentId}`
       )
       if (!response || !response.ok) {
         console.error('Failed to fetch data after multiple retries.')
@@ -335,7 +339,10 @@ function CreateAgent() {
                     Generate Description
                   </Button>
                   <Button
-                    onClick={() => onGenerateDescription(true, description)}
+                    onClick={() => {
+                      track('Feeling Lucky Description')
+                      onGenerateDescription(true, description)
+                    }}
                     variant="solid"
                     colorScheme="purple"
                     size="sm"
@@ -382,7 +389,10 @@ function CreateAgent() {
                   >
                     <Button
                       isDisabled={!enoughFunds}
-                      onClick={handleSubmit}
+                      onClick={() => {
+                        track('Create Agent', { name: agentName })
+                        handleSubmit()
+                      }}
                       colorScheme="blue"
                       width="100%"
                       mt={4}
@@ -442,7 +452,10 @@ function CreateAgent() {
                 </Alert>
               )}
               <Button
-                onClick={handleTwitterAuth}
+                onClick={() => {
+                  track('Link Twitter Account', { agentId })
+                  handleTwitterAuth()
+                }}
                 colorScheme="twitter"
                 width="100%"
                 size="md"
@@ -467,7 +480,10 @@ function CreateAgent() {
                   width="100%"
                 >
                   <Button
-                    onClick={handleCreateBackroom}
+                    onClick={() => {
+                      track('Create Backroom', { agentId })
+                      handleCreateBackroom()
+                    }}
                     isDisabled={!enoughFunds}
                     colorScheme="green"
                     width="100%"

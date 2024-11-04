@@ -40,6 +40,7 @@ import { useAccount } from '../hooks/useMetaMask'
 import { FiCopy } from 'react-icons/fi'
 import { fetchWithRetries } from '@/utils/urls'
 import PendingTweets from '@/components/PendingTweets'
+import { track } from '@vercel/analytics'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -221,6 +222,33 @@ function Agents() {
     setEditMode(true)
   }
 
+  // Handle Twitter OAuth flow
+  const handleTwitterAuth = async () => {
+    if (!agentId) {
+      console.error('Agent ID is required before linking Twitter account')
+      return
+    }
+
+    try {
+      const response = await fetchWithRetries(
+        BASE_URL + `/api/auth/twitter?agentId=${agentId}`
+      )
+      if (!response || !response.ok) {
+        console.error('Failed to fetch data after multiple retries.')
+        // Handle the failure case here, e.g., show an error message to the user
+        return
+      }
+      const data = await response.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        console.error('No URL returned from /api/auth/twitter')
+      }
+    } catch (error) {
+      console.error('Error during Twitter OAuth:', error)
+    }
+  }
+
   const handleValidation = () => {
     let valid = true
     let errors = {}
@@ -397,7 +425,7 @@ function Agents() {
     try {
       // Show loading state
       setDescription('Generating description...')
-
+      track('Generate Description', { agentName, isRandom })
       const response = await fetchWithRetries(
         BASE_URL + '/api/agent/generate-description',
         {
@@ -500,7 +528,10 @@ function Agents() {
                     cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
                     <Button
-                      onClick={() => router.push('/create-agent')}
+                      onClick={() => {
+                        track('Create New Agent')
+                        router.push('/create-agent')
+                      }}
                       colorScheme="blue"
                       size="md"
                       fontWeight="bold"
@@ -526,7 +557,12 @@ function Agents() {
                     cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
                     <Button
-                      onClick={handleCreateBackroom}
+                      onClick={() => {
+                        track('Create New Backroom', {
+                          agentId: selectedAgent?._id,
+                        })
+                        handleCreateBackroom()
+                      }}
                       isDisabled={!enoughFunds}
                       colorScheme="green"
                       width={{ base: '100%', md: 'auto' }}
@@ -649,12 +685,24 @@ function Agents() {
                       hasArrow
                       placement="top"
                     >
-                      <Box
+                      <Flex
                         as="span"
                         cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
                         display="flex"
                         justifyContent={{ base: 'center', md: 'flex-end' }}
+                        gap={2}
                       >
+                        <Button
+                          onClick={
+                            hasEditPermission() ? handleTwitterAuth : undefined
+                          }
+                          colorScheme="twitter"
+                          mb={4}
+                          isDisabled={!hasEditPermission()}
+                          pointerEvents={hasEditPermission() ? 'auto' : 'none'}
+                        >
+                          Link X
+                        </Button>
                         <Button
                           onClick={
                             hasEditPermission() ? handleEditClick : undefined
@@ -666,7 +714,7 @@ function Agents() {
                         >
                           Edit
                         </Button>
-                      </Box>
+                      </Flex>
                     </Tooltip>
                   </Box>
                 </Flex>
