@@ -38,6 +38,7 @@ import {
 import { useAccount } from '../hooks/useMetaMask'
 import LoadingOverlay from '../components/LoadingOverlay'
 import { fetchWithRetries } from '@/utils/urls'
+import { track } from '@vercel/analytics'
 
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
@@ -335,7 +336,10 @@ function CreateAgent() {
                     Generate Description
                   </Button>
                   <Button
-                    onClick={() => onGenerateDescription(true, description)}
+                    onClick={() => {
+                      track('Feeling Lucky Description')
+                      onGenerateDescription(true, description)
+                    }}
                     variant="solid"
                     colorScheme="purple"
                     size="sm"
@@ -382,7 +386,10 @@ function CreateAgent() {
                   >
                     <Button
                       isDisabled={!enoughFunds}
-                      onClick={handleSubmit}
+                      onClick={() => {
+                        track('Create Agent', { name: agentName })
+                        handleSubmit()
+                      }}
                       colorScheme="blue"
                       width="100%"
                       mt={4}
@@ -442,7 +449,10 @@ function CreateAgent() {
                 </Alert>
               )}
               <Button
-                onClick={handleTwitterAuth}
+                onClick={() => {
+                  track('Link Twitter Account', { agentId })
+                  handleTwitterAuth()
+                }}
                 colorScheme="twitter"
                 width="100%"
                 size="md"
@@ -467,7 +477,10 @@ function CreateAgent() {
                   width="100%"
                 >
                   <Button
-                    onClick={handleCreateBackroom}
+                    onClick={() => {
+                      track('Create Backroom', { agentId })
+                      handleCreateBackroom()
+                    }}
                     isDisabled={!enoughFunds}
                     colorScheme="green"
                     width="100%"

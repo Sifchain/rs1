@@ -10,17 +10,18 @@ import {
   useDisclosure,
   VStack,
   Collapse,
-} from '@chakra-ui/react';
-import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useRouter } from 'next/router';
-import { FiMenu, FiX } from 'react-icons/fi';
-import Jazzicon, { jsNumberForAddress } from 'react-jazzicon';
+} from '@chakra-ui/react'
+import { useAccount } from 'wagmi'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useRouter } from 'next/router'
+import { FiMenu, FiX } from 'react-icons/fi'
+import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
+import { track } from '@vercel/analytics'
 
 function Navigation() {
-  const { address, isConnected } = useAccount();
-  const router = useRouter();
-  const { isOpen, onToggle } = useDisclosure();
+  const { address, isConnected } = useAccount()
+  const router = useRouter()
+  const { isOpen, onToggle } = useDisclosure()
 
   return (
     <Box>
@@ -128,11 +129,14 @@ function Navigation() {
                           onClick={openConnectModal}
                           colorScheme="blue"
                           variant="solid"
-                          _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
+                          _hover={{
+                            bg: '#0288d1',
+                            boxShadow: '0 0 15px #0288d1',
+                          }}
                         >
                           Connect Wallet
                         </Button>
-                      );
+                      )
                     }
                     if (chain.unsupported) {
                       return (
@@ -140,11 +144,14 @@ function Navigation() {
                           onClick={openChainModal}
                           colorScheme="red"
                           variant="solid"
-                          _hover={{ bg: '#e53935', boxShadow: '0 0 15px #e53935' }}
+                          _hover={{
+                            bg: '#e53935',
+                            boxShadow: '0 0 15px #e53935',
+                          }}
                         >
                           Wrong network
                         </Button>
-                      );
+                      )
                     }
                     return (
                       <Button
@@ -159,14 +166,15 @@ function Navigation() {
                             seed={jsNumberForAddress(account.address)}
                           />
                           <Text fontFamily="Arial, sans-serif">
-                            {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                            {account.address.slice(0, 6)}...
+                            {account.address.slice(-4)}
                           </Text>
                         </HStack>
                       </Button>
-                    );
+                    )
                   })()}
                 </div>
-              );
+              )
             }}
           </ConnectButton.Custom>
         </HStack>
@@ -212,6 +220,7 @@ function Navigation() {
               fontFamily="Arial, sans-serif"
               color="#e0e0e0"
               target="_blank"
+              onClick={() => track('Navigate', { page: 'Telegram' })}
               rel="noopener noreferrer"
               _hover={{ color: '#81d4fa' }}
             >
@@ -220,8 +229,9 @@ function Navigation() {
             <Link
               href="https://x.com/reality_spiral"
               fontFamily="Arial, sans-serif"
-              color="#e0e0e0" 
+              color="#e0e0e0"
               target="_blank"
+              onClick={() => track('Navigate', { page: 'X' })}
               rel="noopener noreferrer"
               _hover={{ color: '#81d4fa' }}
             >
@@ -230,8 +240,9 @@ function Navigation() {
             <Link
               href="https://www.dextools.io/app/en/ether/pair-explorer/0xa909be631bf794346b6dee19db1d98b6dc0eaf70?t=1730150465235"
               fontFamily="Arial, sans-serif"
-              color="#e0e0e0" 
+              color="#e0e0e0"
               target="_blank"
+              onClick={() => track('Navigate', { page: 'Chart' })}
               rel="noopener noreferrer"
               _hover={{ color: '#81d4fa' }}
             >
@@ -266,11 +277,14 @@ function Navigation() {
                             onClick={openConnectModal}
                             colorScheme="blue"
                             variant="solid"
-                            _hover={{ bg: '#0288d1', boxShadow: '0 0 15px #0288d1' }}
+                            _hover={{
+                              bg: '#0288d1',
+                              boxShadow: '0 0 15px #0288d1',
+                            }}
                           >
                             Connect Wallet
                           </Button>
-                        );
+                        )
                       }
                       if (chain.unsupported) {
                         return (
@@ -278,11 +292,14 @@ function Navigation() {
                             onClick={openChainModal}
                             colorScheme="red"
                             variant="solid"
-                            _hover={{ bg: '#e53935', boxShadow: '0 0 15px #e53935' }}
+                            _hover={{
+                              bg: '#e53935',
+                              boxShadow: '0 0 15px #e53935',
+                            }}
                           >
                             Wrong network
                           </Button>
-                        );
+                        )
                       }
                       return (
                         <Button
@@ -297,21 +314,22 @@ function Navigation() {
                               seed={jsNumberForAddress(account.address)}
                             />
                             <Text fontFamily="Arial, sans-serif">
-                              {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                              {account.address.slice(0, 6)}...
+                              {account.address.slice(-4)}
                             </Text>
                           </HStack>
                         </Button>
-                      );
+                      )
                     })()}
                   </div>
-                );
+                )
               }}
             </ConnectButton.Custom>
           </VStack>
         </Box>
       </Collapse>
     </Box>
-  );
+  )
 }
 
-export default Navigation;
+export default Navigation

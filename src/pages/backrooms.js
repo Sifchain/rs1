@@ -26,10 +26,11 @@ import {
   MINIMUM_TOKENS_TO_CREATE_BACKROOM,
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
+  BASE_URL,
 } from '../constants/constants'
 import { useAccount } from '../hooks/useMetaMask'
 import { fetchWithRetries } from '@/utils/urls'
-import { BASE_URL } from '@/constants/constants'
+import { track } from '@vercel/analytics'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Escape agent names to handle special characters
@@ -216,11 +217,13 @@ function Backrooms() {
     }
     setSelectedTags(updatedTags)
 
+    track('Toggle Tag Selection', { tag, selected: updatedTags.includes(tag) })
+
     // Update the BASE_URL with the new tags selection
     const tagQueryString = updatedTags
       .map(tag => tag.replace('#', ''))
       .join(',')
-    router.push(`/backrooms?tags=${tagQueryString}`)
+    router.push(BASE_URL + `/backrooms?tags=${tagQueryString}`)
   }
 
   const filteredBackrooms = backrooms?.filter(backroom => {
@@ -251,6 +254,7 @@ function Backrooms() {
       // Fallback for older browsers
       navigator.clipboard.writeText(shareUrl).then(() => {
         alert('Link copied to clipboard!')
+        track('Copy Backroom Link', { backroomId })
       })
     }
   }
@@ -259,6 +263,7 @@ function Backrooms() {
     const link = `${window.location.origin}/backrooms/${backroomId}`
     navigator.clipboard.writeText(link).then(() => {
       alert('Link copied to clipboard!')
+      track('Copy Backroom Link', { backroomId })
     })
   }
 
@@ -454,6 +459,9 @@ function Backrooms() {
                       colorScheme="blue"
                       variant="outline"
                       onClick={() => {
+                        track('View Full Conversation', {
+                          backroomId: backroom._id,
+                        })
                         router.push(`/backrooms/${backroom._id}`)
                       }}
                     >

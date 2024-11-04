@@ -39,6 +39,7 @@ import {
 import { useAccount } from '../hooks/useMetaMask'
 import { FiCopy } from 'react-icons/fi'
 import { fetchWithRetries } from '@/utils/urls'
+import { track } from '@vercel/analytics'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -802,7 +803,7 @@ function Agents() {
     try {
       // Show loading state
       setDescription('Generating description...')
-
+      track('Generate Description', { agentName, isRandom })
       const response = await fetchWithRetries(
         BASE_URL + '/api/agent/generate-description',
         {
@@ -905,7 +906,10 @@ function Agents() {
                     cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
                     <Button
-                      onClick={() => router.push('/create-agent')}
+                      onClick={() => {
+                        track('Create New Agent')
+                        router.push('/create-agent')
+                      }}
                       colorScheme="blue"
                       size="md"
                       fontWeight="bold"
@@ -931,7 +935,12 @@ function Agents() {
                     cursor={enoughFunds ? 'pointer' : 'not-allowed'}
                   >
                     <Button
-                      onClick={handleCreateBackroom}
+                      onClick={() => {
+                        track('Create New Backroom', {
+                          agentId: selectedAgent?._id,
+                        })
+                        handleCreateBackroom()
+                      }}
                       isDisabled={!enoughFunds}
                       colorScheme="green"
                       width={{ base: '100%', md: 'auto' }}
