@@ -16,7 +16,6 @@ import {
   FormErrorMessage,
   Button,
   Tooltip,
-  useToast,
   List,
   ListItem,
   Collapse,
@@ -64,7 +63,6 @@ function Agents() {
   const [description, setDescription] = useState('')
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
-  const toast = useToast() // Initialize useToast for notifications
   const [backrooms, setBackrooms] = useState([])
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 
