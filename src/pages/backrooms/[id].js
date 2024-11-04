@@ -147,7 +147,9 @@ function BackroomDetail() {
     const fetchData = async () => {
       try {
         // First fetch backroom
-        const backroomRes = await fetchWithRetries(`${URL}/api/backrooms/${id}`)
+        const backroomRes = await fetchWithRetries(
+          `${BASE_URL}/api/backrooms/${id}`
+        )
         if (!backroomRes.ok) {
           console.error('Backroom response not ok:', await backroomRes.text())
           throw new Error(`Failed to fetch backroom: ${backroomRes.status}`)
@@ -165,7 +167,7 @@ function BackroomDetail() {
 
         // Then fetch agent
         const agentRes = await fetchWithRetries(
-          `${URL}/api/agents?agentId=${backroom.explorerId}`,
+          `${BASE_URL}/api/agents?agentId=${backroom.explorerId}`,
           {
             method: 'GET',
             headers: {

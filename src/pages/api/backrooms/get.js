@@ -1,24 +1,28 @@
 import Backroom from '../../../models/Backroom'
 import { connectDB } from '@/utils/db'
 
-// const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
+// Middleware to set CORS headers for all responses
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Use a specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'GET, OPTIONS')
+}
 
 export default async function handler(req, res) {
+  await connectDB()
+  setHeaders(res)
+
+  if (req.method === 'OPTIONS') {
+    // Respond to CORS preflight request
+    return res.status(204).end()
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: `Method ${req.method} not allowed` })
   }
-  // const origin = req.headers.origin || req.headers.referer || 'same-origin'
-  // const isAllowed =
-  //   allowedOrigins.some(pattern => pattern.test(origin)) ||
-  //   process.env.NODE_ENV === 'development' ||
-  //   origin === 'same-origin'
 
-  // if (!isAllowed) {
-  //   return res.status(403).json({ error: 'Request origin not allowed' })
-  // }
   try {
-    await connectDB()
-
     const { id, agentId } = req.query
     if (id != null) {
       // Find a specific Backroom by ID

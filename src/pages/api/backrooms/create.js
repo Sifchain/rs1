@@ -18,6 +18,13 @@ const TitleSchema = z.object({
   title: z.string(),
 })
 
+// Middleware to set CORS headers for all responses
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Replace * with your specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'POST, OPTIONS')
+}
 export default async function handler(req, res) {
   // const origin = req.headers.origin || req.headers.referer || 'same-origin'
 
@@ -29,6 +36,12 @@ export default async function handler(req, res) {
   // if (!isAllowed) {
   //   return res.status(403).json({ error: 'Request origin not allowed' })
   // }
+  setHeaders(res) // Apply CORS headers for all responses
+
+  if (req.method === 'OPTIONS') {
+    // Handle CORS preflight requests
+    return res.status(204).end()
+  }
 
   await connectDB()
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -339,7 +352,6 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         .json({ error: 'Failed to create backroom or update agent evolution' })
     }
   } else {
-    res.setHeader('Allow', ['POST'])
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }

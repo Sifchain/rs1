@@ -41,6 +41,10 @@ import { FiCopy } from 'react-icons/fi'
 import { fetchWithRetries } from '@/utils/urls'
 import PendingTweets from '@/components/PendingTweets'
 import { track } from '@vercel/analytics'
+import {
+  requestTwitterAuthLink,
+  completeTwitterAuth,
+} from '@/utils/twitterUtils'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -54,7 +58,7 @@ function Agents() {
   const router = useRouter()
   const { agentId } = router.query
   const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
-
+  console.log('selectedAgent', selectedAgent)
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
   const [description, setDescription] = useState('')
@@ -64,6 +68,13 @@ function Agents() {
   const [backrooms, setBackrooms] = useState([])
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 
+  // Twitter OAuth callback handling
+  useEffect(() => {
+    const { code, state } = router.query
+    if (code && state && agentId) {
+      completeTwitterAuth(agentId, state, code)
+    }
+  }, [router.query, agentId])
   // Fetch
   useEffect(() => {
     if (address) {
@@ -230,20 +241,8 @@ function Agents() {
     }
 
     try {
-      const response = await fetchWithRetries(
-        BASE_URL + `/api/auth/twitter?agentId=${agentId}`
-      )
-      if (!response || !response.ok) {
-        console.error('Failed to fetch data after multiple retries.')
-        // Handle the failure case here, e.g., show an error message to the user
-        return
-      }
-      const data = await response.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        console.error('No URL returned from /api/auth/twitter')
-      }
+      // Call the helper function to initiate Twitter OAuth flow
+      await requestTwitterAuthLink(agentId, window.location.origin)
     } catch (error) {
       console.error('Error during Twitter OAuth:', error)
     }

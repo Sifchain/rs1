@@ -1,8 +1,22 @@
 import User from '../../models/User'
 import { connectDB } from '@/utils/db'
 
+// Middleware to set CORS headers for all responses
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Replace with a specific origin if necessary
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'POST, OPTIONS')
+}
+
 export default async function handler(req, res) {
   await connectDB()
+  setHeaders(res)
+
+  if (req.method === 'OPTIONS') {
+    // Handle CORS preflight request
+    return res.status(204).end()
+  }
 
   if (req.method === 'POST') {
     const { address } = req.body
@@ -30,7 +44,6 @@ export default async function handler(req, res) {
       }
     }
   } else {
-    res.setHeader('Allow', ['POST'])
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }

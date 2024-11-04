@@ -1,9 +1,24 @@
-import Agent from '../../../models/Agent'
+import Agent from '@/models/Agent'
 import { TwitterApi } from 'twitter-api-v2'
 import { connectDB } from '@/utils/db'
+import { refreshTwitterToken } from '@/utils/auth/refreshTwitterToken'
+
+// Middleware to set CORS headers for all responses
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Replace with specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'PUT, OPTIONS')
+}
 
 export default async function handler(req, res) {
   await connectDB()
+  setHeaders(res)
+
+  if (req.method === 'OPTIONS') {
+    // Respond to CORS preflight request
+    return res.status(204).end()
+  }
 
   if (req.method === 'PUT') {
     const { agentId, tweetId } = req.body
@@ -27,8 +42,16 @@ export default async function handler(req, res) {
           .json({ error: 'No pending tweet found with the specified ID.' })
 
       // Refresh Twitter token if needed
+      let twitterClient
 
-      const twitterClient = new TwitterApi(agent.twitterAuthToken.accessToken)
+      try {
+        // Try refreshing the token to ensure it's valid
+        twitterClient = await refreshTwitterToken(agent)
+      } catch (error) {
+        throw new Error(
+          'Token refresh failed. User reauthorization may be needed.'
+        )
+      }
 
       try {
         const tweetResponse = await twitterClient.v2.tweet(
@@ -47,13 +70,14 @@ export default async function handler(req, res) {
         agent.twitterPostStatus = 'Posted'
         agent.postTimestamp = new Date()
       } catch (error) {
-        // Handle rate limiting or posting issues
         console.error('Error posting tweet:', error)
 
         agent.twitterPostStatus = 'Failed'
         agent.errorDetails = error.message
         await agent.save()
-        res.status(500).json({ message: 'Twitter failed to update', agent })
+        return res
+          .status(500)
+          .json({ message: 'Twitter failed to update', agent })
       }
 
       await agent.save()
@@ -67,7 +91,6 @@ export default async function handler(req, res) {
         .json({ error: 'An error occurred while processing the request.' })
     }
   } else {
-    res.setHeader('Allow', ['PUT'])
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
