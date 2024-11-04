@@ -60,7 +60,7 @@ function CreateAgent() {
       setDescription('Generating description...')
 
       const response = await fetchWithRetries(
-        URL + '/api/agent/generate-description',
+        BASE_URL + '/api/agent/generate-description',
         {
           method: 'POST',
           headers: {
@@ -161,7 +161,7 @@ function CreateAgent() {
 
         const user = JSON.parse(localStorage.getItem('user'))
         const userId = user ? user._id : null
-        const response = await fetchWithRetries(URL + '/api/agents', {
+        const response = await fetchWithRetries(BASE_URL + '/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -194,7 +194,7 @@ function CreateAgent() {
 
     try {
       const response = await fetchWithRetries(
-        URL + `/api/auth/twitter?agentId=${agentId}`
+        BASE_URL + `/api/auth/twitter?agentId=${agentId}`
       )
       if (!response || !response.ok) {
         console.error('Failed to fetch data after multiple retries.')
