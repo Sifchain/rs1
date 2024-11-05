@@ -1,4 +1,3 @@
-// pages/api/backroom/continue.js
 import Backroom from '@/models/Backroom'
 import Agent from '@/models/Agent'
 import { connectDB } from '@/utils/db'
@@ -16,7 +15,13 @@ export default async function handler(req, res) {
     responderAgentId,
   } = req.body
 
-  if (!backroomId || !selectedOption || !explorerAgentId || !responderAgentId) {
+  if (
+    !backroomId ||
+    !selectedOption ||
+    !explorerAgentId ||
+    !responderAgentId ||
+    !question
+  ) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
 
@@ -81,7 +86,8 @@ export default async function handler(req, res) {
     const newContent = conversationContentArray.join('\n')
 
     // Append the conversation continuation to the backroom
-    backroom.content += `\n\nSelected Option: ${selectedOption}\nContinuation:\n${newContent}`
+    // or should we make content an array and append to the end?
+    backroom.content += `\n\nQuestion: ${question} Selected Option: ${selectedOption}\nContinuation:\n${newContent}`
     await backroom.save()
 
     res.status(200).json({
