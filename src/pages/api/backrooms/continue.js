@@ -35,21 +35,33 @@ export default async function handler(req, res) {
     if (!explorer || !responder) {
       return res.status(404).json({ error: 'Agent not found' })
     }
-
+    const {
+      narrativeStage,
+      narrativePoint,
+      currentFocus,
+      narrativeSignals,
+      conversationHistory,
+    } = backroom.backroomState
     // Reinitialize InteractionStage with saved state and history
     const interactionStage = new InteractionStage(
       backroom.backroomType,
       backroom.topic,
       explorer,
-      responder
+      responder,
+      narrativeStage,
+      narrativePoint,
+      currentFocus,
+      narrativeSignals,
+      conversationHistory
     )
     interactionStage.setStageState(backroom.backroomState)
-    let explorerMessageHistory = [
-      await interactionStage.generateExplorerSystemPrompt(),
-    ]
-    let responderMessageHistory = [
-      await interactionStage.generateResponderSystemPrompt(),
-    ]
+    // Initialize the histories with saved conversation data
+    let explorerMessageHistory = conversationHistory.filter(
+      entry => entry.role === 'assistant'
+    )
+    let responderMessageHistory = conversationHistory.filter(
+      entry => entry.role === 'user'
+    )
 
     for (let i = 0; i < 2; i++) {
       const explorerMessage = await interactionStage.generateExplorerMessage()

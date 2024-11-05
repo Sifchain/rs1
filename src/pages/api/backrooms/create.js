@@ -78,7 +78,12 @@ export default async function handler(req, res) {
         backroomType,
         topic,
         explorer,
-        responder
+        responder,
+        null,
+        null,
+        null,
+        [],
+        []
       )
       await interactionStage.generateCustomStory()
       let explorerMessageHistory = [

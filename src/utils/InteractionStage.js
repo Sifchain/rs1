@@ -23,16 +23,26 @@ const InteractionStageSchema = z.object(
 )
 
 export class InteractionStage {
-  constructor(backroomType, topic, explorerAgent, responderAgent) {
+  constructor(
+    backroomType,
+    topic,
+    explorerAgent,
+    responderAgent,
+    narrativeStage,
+    narrativePoint,
+    currentFocus,
+    narrativeSignals,
+    conversationHistory
+  ) {
     this.backroomType = backroomType
     this.topic = topic
     this.explorerAgent = explorerAgent
     this.responderAgent = responderAgent
-    this.narrativeStage = 'start'
-    this.narrativePoint = ''
-    this.currentFocus = { theme: '', tension: '' }
-    this.narrativeSignals = []
-    this.conversationHistory = []
+    this.narrativeStage = narrativeStage ?? 'start'
+    this.narrativePoint = narrativePoint ?? ''
+    this.currentFocus = currentFocus ?? { theme: '', tension: '' }
+    this.narrativeSignals = narrativeSignals ?? []
+    this.conversationHistory = conversationHistory ?? []
     this.chosenStoryTemplate = this.getChosenStoryTemplate()
   }
 
