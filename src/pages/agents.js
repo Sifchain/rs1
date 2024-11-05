@@ -43,6 +43,7 @@ import { track } from '@vercel/analytics'
 import {
   requestTwitterAuthLink,
   completeTwitterAuth,
+  isTwitterTokenExpired,
 } from '@/utils/twitterUtils'
 
 function Agents() {
@@ -64,7 +65,23 @@ function Agents() {
   const { address } = useAccount()
   const [backrooms, setBackrooms] = useState([])
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
-
+  const [isTwitterTokenExpired, setIsTwitterTokenExpired] = useState(false)
+  // Fetch Twitter token status
+  useEffect(() => {
+    const isTwitterTokenExpired = isTwitterTokenExpired(
+      selectedAgent?.twitterTokenExpiry
+    )
+    setIsTwitterTokenExpired(isTwitterTokenExpired)
+    if (isTwitterTokenExpired) {
+      showNotification({
+        title: 'Twitter Token Expired',
+        description:
+          'Your X token has expired. Please link your X account again.',
+        actionText: 'Relink X',
+        onAction: handleTwitterAuth,
+      })
+    }
+  }, [selectedAgent?.twitterTokenExpiry, showNotification, handleTwitterAuth])
   // Twitter OAuth callback handling
   useEffect(() => {
     const { code, state } = router.query
