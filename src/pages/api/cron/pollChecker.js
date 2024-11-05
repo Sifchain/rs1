@@ -27,8 +27,7 @@ export default async function handler(req, res) {
       )
 
       if (winningOption) {
-        await continueStory(backroom._id, winningOption)
-        poll.status = 'completed'
+        await continueStory(backroom._id, poll.tweetId, winningOption)
         await backroom.save()
       }
     }

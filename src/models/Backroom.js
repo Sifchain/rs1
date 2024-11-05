@@ -30,7 +30,7 @@ const BackroomSchema = new mongoose.Schema({
       type: [
         {
           role: { type: String, enum: ['explorer', 'responder', 'system'] },
-          content: { type: String, required: true },
+          content: { type: String, default: '' },
           timestamp: { type: Date, default: Date.now },
         },
       ],

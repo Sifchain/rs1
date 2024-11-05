@@ -2,7 +2,7 @@ import Backroom from '@/models/Backroom'
 import Agent from '@/models/Agent'
 import { InteractionStage } from '@/utils/InteractionStage'
 
-export async function continueStory(backroomId, winningOption) {
+export async function continueStory(backroomId, pollTweetId, winningOption) {
   const backroom = await Backroom.findById(backroomId)
   if (!backroom) throw new Error('Backroom not found')
 
@@ -60,6 +60,13 @@ export async function continueStory(backroomId, winningOption) {
 
   backroom.content += `\n\nWinning Option: ${winningOption}\nContinuation:\n${newContent}`
   backroom.backroomState = interactionStage.getStageState()
+  // Need to find the poll by tweetId and update its selectedOption
+  console.log(backroom.polls)
+  console.log(pollTweetId)
+  console.log(winningOption)
+  const poll = backroom.polls.find(p => p.tweetId === pollTweetId)
+  if (!poll) throw new Error('Poll not found')
+  poll.selectedOption = winningOption
   await backroom.save()
 
   return newContent
