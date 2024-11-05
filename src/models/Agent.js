@@ -55,7 +55,7 @@ const AgentSchema = new mongoose.Schema({
         postTimestamp: { type: Date, default: null },
         retryCount: { type: Number, default: 0 },
         errorDetails: { type: String, default: '' },
-        expiresAt: { type: Date, required: true }, // New TTL field
+        expiresAt: { type: Date, default: null },
       },
     ],
     default: [],

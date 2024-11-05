@@ -97,7 +97,7 @@ function Agents() {
         onAction: handleTwitterAuth,
       })
     }
-  }, [selectedAgent?.twitterTokenExpiry, showNotification, handleTwitterAuth])
+  }, [selectedAgent?.twitterTokenExpiry])
   // Twitter OAuth callback handling
   useEffect(() => {
     const { code, state } = router.query
