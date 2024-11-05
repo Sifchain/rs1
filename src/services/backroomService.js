@@ -68,6 +68,6 @@ export async function continueStory(backroomId, pollTweetId, winningOption) {
   if (!poll) throw new Error('Poll not found')
   poll.selectedOption = winningOption
   await backroom.save()
-
+  // TODO: Need to test more to make sure newContent is correct and need to render the poll
   return newContent
 }
