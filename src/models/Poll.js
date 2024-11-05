@@ -10,6 +10,11 @@ const PollSchema = new mongoose.Schema({
       'Poll must have between 2 and 4 options',
     ],
   },
+  results: {
+    type: Map,
+    of: Number, // Store the count of votes for each option
+    default: {},
+  },
   durationMinutes: { type: Number, default: 60 }, // Default poll duration is 60 minutes
   posted: { type: Boolean, default: false }, // Track if the poll has been posted
   tweetId: { type: String, default: '' }, // Stores the ID of the poll tweet for reference
