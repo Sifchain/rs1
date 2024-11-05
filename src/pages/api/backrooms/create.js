@@ -157,7 +157,6 @@ export default async function handler(req, res) {
         topic,
         title,
         interactionStageState: interactionStage.getStageState(), // Save InteractionStage state
-        conversationHistory: explorerMessageHistory, // Store conversation history
       })
 
       await newBackroom.save()
