@@ -10,7 +10,6 @@ export default async function handler(req, res) {
     backroomId,
     question,
     selectedOption,
-    results,
     explorerAgentId,
     responderAgentId,
   } = req.body
@@ -37,15 +36,14 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Agent not found' })
     }
 
-    // Initialize InteractionStage with the backroom content and selected option
+    // Reinitialize InteractionStage with saved state and history
     const interactionStage = new InteractionStage(
       backroom.backroomType,
       backroom.topic,
       explorer,
       responder
     )
-    await interactionStage.generateCustomStory()
-    // THIS NEEDS TO BE UPDATED TO USE THE EXISTING STORY INSTEAD OF GENERATING A NEW ONE
+    interactionStage.setStageState(backroom.backroomState)
     let explorerMessageHistory = [
       await interactionStage.generateExplorerSystemPrompt(),
     ]
@@ -53,41 +51,33 @@ export default async function handler(req, res) {
       await interactionStage.generateResponderSystemPrompt(),
     ]
 
-    // Generate two rounds of conversation between explorer and responder
     for (let i = 0; i < 2; i++) {
       const explorerMessage = await interactionStage.generateExplorerMessage()
       explorerMessageHistory.push({
         role: 'assistant',
         content: explorerMessage,
       })
-      responderMessageHistory.push({
-        role: 'user',
-        content: explorerMessage,
-      })
+      responderMessageHistory.push({ role: 'user', content: explorerMessage })
 
       const responderMessage = await interactionStage.generateResponderMessage()
-      explorerMessageHistory.push({
-        role: 'user',
-        content: responderMessage,
-      })
+      explorerMessageHistory.push({ role: 'user', content: responderMessage })
       responderMessageHistory.push({
         role: 'assistant',
         content: responderMessage,
       })
     }
 
-    // Combine the new conversation into the backroom content
     const conversationContentArray = explorerMessageHistory
-      .slice(1) // Remove the initial system prompts
+      .slice(1)
       .map(
         entry =>
           `${entry.role === 'user' ? responder.name : explorer.name}: ${entry.content}`
       )
     const newContent = conversationContentArray.join('\n')
 
-    // Append the conversation continuation to the backroom
-    // or should we make content an array and append to the end?
+    // Append continuation to `Backroom`
     backroom.content += `\n\nQuestion: ${question} Selected Option: ${selectedOption}\nContinuation:\n${newContent}`
+    backroom.backroomState = interactionStage.getStageState() // Update state
     await backroom.save()
 
     res.status(200).json({

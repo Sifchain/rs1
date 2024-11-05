@@ -2,14 +2,13 @@ import mongoose from 'mongoose'
 
 const PollSchema = new mongoose.Schema({
   question: { type: String, required: true },
-  options: {
-    type: [String],
-    required: true,
-    validate: [
-      options => options.length >= 2 && options.length <= 4,
-      'Poll must have between 2 and 4 options',
-    ],
-  },
+  options: [
+    {
+      type: [String],
+      required: true,
+    },
+  ],
+  selectedOption: { type: String, default: '' }, // Store the selected option for the agent
   results: {
     type: Map,
     of: Number, // Store the count of votes for each option

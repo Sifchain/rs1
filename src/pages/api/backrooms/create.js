@@ -64,7 +64,7 @@ export default async function handler(req, res) {
       if (!explorer || !responder) {
         return res
           .status(400)
-          .json({ error: 'Invalid explorer or responder agent name' })
+          .json({ error: 'Invalid explorer or responder agent' })
       }
 
       const explorerEvolutions = explorer.evolutions.length
@@ -95,16 +95,11 @@ export default async function handler(req, res) {
           role: 'assistant',
           content: explorerMessage,
         })
-        responderMessageHistory.push({
-          role: 'user',
-          content: explorerMessage,
-        })
+        responderMessageHistory.push({ role: 'user', content: explorerMessage })
+
         const responderMessage =
           await interactionStage.generateResponderMessage()
-        explorerMessageHistory.push({
-          role: 'user',
-          content: responderMessage,
-        })
+        explorerMessageHistory.push({ role: 'user', content: responderMessage })
         responderMessageHistory.push({
           role: 'assistant',
           content: responderMessage,
@@ -146,8 +141,7 @@ export default async function handler(req, res) {
         console.error('Error fetching interaction data:', error)
       }
 
-      // Generate a summary
-      // Create and save the new backroom entry
+      // Save the initial interaction state and conversation history to `Backroom`
       const newBackroom = new Backroom({
         role,
         sessionDetails,
@@ -162,6 +156,8 @@ export default async function handler(req, res) {
         backroomType,
         topic,
         title,
+        interactionStageState: interactionStage.getStageState(), // Save InteractionStage state
+        conversationHistory: explorerMessageHistory, // Store conversation history
       })
 
       await newBackroom.save()
