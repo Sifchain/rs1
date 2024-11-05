@@ -36,6 +36,7 @@ const BackroomSchema = new mongoose.Schema({
       ],
       default: [],
     },
+    default: {},
   },
   responderId: {
     type: mongoose.Schema.Types.ObjectId,

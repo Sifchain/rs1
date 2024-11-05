@@ -46,9 +46,9 @@ export async function createPoll(agentId, backroomId, durationMinutes = 60) {
 }
 
 export function isTwitterTokenExpired(twitterTokenExpiry) {
-  if (!twitterTokenExpiry) {
+  if (!twitterTokenExpiry || twitterTokenExpiry == null) {
     return false
   }
   const currentTime = new Date()
-  return currentTime.getTime() > twitterTokenExpiry.getTime()
+  return currentTime.getTime() > new Date(twitterTokenExpiry).getTime()
 }

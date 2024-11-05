@@ -45,6 +45,7 @@ import {
   completeTwitterAuth,
   isTwitterTokenExpired,
 } from '@/utils/twitterUtils'
+import { useNotification } from '@/context/NotificationContext'
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -65,14 +66,29 @@ function Agents() {
   const { address } = useAccount()
   const [backrooms, setBackrooms] = useState([])
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
-  const [isTwitterTokenExpired, setIsTwitterTokenExpired] = useState(false)
+  const [isXTokenExpired, setIsXTokenExpired] = useState(false)
   // Fetch Twitter token status
+  const { showNotification } = useNotification()
+  // Handle Twitter OAuth flow
+  const handleTwitterAuth = async () => {
+    if (!agentId) {
+      console.error('Agent ID is required before linking Twitter account')
+      return
+    }
+
+    try {
+      // Call the helper function to initiate Twitter OAuth flow
+      await requestTwitterAuthLink(agentId, window.location.origin)
+    } catch (error) {
+      console.error('Error during Twitter OAuth:', error)
+    }
+  }
   useEffect(() => {
-    const isTwitterTokenExpired = isTwitterTokenExpired(
+    const isXTokenExpired = isTwitterTokenExpired(
       selectedAgent?.twitterTokenExpiry
     )
-    setIsTwitterTokenExpired(isTwitterTokenExpired)
-    if (isTwitterTokenExpired) {
+    setIsXTokenExpired(isXTokenExpired)
+    if (isXTokenExpired) {
       showNotification({
         title: 'Twitter Token Expired',
         description:
@@ -245,21 +261,6 @@ function Agents() {
 
   const handleEditClick = () => {
     setEditMode(true)
-  }
-
-  // Handle Twitter OAuth flow
-  const handleTwitterAuth = async () => {
-    if (!agentId) {
-      console.error('Agent ID is required before linking Twitter account')
-      return
-    }
-
-    try {
-      // Call the helper function to initiate Twitter OAuth flow
-      await requestTwitterAuthLink(agentId, window.location.origin)
-    } catch (error) {
-      console.error('Error during Twitter OAuth:', error)
-    }
   }
 
   const handleValidation = () => {

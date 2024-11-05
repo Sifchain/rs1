@@ -2,12 +2,10 @@ import mongoose from 'mongoose'
 
 const PollSchema = new mongoose.Schema({
   question: { type: String, required: true },
-  options: [
-    {
-      type: [String],
-      required: true,
-    },
-  ],
+  options: {
+    type: [String], // This makes `options` an array of strings
+    default: [],
+  },
   selectedOption: { type: String, default: '' }, // Store the selected option for the agent
   results: {
     type: Map,
@@ -26,5 +24,4 @@ const PollSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 })
 
-const Poll = mongoose.models.Poll || mongoose.model('Poll', PollSchema)
-export default Poll
+export default PollSchema
