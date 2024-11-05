@@ -141,7 +141,6 @@ export default async function handler(req, res) {
           TitleSchema
         )
         title = parsedResponse.title
-        console.log('Full Parsed Response:', parsedResponse)
       } catch (error) {
         console.error('Error fetching interaction data:', error)
       }

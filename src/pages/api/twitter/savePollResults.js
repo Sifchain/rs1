@@ -1,4 +1,3 @@
-// pages/api/getPollResults.js
 import { TwitterApi } from 'twitter-api-v2'
 import Agent from '@/models/Agent'
 import Backroom from '@/models/Backroom'

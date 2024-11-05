@@ -1,8 +1,7 @@
-// pages/api/cron/pollChecker.js
 import Backroom from '@/models/Backroom'
 import { connectDB } from '@/utils/db'
-import { getPollResults } from '@/api/backroom/getPollResults'
-import { continueStory } from '@/api/backroom/continue'
+import { getPollResults } from '@/services/twitterService'
+import { continueStory } from '@/services/backroomService'
 
 export default async function handler(req, res) {
   if (
@@ -12,6 +11,7 @@ export default async function handler(req, res) {
   }
 
   await connectDB()
+
   try {
     const expiredPolls = await Backroom.find({
       'polls.posted': true,
@@ -21,17 +21,18 @@ export default async function handler(req, res) {
 
     for (const backroom of expiredPolls) {
       const poll = backroom.polls.find(p => p.status === 'pending')
-      const pollResult = await getPollResults(poll.tweetId)
+      const winningOption = await getPollResults(
+        backroom.explorerId,
+        poll.tweetId
+      )
 
-      if (pollResult) {
-        // Continue story with winning option
-        await continueStory(backroom._id, pollResult.winningOption)
-
-        // Update poll status to prevent duplicate processing
+      if (winningOption) {
+        await continueStory(backroom._id, winningOption)
         poll.status = 'completed'
         await backroom.save()
       }
     }
+
     res
       .status(200)
       .json({ message: 'Polls checked and processed successfully' })

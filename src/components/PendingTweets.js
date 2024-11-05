@@ -35,7 +35,6 @@ const PendingTweets = ({
         : (selectedAgent?.pendingTweets ?? [])
     )
   }, [selectedAgent, backroomId])
-  console.log('pendingTweets', pendingTweets)
   const countWords = text => text?.trim().split(/\s+/).length
 
   const handleEditTweet = (tweetId, tweetContent) => {

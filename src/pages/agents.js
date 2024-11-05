@@ -57,7 +57,6 @@ function Agents() {
   const router = useRouter()
   const { agentId } = router.query
   const { hasCopied, onCopy } = useClipboard(DESCRIPTION_TEMPLATE)
-  console.log('selectedAgent', selectedAgent)
   // Input state for editing agent details
   const [agentName, setAgentName] = useState('')
   const [description, setDescription] = useState('')

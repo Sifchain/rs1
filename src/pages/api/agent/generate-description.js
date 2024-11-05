@@ -33,7 +33,6 @@ export default async function handler(req, res) {
         descriptionPrompt,
         DescriptionSchema
       )
-      console.log('Full Parsed Response:', parsedResponse)
       generatedDescription = parsedResponse.description
       generatedName = parsedResponse.name
     } catch (error) {
