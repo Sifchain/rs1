@@ -28,3 +28,19 @@ export async function completeTwitterAuth(agentId, state, code) {
     console.error(data.error || 'Twitter authorization failed')
   }
 }
+
+export async function createPoll(agentId, backroomId, durationMinutes = 60) {
+  const response = await fetchWithRetries(BASE_URL + '/api/createPoll', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ agentId, backroomId, durationMinutes }),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.error || 'Failed to create poll')
+  }
+
+  const pollData = await response.json()
+  return pollData
+}

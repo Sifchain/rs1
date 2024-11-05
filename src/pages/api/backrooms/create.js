@@ -172,6 +172,7 @@ export default async function handler(req, res) {
           backroomId: newBackroom._id,
           tweetType: `MESSAGE ${index + 1}`,
           createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 mins from now
         })
       })
       // Generate an evolution summary for the explorer agent
@@ -341,6 +342,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         backroomId: newBackroom._id,
         tweetType: 'RECAP',
         createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 20 * 60 * 1000), // 15 mins from now
       })
       await explorer.save()
 
