@@ -1,5 +1,6 @@
 import { TwitterApi } from 'twitter-api-v2'
 
+// TODO test
 export async function refreshTwitterToken(agent) {
   const twitterClient = new TwitterApi({
     clientId: process.env.TWITTER_API_KEY,

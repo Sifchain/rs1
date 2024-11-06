@@ -20,24 +20,3 @@ function determineWinningOption(options) {
 
   return isTie ? null : winningOption.label
 }
-
-export async function getPollResults(agentId, pollId) {
-  const agent = await Agent.findById(agentId)
-  if (!agent || !agent.twitterAuthToken.accessToken) {
-    throw new Error('Agent or Twitter authentication not found')
-  }
-
-  const twitterClient = new TwitterApi(agent.twitterAuthToken.accessToken)
-  const pollData = await twitterClient.v2.pollResults(pollId)
-
-  if (!pollData || !pollData.data) {
-    throw new Error('Poll data not found')
-  }
-
-  const winningOption = determineWinningOption(pollData.data.options)
-  if (!winningOption) {
-    throw new Error('No votes or poll resulted in a tie')
-  }
-
-  return winningOption
-}

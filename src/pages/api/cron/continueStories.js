@@ -1,6 +1,5 @@
 import Backroom from '@/models/Backroom'
 import { connectDB } from '@/utils/db'
-import { getPollResults } from '@/services/twitterService'
 import { continueStory } from '@/services/backroomService'
 
 export default async function handler(req, res) {
@@ -21,13 +20,8 @@ export default async function handler(req, res) {
 
     for (const backroom of expiredPolls) {
       const poll = backroom.polls.find(p => p.status === 'pending')
-      const winningOption = await getPollResults(
-        backroom.explorerId,
-        poll.tweetId
-      )
-
-      if (winningOption) {
-        await continueStory(backroom._id, poll.tweetId, winningOption)
+      if (backroom.selectedOption) {
+        await continueStory(backroom._id, poll.tweetId)
         await backroom.save()
       }
     }

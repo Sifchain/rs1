@@ -3,6 +3,28 @@ import Agent from '@/models/Agent'
 import Backroom from '@/models/Backroom'
 import { connectDB } from '@/utils/db'
 
+function determineWinningOption(options) {
+  // Ensure there are options with votes
+  if (
+    !options ||
+    options.length === 0 ||
+    options.every(opt => opt.votes === 0)
+  ) {
+    return null // No votes or empty options array
+  }
+
+  // Find the option with the highest votes
+  const winningOption = options.reduce(
+    (max, opt) => (opt.votes > max.votes ? opt : max),
+    options[0]
+  )
+
+  // Check if there is a tie
+  const isTie =
+    options.filter(opt => opt.votes === winningOption.votes).length > 1
+  return isTie ? null : winningOption.label // Return null if a tie, else winning option text
+}
+
 export default async function handler(req, res) {
   await connectDB()
 
@@ -35,6 +57,8 @@ export default async function handler(req, res) {
 
     const pollData = tweetData.includes.polls[0]
     const pollResults = {}
+    // Determine the winning option or handle edge cases
+    const winningOption = determineWinningOption(pollData.data.options)
 
     // Format the results
     pollData.options.forEach(option => {
@@ -48,11 +72,15 @@ export default async function handler(req, res) {
     }
 
     const poll = backroom.polls.find(poll => poll.tweetId === pollTweetId)
+    const remainingPolls = backroom.polls.filter(
+      poll => poll.tweetId !== pollTweetId
+    )
     if (!poll) {
       return res.status(404).json({ error: 'Poll not found in backroom' })
     }
-
+    poll.selectedOption = winningOption
     poll.results = pollResults
+    backroom.polls = [poll, ...remainingPolls]
     await backroom.save()
 
     res.status(200).json({
