@@ -264,7 +264,7 @@ const PendingTweets = ({
                           size="sm"
                           colorScheme="blue"
                           onClick={() =>
-                            handleSaveEdit(tweet._id, tweet.tweetContent)
+                            handleSaveEdit(tweet._id, editTweetContent)
                           }
                         >
                           Save
