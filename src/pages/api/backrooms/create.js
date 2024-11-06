@@ -11,6 +11,7 @@ import { InteractionStage } from '@/utils/InteractionStage'
 import { connectDB } from '@/utils/db'
 import { getParsedOpenAIResponse } from '@/utils/ai'
 import { z } from 'zod'
+import { generateTweetContent } from '@/utils/twitterUtils'
 
 // TODO: implement this across all routes in a generic way that deployments don't fail
 // const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
@@ -164,10 +165,24 @@ export default async function handler(req, res) {
       })
 
       await newBackroom.save()
+      let shortenedUrl = ''
+      try {
+        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
+        shortenedUrl = (await shortenURL(fullBackroomURL)) ?? ''
+      } catch (error) {
+        console.error('Error shortening URL:', error)
+        shortenedUrl = fullBackroomURL // Fallback to the full URL
+      }
       // Create tweets for each message in the conversation
       conversationContentArray.map((message, index) => {
+        const tweetContent = generateTweetContent(
+          `${title} ${index + 1}/${conversationContentArray.length}`,
+          message,
+          shortenedUrl,
+          generatedHashtags
+        )
         explorer.pendingTweets.push({
-          tweetContent: message,
+          tweetContent,
           backroomId: newBackroom._id,
           tweetType: `MESSAGE ${index + 1}`,
           createdAt: new Date(),
@@ -247,14 +262,6 @@ Your task is to synthesize this information into a cohesive evolution summary th
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
-      let shortenedUrl = ''
-      try {
-        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
-        shortenedUrl = (await shortenURL(fullBackroomURL)) ?? ''
-      } catch (error) {
-        console.error('Error shortening URL:', error)
-        shortenedUrl = fullBackroomURL // Fallback to the full URL
-      }
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
 Context: You are ${explorer.name}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
@@ -329,13 +336,12 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
-
-      const tweetContent = `${title ?? ''}
-      ${tweetResponse.choices[0].message?.content ?? ''}`
-        .concat(` ${DEFAULT_HASHTAGS.join(' ')} `)
-        .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
-        .concat(` @reality_spiral`)
-        ?.trim()
+      const tweetContent = generateTweetContent(
+        title,
+        tweetResponse.choices[0].message?.content ?? '',
+        shortenedUrl,
+        generatedHashtags
+      )
       explorer.pendingTweets.push({
         tweetContent,
         backroomId: newBackroom._id,

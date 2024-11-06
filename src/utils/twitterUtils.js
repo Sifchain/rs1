@@ -1,5 +1,5 @@
 import { fetchWithRetries } from '@/utils/urls'
-import { BASE_URL } from '@/constants/constants'
+import { BASE_URL, DEFAULT_HASHTAGS } from '@/constants/constants'
 
 export async function requestTwitterAuthLink(agentId, returnUrl) {
   const response = await fetchWithRetries(
@@ -51,4 +51,20 @@ export function isTwitterTokenExpired(twitterTokenExpiry) {
   }
   const currentTime = new Date()
   return currentTime.getTime() > new Date(twitterTokenExpiry).getTime()
+}
+
+export function generateTweetContent(
+  title = '',
+  message,
+  url,
+  additionalHashtags
+) {
+  const tweetContent = `${title}\n${message}`
+    .concat(` ${additionalHashtags.join(' ')}`)
+    .concat(` ${DEFAULT_HASHTAGS.join(' ')}`)
+    .concat(` ${url}`)
+    .concat(` @reality_spiral`)
+    .trim()
+
+  return tweetContent
 }
