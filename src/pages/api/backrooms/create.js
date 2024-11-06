@@ -250,7 +250,7 @@ Your task is to synthesize this information into a cohesive evolution summary th
       let shortenedUrl = ''
       try {
         const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
-        shortenedUrl = await shortenURL(fullBackroomURL)
+        shortenedUrl = (await shortenURL(fullBackroomURL)) ?? ''
       } catch (error) {
         console.error('Error shortening URL:', error)
         shortenedUrl = fullBackroomURL // Fallback to the full URL
