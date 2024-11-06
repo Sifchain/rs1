@@ -18,11 +18,11 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/continueStories",
-      "schedule": "*/15 * * * *"
+      "path": "api/cron/continueStories",
+      "schedule": "*/75 * * * *"
     },
     {
-      "path": "/api/cron/savePollResults",
+      "path": "api/cron/savePollResults",
       "schedule": "*/15 * * * *"
     }
   ]

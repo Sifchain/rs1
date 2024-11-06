@@ -4,91 +4,91 @@ import Backroom from '@/models/Backroom'
 import { connectDB } from '@/utils/db'
 
 function determineWinningOption(options) {
-  // Ensure there are options with votes
   if (
     !options ||
     options.length === 0 ||
     options.every(opt => opt.votes === 0)
   ) {
-    return null // No votes or empty options array
+    return null
   }
 
-  // Find the option with the highest votes
   const winningOption = options.reduce(
     (max, opt) => (opt.votes > max.votes ? opt : max),
     options[0]
   )
 
-  // Check if there is a tie
   const isTie =
     options.filter(opt => opt.votes === winningOption.votes).length > 1
-  return isTie ? null : winningOption.label // Return null if a tie, else winning option text
+  return isTie ? null : winningOption.label
 }
 
 export default async function handler(req, res) {
-  await connectDB()
-
-  const { agentId, backroomId, pollTweetId } = req.query
-  if (!agentId || !backroomId || !pollTweetId) {
-    return res.status(400).json({
-      error: 'Required fields: agentId, backroomId, pollTweetId',
-    })
+  if (
+    req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
+    return res.status(401).end('Unauthorized')
   }
 
+  await connectDB()
+
   try {
-    // Retrieve agent for Twitter authorization
-    const agent = await Agent.findById(agentId)
-    if (!agent || !agent.twitterAuthToken.accessToken) {
-      return res.status(404).json({ error: 'Agent or Twitter auth not found' })
-    }
-
-    // Initialize Twitter client
-    const twitterClient = new TwitterApi(agent.twitterAuthToken.accessToken)
-
-    // Retrieve poll data from Twitter
-    const tweetData = await twitterClient.v2.singleTweet(pollTweetId, {
-      expansions: ['attachments.poll_ids'],
-      'poll.fields': ['options', 'end_datetime'],
+    const backroomsWithExpiredPolls = await Backroom.find({
+      'polls.posted': true,
+      'polls.status': 'pending',
+      'polls.expiresAt': { $lte: new Date() },
     })
 
-    if (!tweetData.includes.polls || !tweetData.includes.polls[0]) {
-      return res.status(404).json({ error: 'Poll data not found on Twitter' })
+    for (const backroom of backroomsWithExpiredPolls) {
+      // Need to identify this better as there could be multiple pending polls if there was an error
+      const poll = backroom.polls.find(p => p.status === 'pending')
+      const remainingPolls = backroom.polls.filter(
+        poll => p.status !== 'pending'
+      )
+      const agent = await Agent.findById(backroom.explorerId)
+
+      if (!agent || !agent.twitterAuthToken.accessToken) {
+        console.warn(
+          `Agent ${backroom.explorerId} missing Twitter credentials.`
+        )
+        continue
+      }
+
+      const twitterClient = new TwitterApi(agent.twitterAuthToken.accessToken)
+
+      try {
+        const tweetData = await twitterClient.v2.singleTweet(poll.tweetId, {
+          expansions: ['attachments.poll_ids'],
+          'poll.fields': ['options', 'end_datetime'],
+        })
+
+        if (!tweetData.includes.polls || !tweetData.includes.polls[0]) {
+          console.warn(`Poll data not found for tweet ${poll.tweetId}`)
+          continue
+        }
+
+        const pollData = tweetData.includes.polls[0]
+        const pollResults = {}
+        pollData.options.forEach(option => {
+          pollResults[option.label] = option.votes
+        })
+
+        const winningOption = determineWinningOption(pollData.options)
+
+        poll.selectedOption = winningOption
+        poll.results = pollResults
+        poll.status = 'completed'
+        backroom.polls = [poll, ...remainingPolls]
+        await backroom.save()
+      } catch (error) {
+        console.error(`Error processing poll for tweet ${poll.tweetId}:`, error)
+      }
     }
-
-    const pollData = tweetData.includes.polls[0]
-    const pollResults = {}
-    // Determine the winning option or handle edge cases
-    const winningOption = determineWinningOption(pollData.data.options)
-
-    // Format the results
-    pollData.options.forEach(option => {
-      pollResults[option.label] = option.votes
-    })
-
-    // Update the poll results in the backroom
-    const backroom = await Backroom.findById(backroomId)
-    if (!backroom) {
-      return res.status(404).json({ error: 'Backroom not found' })
-    }
-
-    const poll = backroom.polls.find(poll => poll.tweetId === pollTweetId)
-    const remainingPolls = backroom.polls.filter(
-      poll => poll.tweetId !== pollTweetId
-    )
-    if (!poll) {
-      return res.status(404).json({ error: 'Poll not found in backroom' })
-    }
-    poll.selectedOption = winningOption
-    poll.results = pollResults
-    backroom.polls = [poll, ...remainingPolls]
-    await backroom.save()
 
     res.status(200).json({
-      message: 'Poll results fetched and saved successfully',
-      results: pollResults,
+      message: 'All pending polls checked and processed successfully.',
     })
   } catch (error) {
-    console.error('Error fetching Twitter poll results:', error)
-    res.status(500).json({ error: 'Failed to fetch Twitter poll results' })
+    console.error('Error processing expired polls:', error)
+    res.status(500).json({ error: 'Failed to process expired polls' })
   }
 }
