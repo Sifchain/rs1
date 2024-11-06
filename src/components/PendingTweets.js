@@ -246,6 +246,31 @@ const PendingTweets = ({
                         Tweet exceeds 280 words
                       </FormErrorMessage>
                     )}
+                    <Tooltip
+                      label={
+                        !hasEditPermission()
+                          ? `You have to be the owner of the agent to edit it`
+                          : ''
+                      }
+                      hasArrow
+                      placement="top"
+                    >
+                      <Box
+                        as="span"
+                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
+                      >
+                        <Button
+                          isDisabled={!hasEditPermission()}
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={() =>
+                            handleSaveEdit(tweet._id, tweet.tweetContent)
+                          }
+                        >
+                          Save
+                        </Button>
+                      </Box>
+                    </Tooltip>
                   </Flex>
                 ) : (
                   <Flex justifyContent="space-between" mb={2}>
