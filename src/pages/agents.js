@@ -715,7 +715,7 @@ function Agents() {
                           isDisabled={!hasEditPermission()}
                           pointerEvents={hasEditPermission() ? 'auto' : 'none'}
                         >
-                          Link X
+                          {`${!isXTokenExpired ? 'Rel' : 'L'}ink X`}
                         </Button>
                         <Button
                           onClick={
