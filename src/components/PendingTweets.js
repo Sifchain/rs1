@@ -69,6 +69,7 @@ const PendingTweets = ({
       if (response?.ok) {
         const data = await response.json()
         setSelectedAgent(data.agent)
+        setPendingTweets(data.agent.pendingTweets)
         showNotification({
           title: 'Tweet Discarded',
           description: 'The tweet has been successfully discarded.',
@@ -161,6 +162,7 @@ const PendingTweets = ({
         setEditTweetId(null)
         setEditTweetContent('')
         setSelectedAgent(data.agent)
+        setPendingTweets(data.agent.pendingTweets)
         showNotification({
           title: 'Tweet Updated',
           description: 'The tweet content has been updated.',
