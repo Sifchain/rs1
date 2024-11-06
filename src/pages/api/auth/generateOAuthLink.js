@@ -4,11 +4,25 @@ import Agent from '@/models/Agent'
 import { connectDB } from '@/utils/db'
 import { BASE_URL } from '@/constants/constants'
 
+// Middleware to set CORS headers for all requests
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Update to specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'POST, GET, PUT, OPTIONS')
+}
+
 export default async function generateOAuthLink(req, res) {
   const { agentId, returnUrl } = req.query
 
   try {
     await connectDB()
+    setHeaders(res)
+
+    if (req.method === 'OPTIONS') {
+      // Handle preflight request
+      return res.status(204).end()
+    }
 
     const agent = await Agent.findById(agentId)
     if (!agent) {
