@@ -40,18 +40,18 @@ export default async function handler(req, res) {
           .status(404)
           .json({ error: 'No pending tweet found with the specified ID.' })
 
-      let twitterClient
-      try {
-        // Try refreshing the token to ensure it's valid
-        twitterClient = await refreshTwitterToken(agent)
-      } catch (error) {
-        console.error('Failed to refresh Twitter token:', error)
-        return res.status(400).json({
-          error: 'Token refresh failed. User reauthorization may be needed.',
-        })
-      } finally {
-        twitterClient = new TwitterApi(agent.twitterAuthToken.accessToken)
-      }
+      let twitterClient = new TwitterApi(agent.twitterAuthToken.accessToken)
+      // try {
+      //   // Try refreshing the token to ensure it's valid
+      //   twitterClient = await refreshTwitterToken(agent)
+      // } catch (error) {
+      //   console.error('Failed to refresh Twitter token:', error)
+      //   return res.status(400).json({
+      //     error: 'Token refresh failed. User reauthorization may be needed.',
+      //   })
+      // } finally {
+      //   twitterClient = new TwitterApi(agent.twitterAuthToken.accessToken)
+      // }
 
       try {
         const tweetResponse = await twitterClient.v2.tweet(
