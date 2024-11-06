@@ -1,12 +1,16 @@
 import { TwitterApi } from 'twitter-api-v2'
+import { isTwitterTokenExpired } from '@/utils/twitterUtils'
+import { connectDB } from '@/utils/db'
 
 export async function refreshTwitterToken(agent) {
   // Check if the token is expired
   if (!isTwitterTokenExpired(agent.twitterTokenExpiry)) {
-    const { accessToken, refreshToken } = agent.twitterAuthToken
-    if (accessToken) {
-      return new TwitterApi(accessToken)
-    }
+    // Token is still valid, return the current client
+    return new TwitterApi({
+      clientId: process.env.TWITTER_API_KEY,
+      clientSecret: process.env.TWITTER_API_SECRET_KEY,
+      accessToken: agent.twitterAuthToken.accessToken,
+    })
   }
   const twitterClient = new TwitterApi({
     clientId: process.env.TWITTER_API_KEY,
