@@ -83,12 +83,16 @@ function Agents() {
       console.error('Error during Twitter OAuth:', error)
     }
   }
+  const hasEditPermission = useCallback(() => {
+    const user = JSON.parse(localStorage.getItem('user'))
+    return user && selectedAgent && user?._id === selectedAgent?.user
+  }, [selectedAgent])
   useEffect(() => {
     const isXTokenExpired = isTwitterTokenExpired(
       selectedAgent?.twitterTokenExpiry
     )
     setIsXTokenExpired(isXTokenExpired)
-    if (isXTokenExpired) {
+    if (isXTokenExpired && hasEditPermission()) {
       showNotification({
         title: 'Twitter Token Expired',
         description:
@@ -386,10 +390,6 @@ function Agents() {
     )
   }
 
-  const hasEditPermission = useCallback(() => {
-    const user = JSON.parse(localStorage.getItem('user'))
-    return user && selectedAgent && user?._id === selectedAgent?.user
-  }, [selectedAgent])
   const handleCreateBackroom = () => {
     router.push(
       `/create-backroom${agentId != null ? `?agentId=${agentId}` : ''}`
