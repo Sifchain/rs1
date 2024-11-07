@@ -15,15 +15,5 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/continueStories",
-      "schedule": "*/75 * * * *"
-    },
-    {
-      "path": "/api/cron/savePollResults",
-      "schedule": "*/60 * * * *"
-    }
   ]
 }
