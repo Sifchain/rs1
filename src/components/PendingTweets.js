@@ -12,9 +12,10 @@ import {
 } from '@chakra-ui/react'
 import { FiTrash2 } from 'react-icons/fi'
 import { fetchWithRetries } from '@/utils/urls'
-import { BASE_URL } from '@/constants/constants'
+import { BASE_URL, DEFAULT_HASHTAGS } from '@/constants/constants'
 import { useNotification } from '@/context/NotificationContext'
 import { FiCopy } from 'react-icons/fi'
+import TwitterShareButton from '@/components/TwitterShareButton'
 
 const PendingTweets = ({
   selectedAgent,
@@ -302,7 +303,6 @@ const PendingTweets = ({
                             .join(' ')}
                         </pre>
                       </Text>
-
                       {/* <Tooltip
                       label={
                         !hasEditPermission()
@@ -338,16 +338,20 @@ const PendingTweets = ({
                       Error: {tweet.errorDetails}
                     </Text>
                   )}
-                  <Flex justifyContent="space-between" alignItems="center">
+                  <Flex justifyContent="start" alignItems="center" gap={4}>
                     <Button
                       onClick={() => handleCopy(tweet.tweetContent, tweet._id)}
                       variant="outline"
                       colorScheme="blue"
                       leftIcon={<FiCopy />}
-                      mb={2}
                     >
                       Copy Tweet
                     </Button>
+                    <TwitterShareButton
+                      text={tweet.tweetContent}
+                      url={`https://app.realityspiral.com/backrooms/${tweet.backroomId.toString()}`}
+                      hashtags={DEFAULT_HASHTAGS}
+                    />
                     {/* <Button
                     size="sm"
                     isDisabled={!hasEditPermission()}
