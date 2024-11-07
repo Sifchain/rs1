@@ -350,7 +350,7 @@ const PendingTweets = ({
                     <TwitterShareButton
                       text={tweet.tweetContent}
                       url={`https://app.realityspiral.com/backrooms/${tweet.backroomId.toString()}`}
-                      hashtags={DEFAULT_HASHTAGS}
+                      hashtags={[]}
                     />
                     {/* <Button
                     size="sm"
