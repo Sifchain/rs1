@@ -9,7 +9,6 @@ export async function refreshTwitterToken(agent) {
     return new TwitterApi({
       clientId: process.env.TWITTER_API_KEY,
       clientSecret: process.env.TWITTER_API_SECRET_KEY,
-      accessToken: agent.twitterAuthToken.accessToken,
     })
   }
   const twitterClient = new TwitterApi({

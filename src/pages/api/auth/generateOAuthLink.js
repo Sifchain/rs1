@@ -34,17 +34,19 @@ export default async function generateOAuthLink(req, res) {
       clientSecret: process.env.TWITTER_API_SECRET_KEY,
     })
 
-    // Define a fixed redirect URI as specified in Twitter's app settings
-    const TWITTER_REDIRECT_URI = process.env.TWITTER_REDIRECT_URI
-
     // Generate the authorization link with scopes
     const { url, codeVerifier, state } = twitterClient.generateOAuth2AuthLink(
-      TWITTER_REDIRECT_URI,
+      process.env.TWITTER_REDIRECT_URI,
       { scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'] }
     )
-
-    // Save codeVerifier and state in the agent
-    agent.twitterAuthState = { codeVerifier, state }
+    agent.twitterAuthToken = {
+      accessToken: '',
+      refreshToken: '',
+    }
+    agent.twitterAuthState = {
+      codeVerifier,
+      state,
+    }
     await agent.save()
 
     // Append returnUrl as a query parameter in the redirect link

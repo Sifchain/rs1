@@ -26,12 +26,16 @@ export default async function handler(req, res) {
       clientSecret: process.env.TWITTER_API_SECRET_KEY,
     })
 
-    const { accessToken, refreshToken, expiresIn } =
-      await twitterClient.loginWithOAuth2({
-        code,
-        codeVerifier,
-        redirectUri: process.env.TWITTER_REDIRECT_URI,
-      })
+    const {
+      client: loggedClient,
+      accessToken,
+      refreshToken,
+      expiresIn,
+    } = await twitterClient.loginWithOAuth2({
+      code,
+      codeVerifier,
+      redirectUri: process.env.TWITTER_REDIRECT_URI,
+    })
 
     if (!accessToken || !refreshToken) {
       return res
