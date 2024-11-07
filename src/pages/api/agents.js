@@ -31,8 +31,22 @@ const sanitizeAgent = agent => {
   }
 }
 
+// Middleware to set CORS headers for all requests
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Update to specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'POST, GET, PUT, OPTIONS')
+}
+
 export default async function handler(req, res) {
   await connectDB()
+  setHeaders(res)
+
+  if (req.method === 'OPTIONS') {
+    // Handle preflight request
+    return res.status(204).end()
+  }
 
   if (req.method === 'POST') {
     try {
@@ -44,7 +58,6 @@ export default async function handler(req, res) {
           .json({ error: 'All fields are required: name, description' })
       }
 
-      // Create a new agent with optional prompts
       const newAgent = new Agent({
         name,
         user,
@@ -52,22 +65,31 @@ export default async function handler(req, res) {
         originalDescription: description,
       })
       await newAgent.save()
-
-      // Sanitize and send the agent data
       res.status(201).json(sanitizeAgent(newAgent))
     } catch (error) {
       res.status(500).json({ error })
     }
   } else if (req.method === 'GET') {
     try {
-      // Fetch agents and include only the specified fields
-      const agents = await Agent.find(
-        {},
-        '_id name description evolutions user tweets conversationPrompt recapPrompt tweetPrompt createdAt updatedAt pendingTweets originalDescription'
-      ).lean()
-      res.status(200).json(agents)
+      const { agentId } = req.query
+      if (agentId) {
+        const explorer = await Agent.findById(agentId).lean()
+        if (!explorer) {
+          return res.status(404).json({ error: 'Agent not found' })
+        }
+        return res.status(200).json([explorer])
+      } else {
+        const agents = await Agent.find(
+          {},
+          '_id name description evolutions user tweets createdAt updatedAt pendingTweets originalDescription twitterAuthToken twitterAuthState twitterTokenExpiry'
+        ).lean()
+        return res.status(200).json(agents)
+      }
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch agents' })
+      console.error('Error in /api/agents:', error)
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch agents', details: error.message })
     }
   } else if (req.method === 'PUT') {
     try {
@@ -77,19 +99,12 @@ export default async function handler(req, res) {
           error: 'All fields are required: id, name',
         })
       }
-      // Ensure the user has permission to modify this agent
       await checkAgentOwnership(agentId, userId)
 
-      // Update the agent with optional prompts
       const updatedAgent = await Agent.findByIdAndUpdate(
         agentId,
-        {
-          name,
-          description,
-          // should we update the original description?
-          // originalDescription: description,
-        },
-        { new: true } // Return the updated agent
+        { name, description },
+        { new: true }
       )
 
       res.status(200).json(sanitizeAgent(updatedAgent))
@@ -98,7 +113,6 @@ export default async function handler(req, res) {
       res.status(500).json({ error: error.message || 'Failed to update agent' })
     }
   } else {
-    res.setHeader('Allow', ['POST', 'GET', 'PUT'])
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }

@@ -11,6 +11,7 @@ import { InteractionStage } from '@/utils/InteractionStage'
 import { connectDB } from '@/utils/db'
 import { getParsedOpenAIResponse } from '@/utils/ai'
 import { z } from 'zod'
+import { generateTweetContent } from '@/utils/twitterUtils'
 
 // TODO: implement this across all routes in a generic way that deployments don't fail
 // const allowedOrigins = [/^https:\/\/(?:.*\.)?realityspiral\.com.*/]
@@ -18,6 +19,13 @@ const TitleSchema = z.object({
   title: z.string(),
 })
 
+// Middleware to set CORS headers for all responses
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Replace * with your specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'POST, OPTIONS')
+}
 export default async function handler(req, res) {
   // const origin = req.headers.origin || req.headers.referer || 'same-origin'
 
@@ -29,6 +37,12 @@ export default async function handler(req, res) {
   // if (!isAllowed) {
   //   return res.status(403).json({ error: 'Request origin not allowed' })
   // }
+  setHeaders(res) // Apply CORS headers for all responses
+
+  if (req.method === 'OPTIONS') {
+    // Handle CORS preflight requests
+    return res.status(204).end()
+  }
 
   await connectDB()
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -51,7 +65,7 @@ export default async function handler(req, res) {
       if (!explorer || !responder) {
         return res
           .status(400)
-          .json({ error: 'Invalid explorer or responder agent name' })
+          .json({ error: 'Invalid explorer or responder agent' })
       }
 
       const explorerEvolutions = explorer.evolutions.length
@@ -65,7 +79,12 @@ export default async function handler(req, res) {
         backroomType,
         topic,
         explorer,
-        responder
+        responder,
+        null,
+        null,
+        null,
+        [],
+        []
       )
       await interactionStage.generateCustomStory()
       let explorerMessageHistory = [
@@ -82,29 +101,24 @@ export default async function handler(req, res) {
           role: 'assistant',
           content: explorerMessage,
         })
-        responderMessageHistory.push({
-          role: 'user',
-          content: explorerMessage,
-        })
+        responderMessageHistory.push({ role: 'user', content: explorerMessage })
+
         const responderMessage =
           await interactionStage.generateResponderMessage()
-        explorerMessageHistory.push({
-          role: 'user',
-          content: responderMessage,
-        })
+        explorerMessageHistory.push({ role: 'user', content: responderMessage })
         responderMessageHistory.push({
           role: 'assistant',
           content: responderMessage,
         })
       }
       // Gather the entire conversation content from explorerMessageHistory
-      const conversationContent = explorerMessageHistory
+      const conversationContentArray = explorerMessageHistory
         .slice(1) // Start from the initial CLI prompt to include only conversation parts
         .map(
           entry =>
             `${entry.role === 'user' ? responder.name : explorer.name}: ${entry.content}`
         )
-        .join('\n')
+      const conversationContent = conversationContentArray.join('\n')
       // Generate relevant hashtags based on the conversation
       const hashtagPrompt = `Based on the following conversation, generate the top 3 most appropriate hashtags summarizing the following conversation:\n\n${conversationContent}  in the following format #hashtag1, #hashtag2, #hashtag3`
       const hashtagResponse = await openai.chat.completions.create({
@@ -128,13 +142,11 @@ export default async function handler(req, res) {
           TitleSchema
         )
         title = parsedResponse.title
-        console.log('Full Parsed Response:', parsedResponse)
       } catch (error) {
         console.error('Error fetching interaction data:', error)
       }
 
-      // Generate a summary
-      // Create and save the new backroom entry
+      // Save the initial interaction state and conversation history to `Backroom`
       const newBackroom = new Backroom({
         role,
         sessionDetails,
@@ -149,10 +161,34 @@ export default async function handler(req, res) {
         backroomType,
         topic,
         title,
+        interactionStageState: interactionStage.getStageState(), // Save InteractionStage state
       })
 
       await newBackroom.save()
-      console.log('New Backroom:', newBackroom)
+      let shortenedUrl = ''
+      try {
+        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
+        shortenedUrl = (await shortenURL(fullBackroomURL)) ?? ''
+      } catch (error) {
+        console.error('Error shortening URL:', error)
+        shortenedUrl = fullBackroomURL // Fallback to the full URL
+      }
+      // Create tweets for each message in the conversation
+      conversationContentArray.map((message, index) => {
+        const tweetContent = generateTweetContent(
+          `${title} ${index + 1}/${conversationContentArray.length}`,
+          message,
+          shortenedUrl,
+          generatedHashtags
+        )
+        explorer.pendingTweets.push({
+          tweetContent,
+          backroomId: newBackroom._id,
+          tweetType: `MESSAGE ${index + 1}`,
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 mins from now
+        })
+      })
       // Generate an evolution summary for the explorer agent
       const recapPrompt = `
 System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
@@ -226,14 +262,6 @@ Your task is to synthesize this information into a cohesive evolution summary th
       }
       explorer.evolutions.push(newEvolution)
       await explorer.save()
-      let shortenedUrl = ''
-      try {
-        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
-        shortenedUrl = await shortenURL(fullBackroomURL)
-      } catch (error) {
-        console.error('Error shortening URL:', error)
-        shortenedUrl = fullBackroomURL // Fallback to the full URL
-      }
       // Prepare a tweet for the backroom conversation and save it as a pending tweet
       const tweetPrompt = `
 Context: You are ${explorer.name}, composing a tweet about your recent conversation in the digital dimension. Your essence and background:
@@ -308,17 +336,18 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         max_tokens: MAX_TOKENS,
         temperature: 0.7,
       })
-
-      const tweetContent = `${title ?? ''}
-      ${tweetResponse.choices[0].message?.content ?? ''}`
-        .concat(` ${DEFAULT_HASHTAGS.join(' ')} `)
-        .concat(` ${shortenedUrl}`) // append shortened url at the end of the tweet content
-        .concat(` @reality_spiral`)
-        ?.trim()
+      const tweetContent = generateTweetContent(
+        title,
+        tweetResponse.choices[0].message?.content ?? '',
+        shortenedUrl,
+        generatedHashtags
+      )
       explorer.pendingTweets.push({
         tweetContent,
         backroomId: newBackroom._id,
+        tweetType: 'RECAP',
         createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 20 * 60 * 1000), // 15 mins from now
       })
       await explorer.save()
 
@@ -330,7 +359,6 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         .json({ error: 'Failed to create backroom or update agent evolution' })
     }
   } else {
-    res.setHeader('Allow', ['POST'])
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }

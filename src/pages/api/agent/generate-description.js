@@ -17,8 +17,23 @@ const DescriptionSchema = z.object({
   name: z.string(),
 })
 
+// Middleware to set CORS headers for all requests
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Update to specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'POST, GET, PUT, OPTIONS')
+}
+
 export default async function handler(req, res) {
   try {
+    setHeaders(res)
+
+    if (req.method === 'OPTIONS') {
+      // Handle preflight request
+      return res.status(204).end()
+    }
+
     const { description, name, isRandom } = req.body
     // Generate description based on whether one was provided
     const descriptionPrompt =
@@ -33,7 +48,6 @@ export default async function handler(req, res) {
         descriptionPrompt,
         DescriptionSchema
       )
-      console.log('Full Parsed Response:', parsedResponse)
       generatedDescription = parsedResponse.description
       generatedName = parsedResponse.name
     } catch (error) {

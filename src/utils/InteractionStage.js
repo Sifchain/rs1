@@ -23,19 +23,52 @@ const InteractionStageSchema = z.object(
 )
 
 export class InteractionStage {
-  constructor(backroomType, topic, explorerAgent, responderAgent) {
+  constructor(
+    backroomType,
+    topic,
+    explorerAgent,
+    responderAgent,
+    narrativeStage,
+    narrativePoint,
+    currentFocus,
+    narrativeSignals,
+    conversationHistory
+  ) {
     this.backroomType = backroomType
     this.topic = topic
     this.explorerAgent = explorerAgent
     this.responderAgent = responderAgent
-    this.narrativeStage = 'start'
-    this.conversationHistory = []
-    this.chosenStoryTemplate = this?.getChosenStoryTemplate()
+    this.narrativeStage = narrativeStage ?? 'start'
+    this.narrativePoint = narrativePoint ?? ''
+    this.currentFocus = currentFocus ?? { theme: '', tension: '' }
+    this.narrativeSignals = narrativeSignals ?? []
+    this.conversationHistory = conversationHistory ?? []
+    this.chosenStoryTemplate = this.getChosenStoryTemplate()
+  }
+
+  // Method to retrieve the state as an object for storage or transfer
+  getStageState() {
+    return {
+      narrativeStage: this.narrativeStage,
+      narrativePoint: this.narrativePoint,
+      currentFocus: this.currentFocus,
+      narrativeSignals: this.narrativeSignals,
+      conversationHistory: this.conversationHistory,
+    }
+  }
+
+  // Method to set the state from a stored state object
+  setStageState(state) {
+    this.narrativeStage = state.narrativeStage
+    this.narrativePoint = state.narrativePoint
+    this.currentFocus = state.currentFocus
+    this.narrativeSignals = state.narrativeSignals
+    this.conversationHistory = state.conversationHistory
   }
 
   getChosenStoryTemplate() {
     const selectedBackroom = backroomTypes.find(
-      type => type.id === this?.backroomType
+      type => type.id === this.backroomType
     )
     return selectedBackroom?.template || 'General adaptable backroom template'
   }
@@ -258,7 +291,7 @@ Now, ${this?.explorerAgent.name}, describe your next action or observation in re
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this?.explorerAgent.name} in the third person, based on the following prompt.`,
+          content: `Generate a response as ${this?.explorerAgent.name} in the third person, based on the following prompt. Please limit your response to 250 words or less.`,
         },
         { role: 'user', content: explorerPrompt },
       ],
@@ -308,7 +341,7 @@ Now, ${this?.responderAgent.name}, describe your next action or observation in r
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this?.responderAgent.name} in the third person, based on the following prompt.`,
+          content: `Generate a response as ${this?.responderAgent.name} in the third person, based on the following prompt. Please limit your response to 250 words or less.`,
         },
         { role: 'user', content: responderPrompt },
       ],

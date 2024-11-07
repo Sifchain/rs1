@@ -1,6 +1,21 @@
 import { Alchemy, Network, Utils } from 'alchemy-sdk'
 
+// Middleware to set CORS headers for all responses
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // Replace with specific origin if needed
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'GET, OPTIONS')
+}
+
 export default async function handler(req, res) {
+  setHeaders(res)
+
+  if (req.method === 'OPTIONS') {
+    // Handle CORS preflight request
+    return res.status(204).end()
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' })
   }

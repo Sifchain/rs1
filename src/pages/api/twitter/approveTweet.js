@@ -1,51 +1,70 @@
-import Agent from '../../../models/Agent'
+import Agent from '@/models/Agent'
 import { TwitterApi } from 'twitter-api-v2'
-import { refreshTwitterToken } from '../../../utils/twitterTokenRefresh'
 import { connectDB } from '@/utils/db'
+import { refreshTwitterToken } from '@/utils/auth/refreshTwitterToken'
+import { postTweet } from '@/services/twitterService'
+
+// Middleware to set CORS headers for all responses
+const setHeaders = res => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Allow', 'PUT, OPTIONS')
+}
 
 export default async function handler(req, res) {
   await connectDB()
+  setHeaders(res)
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end()
+  }
 
   if (req.method === 'PUT') {
     const { agentId, tweetId } = req.body
+
+    if (!agentId || !tweetId) {
+      return res
+        .status(400)
+        .json({ error: 'Missing required fields: agentId or tweetId.' })
+    }
+
     try {
-      if (!agentId || !tweetId) {
-        return res.status(400).json({ error: 'Missing required fields.' })
-      }
-      const updatedAgent = await Agent.findById(agentId)
-      if (!updatedAgent) {
-        return res.status(404).json({ error: 'Agent not found.' })
-      }
-      if (updatedAgent.pendingTweets.length === 0) {
-        return res.status(404).json({ error: 'No pending tweets found.' })
-      }
+      const agent = await Agent.findById(agentId)
+      if (!agent) return res.status(404).json({ error: 'Agent not found.' })
 
-      // Refresh Twitter token (if required)
-      const refreshedClient = await refreshTwitterToken(updatedAgent)
-      // Post the tweet
-      const tweetResponse = await refreshedClient.v2.tweet(
-        updatedAgent.pendingTweets.find(t => t._id.toString() === tweetId)
-          .tweetContent
+      const pendingTweet = agent.pendingTweets.find(
+        tweet => tweet._id.toString() === tweetId
       )
-
-      // Update the agent with the posted tweet URL
-      updatedAgent.tweets.push(
-        `https://twitter.com/i/web/status/${tweetResponse.data.id}`
+      if (!pendingTweet) {
+        return res
+          .status(404)
+          .json({ error: 'No pending tweet found with the specified ID.' })
+      }
+      const client = new TwitterApi(agent.twitterAuthToken.accessToken)
+      console.log('Client:', client)
+      const tweet = await postTweet(
+        agent.twitterAuthToken.accessToken,
+        agent.twitterAuthToken.refreshToken,
+        pendingTweet.tweetContent,
+        agentId
       )
-      // Remove the tweet from the pendingTweets array
-      updatedAgent.pendingTweets = updatedAgent.pendingTweets.filter(
-        tweet => tweet._id.toString() !== tweetId
-      )
-      await updatedAgent.save()
-      res
-        .status(200)
-        .json({ message: 'Tweet successfully posted.', agent: updatedAgent })
+      if (!tweet) {
+        return res
+          .status(500)
+          .json({ error: 'Failed to post tweet to Twitter.' })
+      }
+      return res.status(200).json({
+        message: 'Tweet successfully approved.',
+        agent: updatedAgent,
+      })
     } catch (error) {
-      console.error('Error posting tweet:', error)
-      res.status(500).json({ error: 'Failed to post tweet.' })
+      console.error('Handler Error:', error)
+      res
+        .status(500)
+        .json({ error: 'An error occurred while processing the request.' })
     }
   } else {
-    res.setHeader('Allow', ['PUT'])
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }

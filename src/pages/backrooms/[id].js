@@ -16,7 +16,7 @@ import {
   Tooltip,
   Link,
 } from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import Navigation from '@/components/Navigation'
 import SEO from '@/components/SEO'
@@ -31,6 +31,7 @@ import {
 import { useAccount } from '@/hooks/useMetaMask'
 import { ArrowBackIcon, RepeatIcon, StarIcon } from '@chakra-ui/icons'
 import { fetchWithRetries } from '@/utils/urls'
+import PendingTweets from '@/components/PendingTweets'
 
 const parseConversationByAgents = (content, agentOne, agentTwo) => {
   // Escape agent names to handle special characters
@@ -134,19 +135,67 @@ function BackroomDetail() {
   const { id } = router.query
   const [backroom, setBackroom] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [explorerAgent, setExplorerAgent] = useState(null)
+  const hasEditPermission = useCallback(() => {
+    const user = JSON.parse(localStorage.getItem('user'))
+    return user && explorerAgent && user?._id === explorerAgent?.user
+  }, [explorerAgent])
+
   useEffect(() => {
-    if (id) {
-      fetchWithRetries(BASE_URL + `/api/backrooms/${id}`)
-        .then(res => res.json())
-        .then(data => {
-          setBackroom(data)
+    if (!id) return
+
+    const fetchData = async () => {
+      try {
+        // First fetch backroom
+        const backroomRes = await fetchWithRetries(
+          `${BASE_URL}/api/backrooms/${id}`
+        )
+        if (!backroomRes.ok) {
+          console.error('Backroom response not ok:', await backroomRes.text())
+          throw new Error(`Failed to fetch backroom: ${backroomRes.status}`)
+        }
+
+        const backroom = await backroomRes.json()
+        setBackroom(backroom)
+
+        // Check if we have an explorerId before proceeding
+        if (!backroom.explorerId) {
+          console.log('No explorerId found in backroom:', backroom)
           setLoading(false)
-        })
-        .catch(err => {
-          console.error('Error fetching backroom:', err)
-          setLoading(false)
-        })
+          return
+        }
+
+        // Then fetch agent
+        const agentRes = await fetchWithRetries(
+          `${BASE_URL}/api/agents?agentId=${backroom.explorerId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        if (!agentRes.ok) {
+          console.error('Agent response not ok:', await agentRes.text())
+          throw new Error(`Failed to fetch agent: ${agentRes.status}`)
+        }
+
+        const data = await agentRes.json()
+
+        if (data.length === 1) {
+          setExplorerAgent(data[0])
+        } else {
+          console.error('Unexpected data length:', data)
+        }
+      } catch (error) {
+        console.error('Error in fetch sequence:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchData()
   }, [id])
 
   if (loading) {
@@ -183,6 +232,12 @@ function BackroomDetail() {
       alert('Link copied to clipboard!')
     })
   }
+  console.log({
+    explorerAgent,
+    setExplorerAgent,
+    hasEdit: hasEditPermission(),
+    id,
+  })
   return (
     <ChakraProvider>
       <SEO title={`Backroom Details`} />
@@ -274,6 +329,7 @@ function BackroomDetail() {
                 </Tooltip>
               </Flex>
             </Flex>
+
             {/* Added Backroom Type Display */}
             {backroom?.backroomType && (
               <Flex wrap="wrap">
@@ -310,6 +366,12 @@ function BackroomDetail() {
                 </Tag>
               ))}
             </Flex>
+            <PendingTweets
+              selectedAgent={explorerAgent}
+              setSelectedAgent={setExplorerAgent}
+              hasEditPermission={hasEditPermission}
+              backroomId={id}
+            />
             {/* Collapse component for full conversation */}
             <Collapse in={true} animateOpacity>
               <Box mt={2}>

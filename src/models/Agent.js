@@ -38,11 +38,24 @@ const AgentSchema = new mongoose.Schema({
           type: String,
           required: true,
         },
+        tweetType: {
+          type: String,
+          default: 'Recap',
+        },
         backroomId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Backroom', // Reference the Backroom model
         },
         createdAt: { type: Date, default: Date.now },
+        postStatus: {
+          type: String,
+          enum: ['Pending', 'Posted', 'Failed'],
+          default: 'Pending',
+        },
+        postTimestamp: { type: Date, default: null },
+        retryCount: { type: Number, default: 0 },
+        errorDetails: { type: String, default: '' },
+        expiresAt: { type: Date, default: null },
       },
     ],
     default: [],

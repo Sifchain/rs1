@@ -39,6 +39,10 @@ import { useAccount } from '../hooks/useMetaMask'
 import LoadingOverlay from '../components/LoadingOverlay'
 import { fetchWithRetries } from '@/utils/urls'
 import { track } from '@vercel/analytics'
+import {
+  requestTwitterAuthLink,
+  completeTwitterAuth,
+} from '@/utils/twitterUtils'
 
 function CreateAgent() {
   const [agentName, setAgentName] = useState('')
@@ -197,20 +201,8 @@ function CreateAgent() {
     }
 
     try {
-      const response = await fetchWithRetries(
-        BASE_URL + `/api/auth/twitter?agentId=${agentId}`
-      )
-      if (!response || !response.ok) {
-        console.error('Failed to fetch data after multiple retries.')
-        // Handle the failure case here, e.g., show an error message to the user
-        return
-      }
-      const data = await response.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        console.error('No URL returned from /api/auth/twitter')
-      }
+      // Call the helper function to initiate Twitter OAuth flow
+      await requestTwitterAuthLink(agentId)
     } catch (error) {
       console.error('Error during Twitter OAuth:', error)
     }

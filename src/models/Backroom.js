@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import PollSchema from '@/models/Poll'
 
 const BackroomSchema = new mongoose.Schema({
   explorerAgentName: { type: String, required: true },
@@ -11,10 +12,31 @@ const BackroomSchema = new mongoose.Schema({
   sessionDetails: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  polls: { type: [PollSchema], default: [] }, // New field to store conversation-related polls
   explorerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Agent', // Reference the Agent model
     default: null,
+  },
+  backroomState: {
+    narrativeStage: { type: String, default: '' },
+    narrativePoint: { type: String, default: '' },
+    currentFocus: {
+      theme: { type: String, default: '' },
+      tension: { type: String, default: '' },
+    },
+    narrativeSignals: { type: [String], default: [] },
+    conversationHistory: {
+      type: [
+        {
+          role: { type: String, enum: ['explorer', 'responder', 'system'] },
+          content: { type: String, default: '' },
+          timestamp: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+    default: {},
   },
   responderId: {
     type: mongoose.Schema.Types.ObjectId,
