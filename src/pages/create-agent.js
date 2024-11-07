@@ -443,7 +443,7 @@ function CreateAgent() {
                   </Box>
                 </Alert>
               )}
-              <Button
+              {/* <Button
                 onClick={() => {
                   track('Link Twitter Account', { agentId })
                   handleTwitterAuth()
@@ -456,7 +456,7 @@ function CreateAgent() {
                 {twitterLinked
                   ? 'Twitter Account Linked'
                   : 'Link Twitter Account'}
-              </Button>
+              </Button> */}
               <Tooltip
                 label={
                   !enoughFunds

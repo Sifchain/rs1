@@ -706,7 +706,7 @@ function Agents() {
                         justifyContent={{ base: 'center', md: 'flex-end' }}
                         gap={2}
                       >
-                        <Button
+                        {/* <Button
                           onClick={
                             hasEditPermission() ? handleTwitterAuth : undefined
                           }
@@ -716,7 +716,7 @@ function Agents() {
                           pointerEvents={hasEditPermission() ? 'auto' : 'none'}
                         >
                           {`${!isXTokenExpired ? 'Rel' : 'L'}ink X`}
-                        </Button>
+                        </Button> */}
                         <Button
                           onClick={
                             hasEditPermission() ? handleEditClick : undefined
