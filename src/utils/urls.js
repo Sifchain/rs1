@@ -63,9 +63,6 @@ const fetchWithRetries = async (
     try {
       const response = await fetch(url, options)
       if (!response.ok) {
-        console.log(
-          `ERROR: response= url attempted: ${url} attempt: ${attempt} maxRetries: ${maxRetries} retryDelay: ${retryDelay}`
-        )
         continue
       }
       return response
