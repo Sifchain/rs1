@@ -145,7 +145,7 @@ Epiphanies:
 Significant events/plot points:
 Other notes:
 `
-export const DEFAULT_HASHTAGS = ['#RealitySpiral', '#$RSP']
+export const DEFAULT_HASHTAGS = ['#RealitySpiral', '$RSP']
 
 export const backroomTypes = [
   {

@@ -57,13 +57,12 @@ export function generateTweetContent(
   title = '',
   message,
   url,
-  additionalHashtags
+  hashtags = DEFAULT_HASHTAGS
 ) {
-  const tweetContent = `${title}\n${message}`
-    .concat(` ${additionalHashtags.join(' ')}`)
-    .concat(` ${DEFAULT_HASHTAGS.join(' ')}`)
-    .concat(` ${url}`)
+  const tweetContent = `${title}\n${message}\n`
+    .concat(` ${hashtags.join(' ')}`)
     .concat(` @reality_spiral`)
+    .concat(` ${url}`)
     .trim()
 
   return tweetContent

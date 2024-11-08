@@ -17,6 +17,7 @@ import {
   Td,
   Tooltip,
   Spinner,
+  Input,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from 'react'
@@ -52,6 +53,8 @@ function CreateBackroom() {
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
   const [topic, setTopic] = useState('')
+  const [messageLength, setMessageLength] = useState(200) // Default message length
+  const [interactionCount, setInteractionCount] = useState(2) // Default interaction count
 
   const fetchAgents = async () => {
     try {
@@ -169,7 +172,14 @@ function CreateBackroom() {
       errors.topic = 'Topic must be less than 1000 characters'
       valid = false
     }
-
+    if (messageLength > 200) {
+      errors.messageLength = 'Message length cannot exceed 200 characters'
+      valid = false
+    }
+    if (interactionCount > 5) {
+      errors.interactionCount = 'Interaction count cannot exceed 5'
+      valid = false
+    }
     setErrors(errors)
     return valid
   }
@@ -182,6 +192,8 @@ function CreateBackroom() {
       responderAgent,
       backroomType,
       topicLength: topic.length,
+      messageLength,
+      interactionCount,
     })
     try {
       const res = await fetchWithRetries(BASE_URL + '/api/backrooms/create', {
@@ -195,6 +207,8 @@ function CreateBackroom() {
           responderAgentId: responderAgent,
           backroomType,
           topic,
+          messageLength,
+          interactionCount,
         }),
       })
       if (!res || !res.ok) {
@@ -410,7 +424,49 @@ function CreateBackroom() {
               <FormErrorMessage mb={2}>{errors.topic}</FormErrorMessage>
             )}
           </FormControl>
+          {/* Message Length Input */}
+          <FormControl isInvalid={errors.messageLength}>
+            <Text fontSize="lg" fontWeight="bold" color="#81d4fa" mb={2}>
+              Message Length (max 200):
+            </Text>
+            <Input
+              type="number"
+              placeholder="Enter message length"
+              value={messageLength}
+              onChange={e => setMessageLength(Math.min(200, e.target.value))}
+              bg="#424242"
+              color="#e0e0e0"
+              border="2px solid"
+              borderColor={errors.messageLength ? 'red.500' : '#757575'}
+              _hover={{ borderColor: '#81d4fa' }}
+              mb={4}
+            />
+            {errors.messageLength && (
+              <FormErrorMessage>{errors.messageLength}</FormErrorMessage>
+            )}
+          </FormControl>
 
+          {/* Interaction Count Input */}
+          <FormControl isInvalid={errors.interactionCount}>
+            <Text fontSize="lg" fontWeight="bold" color="#81d4fa" mb={2}>
+              Number of Interactions (max 5):
+            </Text>
+            <Input
+              type="number"
+              placeholder="Enter number of interactions"
+              value={interactionCount}
+              onChange={e => setInteractionCount(Math.min(5, e.target.value))}
+              bg="#424242"
+              color="#e0e0e0"
+              border="2px solid"
+              borderColor={errors.interactionCount ? 'red.500' : '#757575'}
+              _hover={{ borderColor: '#81d4fa' }}
+              mb={4}
+            />
+            {errors.interactionCount && (
+              <FormErrorMessage>{errors.interactionCount}</FormErrorMessage>
+            )}
+          </FormControl>
           <Tooltip
             label={
               !enoughFunds

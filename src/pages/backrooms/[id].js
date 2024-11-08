@@ -243,7 +243,7 @@ function BackroomDetail() {
       <SEO title={`Backroom Details`} />
       <Navigation />
       <Box bg="#424242" color="#e0e0e0" minHeight="100vh" py={10} px={6}>
-        <Flex justifyContent="start" alignItems="center" gap={4}>
+        <Flex justifyContent="space-between" alignItems="center" gap={4}>
           {/* Back Button */}
           <Button
             leftIcon={<ArrowBackIcon />}
@@ -256,6 +256,15 @@ function BackroomDetail() {
           <Heading size="xl" mb={4} color="#81d4fa">
             Backroom Details
           </Heading>
+          <Button
+            onClick={() => router.push('/create-backroom')}
+            colorScheme="blue"
+            ms={10}
+            size="md"
+            fontWeight="bold"
+          >
+            + New Backroom
+          </Button>
         </Flex>
         <VStack spacing={4} align="stretch">
           <Box

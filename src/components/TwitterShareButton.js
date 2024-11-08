@@ -3,8 +3,8 @@ import { track } from '@vercel/analytics'
 
 const TwitterShareButton = ({ text, url, hashtags }) => {
   // URL-encode parameters for the Twitter URL
-  const tweetText = encodeURIComponent(text || 'Check out this content!')
-  const tweetUrl = encodeURIComponent(url || 'https://yourwebsite.com')
+  const tweetText = encodeURIComponent(text || '')
+  const tweetUrl = encodeURIComponent(url || '')
   const tweetHashtags = hashtags ? encodeURIComponent(hashtags.join(',')) : ''
 
   // Build Twitter intent URL

@@ -59,8 +59,8 @@ const PendingTweets = ({
 
   const handleCancelEdit = () => {
     setEditTweetId(null)
-    setEditTweetContent('')
-    setWordCount(0)
+    // setEditTweetContent('')
+    // setWordCount(0)
     setWordCountError(false)
   }
 
@@ -254,15 +254,59 @@ const PendingTweets = ({
                         border="2px solid #757575"
                         resize="vertical"
                         minHeight="300px"
+                        maxWidth="85%"
                       />
-                      <Text fontSize="sm" color="#b0bec5" ml={2}>
-                        {wordCount} / 280 words
+                      <Flex>
+                        <Button
+                          isDisabled={!hasEditPermission()}
+                          size="md"
+                          colorScheme="blue"
+                          mr={4}
+                          onClick={() => handleCancelEdit()}
+                        >
+                          Cancel
+                        </Button>
+                        <Tooltip
+                          label={
+                            !hasEditPermission()
+                              ? `You have to be the owner of the agent to edit it`
+                              : ''
+                          }
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box
+                            as="span"
+                            cursor={
+                              hasEditPermission() ? 'pointer' : 'not-allowed'
+                            }
+                          >
+                            <Button
+                              isDisabled={!hasEditPermission()}
+                              size="md"
+                              colorScheme="green"
+                              onClick={() =>
+                                handleSaveEdit(tweet._id, editTweetContent)
+                              }
+                            >
+                              Save
+                            </Button>
+                          </Box>
+                        </Tooltip>
+                      </Flex>
+                    </Flex>
+                  ) : (
+                    <Flex justifyContent="start" mb={2}>
+                      <Text color="#e0e0e0">
+                        <pre>
+                          {tweet.tweetContent
+                            .split(' ')
+                            .map((word, index) =>
+                              index > 0 && index % 15 === 0 ? `\n${word}` : word
+                            )
+                            .join(' ')}
+                        </pre>
                       </Text>
-                      {wordCountError && (
-                        <FormErrorMessage>
-                          Tweet exceeds 280 words
-                        </FormErrorMessage>
-                      )}
                       <Tooltip
                         label={
                           !hasEditPermission()
@@ -280,54 +324,26 @@ const PendingTweets = ({
                         >
                           <Button
                             isDisabled={!hasEditPermission()}
-                            size="sm"
+                            size="md"
                             colorScheme="blue"
+                            mr={4}
                             onClick={() =>
-                              handleSaveEdit(tweet._id, editTweetContent)
+                              handleEditTweet(tweet._id, tweet.tweetContent)
                             }
                           >
-                            Save
+                            Edit
+                          </Button>
+                          <Button
+                            size="md"
+                            isDisabled={!hasEditPermission()}
+                            colorScheme="red"
+                            onClick={() => handleDiscardTweet(tweet._id)}
+                            leftIcon={<FiTrash2 />}
+                          >
+                            Discard
                           </Button>
                         </Box>
                       </Tooltip>
-                    </Flex>
-                  ) : (
-                    <Flex justifyContent="start" mb={2}>
-                      <Text color="#e0e0e0">
-                        <pre>
-                          {tweet.tweetContent
-                            .split(' ')
-                            .map((word, index) =>
-                              index > 0 && index % 15 === 0 ? `\n${word}` : word
-                            )
-                            .join(' ')}
-                        </pre>
-                      </Text>
-                      {/* <Tooltip
-                      label={
-                        !hasEditPermission()
-                          ? `You have to be the owner of the agent to edit it`
-                          : ''
-                      }
-                      hasArrow
-                      placement="top"
-                    >
-                      <Box
-                        as="span"
-                        cursor={hasEditPermission() ? 'pointer' : 'not-allowed'}
-                      >
-                        <Button
-                          isDisabled={!hasEditPermission()}
-                          size="sm"
-                          colorScheme="blue"
-                          onClick={() =>
-                            handleEditTweet(tweet._id, tweet.tweetContent)
-                          }
-                        >
-                          Edit
-                        </Button>
-                      </Box>
-                    </Tooltip> */}
                     </Flex>
                   )}
                   {/* <Text fontSize="sm" color="#b0bec5" mb={2}>
@@ -337,6 +353,14 @@ const PendingTweets = ({
                     <Text fontSize="sm" color="red.400" mb={2}>
                       Error: {tweet.errorDetails}
                     </Text>
+                  )}
+                  <Text fontSize="sm" color="#b0bec5" ml={2} mb={2}>
+                    {wordCount} / 280 words
+                  </Text>
+                  {wordCountError && (
+                    <FormErrorMessage mb={2}>
+                      Tweet exceeds 280 words
+                    </FormErrorMessage>
                   )}
                   <Flex justifyContent="start" alignItems="center" gap={4}>
                     <Button
@@ -349,19 +373,10 @@ const PendingTweets = ({
                     </Button>
                     <TwitterShareButton
                       text={tweet.tweetContent}
-                      url={`https://app.realityspiral.com/backrooms/${tweet.backroomId.toString()}`}
+                      url={``}
                       hashtags={[]}
                     />
-                    {/* <Button
-                    size="sm"
-                    isDisabled={!hasEditPermission()}
-                    colorScheme="red"
-                    onClick={() => handleDiscardTweet(tweet._id)}
-                    leftIcon={<FiTrash2 />}
-                  >
-                    Discard
-                  </Button>
-                  <Button
+                    {/*<Button
                     size="sm"
                     isDisabled={!hasEditPermission()}
                     colorScheme="green"

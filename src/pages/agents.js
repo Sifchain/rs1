@@ -93,13 +93,13 @@ function Agents() {
     )
     setIsXTokenExpired(isXTokenExpired)
     if (isXTokenExpired && hasEditPermission()) {
-      showNotification({
-        title: 'Twitter Token Expired',
-        description:
-          'Your X token has expired. Please link your X account again.',
-        actionText: 'Relink X',
-        onAction: handleTwitterAuth,
-      })
+      // showNotification({
+      //   title: 'Twitter Token Expired',
+      //   description:
+      //     'Your X token has expired. Please link your X account again.',
+      //   actionText: 'Relink X',
+      //   onAction: handleTwitterAuth,
+      // })
     }
   }, [selectedAgent?.twitterTokenExpiry])
   // Twitter OAuth callback handling

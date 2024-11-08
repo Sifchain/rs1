@@ -55,6 +55,8 @@ export default async function handler(req, res) {
     tags = [],
     backroomType = 'cli',
     topic = '',
+    messageLength,
+    interactionCount,
   } = req.body
 
   const explorer = await Agent.findById(explorerAgentId)
@@ -84,7 +86,8 @@ export default async function handler(req, res) {
         null,
         null,
         [],
-        []
+        [],
+        messageLength
       )
       await interactionStage.generateCustomStory()
       let explorerMessageHistory = [
@@ -93,7 +96,7 @@ export default async function handler(req, res) {
       let responderMessageHistory = [
         await interactionStage.generateResponderSystemPrompt(),
       ]
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < interactionCount; i++) {
         // TODO: new ticket: implement ` while (!conversationComplete)` to replace conversation length by number of rounds
         // Generate explorer response using the current InteractionStage state + update state
         const explorerMessage = await interactionStage.generateExplorerMessage()
@@ -166,29 +169,14 @@ export default async function handler(req, res) {
 
       await newBackroom.save()
       let shortenedUrl = ''
+      const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
       try {
-        const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
-        shortenedUrl = (await shortenURL(fullBackroomURL)) ?? ''
+        shortenedUrl = (await shortenURL(fullBackroomURL)) ?? fullBackroomURL
       } catch (error) {
         console.error('Error shortening URL:', error)
         shortenedUrl = fullBackroomURL // Fallback to the full URL
       }
-      // Create tweets for each message in the conversation
-      conversationContentArray.map((message, index) => {
-        const tweetContent = generateTweetContent(
-          `${title} ${index + 1}/${conversationContentArray.length}`,
-          message,
-          shortenedUrl,
-          generatedHashtags
-        )
-        explorer.pendingTweets.push({
-          tweetContent,
-          backroomId: newBackroom._id,
-          tweetType: `MESSAGE ${index + 1}`,
-          createdAt: new Date(),
-          expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 mins from now
-        })
-      })
+
       // Generate an evolution summary for the explorer agent
       const recapPrompt = `
 System: You are an expert narrative analyst focusing on character development and psychological evolution. Your task is to analyze how an AI agent evolves through conversation and create a meaningful evolution summary.
@@ -349,8 +337,25 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         createdAt: new Date(),
         expiresAt: new Date(Date.now() + 20 * 60 * 1000), // 15 mins from now
       })
+      // Create tweets for each message in the conversation
+      conversationContentArray.map((message, index) => {
+        const tweetContent = generateTweetContent(
+          `${title} ${index + 1}/${conversationContentArray.length}`,
+          message,
+          index !== 0 ? '' : shortenedUrl,
+          index !== 0
+            ? generatedHashtags
+            : [...generatedHashtags, ...DEFAULT_HASHTAGS]
+        )
+        explorer.pendingTweets.push({
+          tweetContent,
+          backroomId: newBackroom._id,
+          tweetType: `MESSAGE ${index + 1}`,
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 mins from now
+        })
+      })
       await explorer.save()
-
       res.status(201).json(newBackroom)
     } catch (error) {
       console.error('Error:', error)
