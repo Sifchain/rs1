@@ -171,10 +171,11 @@ export default async function handler(req, res) {
       let shortenedUrl = ''
       const fullBackroomURL = getFullURL(`/backrooms/${newBackroom._id}`)
       try {
-        shortenedUrl = (await shortenURL(fullBackroomURL)) ?? fullBackroomURL
+        shortenedUrl =
+          (await shortenURL(fullBackroomURL)) ?? 'app.realityspiral.com'
       } catch (error) {
         console.error('Error shortening URL:', error)
-        shortenedUrl = fullBackroomURL // Fallback to the full URL
+        shortenedUrl = 'app.realityspiral.com' // Fallback to the full URL
       }
 
       // Generate an evolution summary for the explorer agent
@@ -328,7 +329,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         title,
         tweetResponse.choices[0].message?.content ?? '',
         shortenedUrl,
-        generatedHashtags
+        []
       )
       explorer.pendingTweets.push({
         tweetContent,
@@ -343,9 +344,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
           `${title} ${index + 1}/${conversationContentArray.length}`,
           message,
           index !== 0 ? '' : shortenedUrl,
-          index !== 0
-            ? generatedHashtags
-            : [...generatedHashtags, ...DEFAULT_HASHTAGS]
+          index !== 0 ? [] : [...DEFAULT_HASHTAGS]
         )
         explorer.pendingTweets.push({
           tweetContent,

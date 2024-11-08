@@ -146,7 +146,7 @@ Significant events/plot points:
 Other notes:
 `
 export const DEFAULT_HASHTAGS = ['#RealitySpiral', '$RSP']
-
+export const MAX_CHAR_LENGTH = 10000
 export const backroomTypes = [
   {
     id: 'slice_of_life',

@@ -26,8 +26,8 @@ const PendingTweets = ({
   const { showNotification } = useNotification()
   const [editTweetId, setEditTweetId] = useState(null)
   const [editTweetContent, setEditTweetContent] = useState('')
-  const [wordCount, setWordCount] = useState(0)
-  const [wordCountError, setWordCountError] = useState(false)
+  const [charCount, setCharCount] = useState(0)
+  const [charCountError, setCharCountError] = useState(false)
   const [pendingTweets, setPendingTweets] = useState([])
   useEffect(() => {
     setPendingTweets(
@@ -54,14 +54,13 @@ const PendingTweets = ({
   const handleEditTweet = (tweetId, tweetContent) => {
     setEditTweetId(tweetId)
     setEditTweetContent(tweetContent)
-    setWordCount(countWords(tweetContent))
+    setCharCount(tweetContent.length)
   }
 
   const handleCancelEdit = () => {
     setEditTweetId(null)
     // setEditTweetContent('')
-    // setWordCount(0)
-    setWordCountError(false)
+    setCharCountError(false)
   }
 
   const handleDiscardTweet = async tweetId => {
@@ -203,7 +202,7 @@ const PendingTweets = ({
   }
 
   const displayPendingTweets = () => {
-    if (pendingTweets?.length === 0) {
+    if (pendingTweets.length === 0) {
       return (
         <Text textAlign="center" fontSize="lg" color="#e0e0e0">
           No pending tweets.
@@ -212,187 +211,140 @@ const PendingTweets = ({
     }
 
     return (
-      selectedAgent &&
-      pendingTweets?.length > 0 && (
-        <Box
-          p={4}
-          bg="#424242"
-          borderRadius="lg"
-          border="2px solid #757575"
-          boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
-          mb={4}
-        >
-          <Text fontSize="lg" fontWeight="bold" color="#81d4fa" mb={2}>
-            Suggested Tweets
-          </Text>
-          <VStack spacing={4} align="stretch">
-            {pendingTweets?.map(tweet => {
-              return (
-                <Box
-                  key={tweet._id}
-                  border="2px solid #757575"
-                  p={3}
-                  borderRadius="md"
-                >
-                  <Text fontSize="md" color="#b0bec5" mt={1} mb={2}>
-                    <Text as="span" fontWeight="bold" color="#81d4fa">
-                      Type: {tweet?.tweetType ?? 'Recap'}
-                    </Text>
+      <Box
+        p={4}
+        bg="#424242"
+        borderRadius="lg"
+        border="2px solid #757575"
+        boxShadow="0 0 15px rgba(0, 0, 0, 0.2)"
+        mb={4}
+      >
+        <Text fontSize="lg" fontWeight="bold" color="#81d4fa" mb={2}>
+          Suggested Tweets
+        </Text>
+        <VStack spacing={4} align="stretch">
+          {pendingTweets.map(tweet => (
+            <Box
+              key={tweet._id}
+              border="2px solid #757575"
+              p={4}
+              borderRadius="md"
+              bg="#333"
+            >
+              <Text fontSize="md" color="#b0bec5" mb={2}>
+                <Text as="span" fontWeight="bold" color="#81d4fa">
+                  Type: {tweet?.tweetType ?? 'Recap'}
+                </Text>
+              </Text>
+              {editTweetId === tweet._id ? (
+                <Flex direction="column" gap={3}>
+                  <Textarea
+                    value={editTweetContent}
+                    onChange={e => {
+                      setEditTweetContent(e.target.value)
+                      setCharCount(e.target.value.length)
+                      setCharCountError(e.target.value.length > 280)
+                    }}
+                    placeholder="Edit tweet content"
+                    bg="#424242"
+                    color="#e0e0e0"
+                    border="2px solid #757575"
+                    resize="vertical"
+                    minHeight="150px"
+                  />
+                  <Text fontSize="sm" color="#b0bec5">
+                    {charCount} / 280 characters
                   </Text>
-                  {editTweetId === tweet._id ? (
-                    <Flex justifyContent="space-between" mb={2}>
-                      <Textarea
-                        value={editTweetContent}
-                        onChange={e => {
-                          setEditTweetContent(e.target.value)
-                          setWordCount(countWords(e.target.value))
-                          setWordCountError(false)
-                        }}
-                        placeholder="Edit tweet content"
-                        bg="#424242"
-                        color="#e0e0e0"
-                        border="2px solid #757575"
-                        resize="vertical"
-                        minHeight="300px"
-                        maxWidth="85%"
-                      />
-                      <Flex>
-                        <Button
-                          isDisabled={!hasEditPermission()}
-                          size="md"
-                          colorScheme="blue"
-                          mr={4}
-                          onClick={() => handleCancelEdit()}
-                        >
-                          Cancel
-                        </Button>
-                        <Tooltip
-                          label={
-                            !hasEditPermission()
-                              ? `You have to be the owner of the agent to edit it`
-                              : ''
-                          }
-                          hasArrow
-                          placement="top"
-                        >
-                          <Box
-                            as="span"
-                            cursor={
-                              hasEditPermission() ? 'pointer' : 'not-allowed'
-                            }
-                          >
-                            <Button
-                              isDisabled={!hasEditPermission()}
-                              size="md"
-                              colorScheme="green"
-                              onClick={() =>
-                                handleSaveEdit(tweet._id, editTweetContent)
-                              }
-                            >
-                              Save
-                            </Button>
-                          </Box>
-                        </Tooltip>
-                      </Flex>
-                    </Flex>
-                  ) : (
-                    <Flex justifyContent="start" mb={2}>
-                      <Text color="#e0e0e0">
-                        <pre>
-                          {tweet.tweetContent
-                            .split(' ')
-                            .map((word, index) =>
-                              index > 0 && index % 15 === 0 ? `\n${word}` : word
-                            )
-                            .join(' ')}
-                        </pre>
-                      </Text>
-                      <Tooltip
-                        label={
-                          !hasEditPermission()
-                            ? `You have to be the owner of the agent to edit it`
-                            : ''
-                        }
-                        hasArrow
-                        placement="top"
-                      >
-                        <Box
-                          as="span"
-                          cursor={
-                            hasEditPermission() ? 'pointer' : 'not-allowed'
-                          }
-                        >
-                          <Button
-                            isDisabled={!hasEditPermission()}
-                            size="md"
-                            colorScheme="blue"
-                            mr={4}
-                            onClick={() =>
-                              handleEditTweet(tweet._id, tweet.tweetContent)
-                            }
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="md"
-                            isDisabled={!hasEditPermission()}
-                            colorScheme="red"
-                            onClick={() => handleDiscardTweet(tweet._id)}
-                            leftIcon={<FiTrash2 />}
-                          >
-                            Discard
-                          </Button>
-                        </Box>
-                      </Tooltip>
-                    </Flex>
-                  )}
-                  {/* <Text fontSize="sm" color="#b0bec5" mb={2}>
-                  Status: {tweet.postStatus || 'Pending'}
-                </Text> */}
-                  {tweet.postStatus === 'Failed' && tweet.errorDetails && (
-                    <Text fontSize="sm" color="red.400" mb={2}>
-                      Error: {tweet.errorDetails}
-                    </Text>
-                  )}
-                  <Text fontSize="sm" color="#b0bec5" ml={2} mb={2}>
-                    {wordCount} / 280 words
-                  </Text>
-                  {wordCountError && (
-                    <FormErrorMessage mb={2}>
-                      Tweet exceeds 280 words
+                  {charCountError && (
+                    <FormErrorMessage>
+                      Tweet exceeds 280 characters
                     </FormErrorMessage>
                   )}
-                  <Flex justifyContent="start" alignItems="center" gap={4}>
-                    <Button
-                      onClick={() => handleCopy(tweet.tweetContent, tweet._id)}
-                      variant="outline"
-                      colorScheme="blue"
-                      leftIcon={<FiCopy />}
-                    >
-                      Copy Tweet
-                    </Button>
-                    <TwitterShareButton
-                      text={tweet.tweetContent}
-                      url={``}
-                      hashtags={[]}
-                    />
-                    {/*<Button
-                    size="sm"
-                    isDisabled={!hasEditPermission()}
-                    colorScheme="green"
-                    onClick={() => handleApproveTweet(tweet)}
-                  >
-                    Approve and Post
-                  </Button> */}
+                  <Flex justifyContent="space-between" width="100%">
+                    <Flex gap={4}>
+                      <Button
+                        size="md"
+                        colorScheme="blue"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="md"
+                        colorScheme="green"
+                        isDisabled={!hasEditPermission()}
+                        onClick={() =>
+                          handleSaveEdit(tweet._id, editTweetContent)
+                        }
+                      >
+                        Save
+                      </Button>
+                    </Flex>
+                    <Flex gap={4}>
+                      <Button
+                        onClick={() =>
+                          handleCopy(tweet.tweetContent, tweet._id)
+                        }
+                        size="md"
+                        variant="outline"
+                        colorScheme="blue"
+                        leftIcon={<FiCopy />}
+                      >
+                        Copy Tweet
+                      </Button>
+                      <TwitterShareButton text={tweet.tweetContent} />
+                    </Flex>
                   </Flex>
-                </Box>
-              )
-            })}
-          </VStack>
-        </Box>
-      )
+                </Flex>
+              ) : (
+                <Flex direction="column" gap={3}>
+                  <Text color="#e0e0e0" whiteSpace="pre-wrap">
+                    {tweet.tweetContent}
+                  </Text>
+                  <Flex justifyContent="space-between" width="100%">
+                    <Flex gap={4}>
+                      <Button
+                        size="md"
+                        colorScheme="blue"
+                        onClick={() =>
+                          handleEditTweet(tweet._id, tweet.tweetContent)
+                        }
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="md"
+                        colorScheme="red"
+                        onClick={() => handleDiscardTweet(tweet._id)}
+                        leftIcon={<FiTrash2 />}
+                      >
+                        Discard
+                      </Button>
+                    </Flex>
+                    <Flex gap={4}>
+                      <Button
+                        onClick={() =>
+                          handleCopy(tweet.tweetContent, tweet._id)
+                        }
+                        size="md"
+                        variant="outline"
+                        colorScheme="blue"
+                        leftIcon={<FiCopy />}
+                      >
+                        Copy Tweet
+                      </Button>
+                      <TwitterShareButton text={tweet.tweetContent} />
+                    </Flex>
+                  </Flex>
+                </Flex>
+              )}
+            </Box>
+          ))}
+        </VStack>
+      </Box>
     )
   }
+
   return pendingTweets?.length > 0 ? displayPendingTweets() : null
 }
 

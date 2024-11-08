@@ -56,12 +56,11 @@ export function isTwitterTokenExpired(twitterTokenExpiry) {
 export function generateTweetContent(
   title = '',
   message,
-  url,
+  url = 'app.realityspiral.com',
   hashtags = DEFAULT_HASHTAGS
 ) {
   const tweetContent = `${title}\n${message}\n`
     .concat(` ${hashtags.join(' ')}`)
-    .concat(` @reality_spiral`)
     .concat(` ${url}`)
     .trim()
 

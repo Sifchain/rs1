@@ -31,6 +31,7 @@ import {
   TOKEN_CONTRACT_ADDRESS,
   backroomTypes,
   BASE_URL,
+  MAX_CHAR_LENGTH,
 } from '../constants/constants'
 import { genIsBalanceEnough } from '../utils/balance'
 import LoadingOverlay from '../components/LoadingOverlay'
@@ -53,7 +54,7 @@ function CreateBackroom() {
   const [enoughFunds, setEnoughFunds] = useState(false)
   const { address } = useAccount()
   const [topic, setTopic] = useState('')
-  const [messageLength, setMessageLength] = useState(200) // Default message length
+  const [messageLength, setMessageLength] = useState(230) // Default message length
   const [interactionCount, setInteractionCount] = useState(2) // Default interaction count
 
   const fetchAgents = async () => {
@@ -172,8 +173,8 @@ function CreateBackroom() {
       errors.topic = 'Topic must be less than 1000 characters'
       valid = false
     }
-    if (messageLength > 200) {
-      errors.messageLength = 'Message length cannot exceed 200 characters'
+    if (messageLength > MAX_CHAR_LENGTH) {
+      errors.messageLength = `Cannot exceed ${MAX_CHAR_LENGTH} characters`
       valid = false
     }
     if (interactionCount > 5) {
@@ -425,15 +426,18 @@ function CreateBackroom() {
             )}
           </FormControl>
           {/* Message Length Input */}
+          {/* Message Length Input */}
           <FormControl isInvalid={errors.messageLength}>
             <Text fontSize="lg" fontWeight="bold" color="#81d4fa" mb={2}>
-              Message Length (max 200):
+              Characters (max {MAX_CHAR_LENGTH}):
             </Text>
             <Input
               type="number"
-              placeholder="Enter message length"
+              placeholder="Enter character length"
               value={messageLength}
-              onChange={e => setMessageLength(Math.min(200, e.target.value))}
+              onChange={e =>
+                setMessageLength(Math.min(MAX_CHAR_LENGTH, e.target.value))
+              }
               bg="#424242"
               color="#e0e0e0"
               border="2px solid"
@@ -505,16 +509,16 @@ function CreateBackroom() {
                 borderRadius="md"
                 overflow="hidden"
               >
-                <Thead
-                  bg="#333"
-                  borderTopRadius="md"
-                  display={{ base: 'none', md: 'table-header-group' }}
-                >
+                <Thead bg="#333" borderTopRadius="md">
                   <Tr>
-                    <Th color="#e0e0e0">Evolution</Th>
+                    <Th color="#e0e0e0" fontSize="md" fontWeight="bold">
+                      Evolution
+                    </Th>
                     <Th
                       color="#e0e0e0"
-                      display={{ base: 'none', md: 'table-cell' }}
+                      fontSize="md"
+                      fontWeight="bold"
+                      textAlign="center"
                     >
                       Backroom
                     </Th>
@@ -524,24 +528,16 @@ function CreateBackroom() {
                   {selectedExplorerEvolutions.map((evolution, index) => (
                     <Tr
                       key={index}
-                      as="a"
-                      href={`/backrooms/${evolution?.backroomId}`}
                       _hover={{ bg: '#333', textDecoration: 'none' }}
                       cursor="pointer"
                       bg={index % 2 === 0 ? '#2d2d2d' : '#424242'}
-                      display="flex"
-                      flexDirection={{ base: 'column', md: 'row' }}
-                      width="100%"
-                      p={{ base: 4, md: 0 }}
-                      alignItems="center"
                     >
                       <Td
                         fontFamily="Arial, sans-serif"
                         color="#e0e0e0"
-                        p={{ base: 2, md: 4 }}
-                        width="100%"
-                        whiteSpace="pre-line"
-                        borderBottom="none"
+                        p={4}
+                        borderBottom="1px solid #333"
+                        whiteSpace="pre-wrap"
                       >
                         {evolution.description}
                       </Td>
@@ -549,12 +545,16 @@ function CreateBackroom() {
                         fontFamily="Arial, sans-serif"
                         color="#81d4fa"
                         textAlign="center"
-                        display={{ base: 'none', md: 'table-cell' }}
                         fontWeight="bold"
                         p={4}
-                        width="200px"
+                        borderBottom="1px solid #333"
                       >
-                        View Backroom
+                        <a
+                          href={`/backrooms/${evolution?.backroomId}`}
+                          style={{ color: '#81d4fa', textDecoration: 'none' }}
+                        >
+                          View Backroom
+                        </a>
                       </Td>
                     </Tr>
                   ))}
