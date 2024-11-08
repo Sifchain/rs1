@@ -38,8 +38,8 @@ export default async function handler(req, res) {
     // Generate description based on whether one was provided
     const descriptionPrompt =
       isRandom || (description?.length === 0 && name?.length === 0)
-        ? `Please use the following template only: ${DESCRIPTION_TEMPLATE} and create an intriguing character. Similar to the I'm Feeling Lucky feature on Google. Return the description and name as a JSON object.`
-        : `Please create a character around the concept of ${name?.length !== 0 ? `name: ${name}` : ''} and description: ${description} and use this template:\n\n${DESCRIPTION_TEMPLATE}. Return the description and name as a JSON object.`
+        ? `Please create a random character description and name, different each time, similar to the I'm Feeling Lucky feature on Google. Please use this template ${DESCRIPTION_TEMPLATE}.  If the character's name is based on a famous entity, person, etc. in your training data then feel free to use data points on them from your training data. Please use that aforementioned template and return the filled in description and name as a JSON object.`
+        : `Please create a character ${name?.length !== 0 ? `name: ${name}` : ''} and description: ${description}  and use this template ${DESCRIPTION_TEMPLATE}.  If the character's name is based on a famous entity, person, etc. in your training data then feel free to use data points on them from your training data. Please use that aforementioned template and return the filled in description and name as a JSON object.`
     let generatedDescription = ''
     let generatedName = name
     try {

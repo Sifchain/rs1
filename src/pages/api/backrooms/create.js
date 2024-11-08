@@ -136,7 +136,7 @@ export default async function handler(req, res) {
       const snippetContent = conversationContent.slice(0, 150) + '...'
 
       // Generate title for the backroom conversation
-      const titlePrompt = `Generate a captivating, pithy title that if someone scrolled across would want to read more. Please use the backroom conversation content:\n\n${conversationContent}. Limit it to 1-10 words.`
+      const titlePrompt = `Generate a captivating, pithy title that if someone scrolled across would want to read more. Please use the backroom conversation content:\n\n${conversationContent}. Limit it to 1-7 words.`
       let title = ''
       // Generate title for the backroom conversation
       try {
@@ -329,7 +329,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         title,
         tweetResponse.choices[0].message?.content ?? '',
         shortenedUrl,
-        []
+        DEFAULT_HASHTAGS
       )
       explorer.pendingTweets.push({
         tweetContent,
@@ -344,7 +344,7 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
           `${title} ${index + 1}/${conversationContentArray.length}`,
           message,
           index !== 0 ? '' : shortenedUrl,
-          index !== 0 ? [] : [...DEFAULT_HASHTAGS]
+          index !== 0 ? [] : DEFAULT_HASHTAGS
         )
         explorer.pendingTweets.push({
           tweetContent,
