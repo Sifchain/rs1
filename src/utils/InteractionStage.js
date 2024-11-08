@@ -285,7 +285,7 @@ Imagine yourself in this environment and respond as if unfolding the next passag
 
 Your response should feel like part of an unfolding short story, where each sentence contributes to the experience of the reader. Balance between advancing the plot naturally and reflecting on the scene in a way that might add unexpected dimensions.
 
-Now, ${this?.explorerAgent.name}, describe your next action or observation in response to this setting.`
+Now, ${this?.explorerAgent.name}, describe your next action or observation in response to this setting. Please limit the response to ${this.messageLength} character or less.`
 
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
@@ -293,7 +293,7 @@ Now, ${this?.explorerAgent.name}, describe your next action or observation in re
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this?.explorerAgent.name} in the third person, based on the following prompt. Please limit your response to ${this.messageLength} character or less.`,
+          content: `Generate a response as ${this?.explorerAgent.name} in the third person, based on the following prompt. Please limit the response to ${this.messageLength} character or less.`,
         },
         { role: 'user', content: explorerPrompt },
       ],
@@ -336,14 +336,14 @@ Imagine yourself in this environment and respond as if unfolding the next passag
 
 Your response should feel like part of an unfolding short story, where each sentence contributes to the experience of the reader. Balance between advancing the plot naturally and reflecting on the scene in a way that might add unexpected dimensions.
 
-Now, ${this?.responderAgent.name}, describe your next action or observation in response to this setting.`
+Now, ${this?.responderAgent.name}, describe your next action or observation in response to this setting. Please limit the response to ${this.messageLength} character or less.`
     // Call OpenAI API to process and respond with an updated InteractionStage
     const response = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages: [
         {
           role: 'assistant',
-          content: `Generate a response as ${this?.responderAgent.name} in the third person, based on the following prompt. Please limit your response to ${this.messageLength} characters or less.`,
+          content: `Generate a response as ${this?.responderAgent.name} in the third person, based on the following prompt. Please limit the response to ${this.messageLength} characters or less.`,
         },
         { role: 'user', content: responderPrompt },
       ],
