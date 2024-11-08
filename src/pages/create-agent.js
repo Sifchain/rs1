@@ -220,12 +220,7 @@ function CreateAgent() {
       />
       <Box minHeight="100vh" bg="#424242" color="#e0e0e0">
         <Navigation />
-        <Box
-          py={{ base: 6, md: 10 }}
-          px={{ base: 4, md: 6 }}
-          maxW="800px"
-          mx="auto"
-        >
+        <Box py={{ base: 6, md: 10 }} px={{ base: 4, md: 6 }} mx="auto">
           <Flex justifyContent="space-between" alignItems="center" mb={3}>
             {/* Back Button */}
             <Button
