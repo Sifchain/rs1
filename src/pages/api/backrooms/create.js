@@ -343,8 +343,8 @@ Now, generate a tweet that captures a genuine moment of insight, discovery, or e
         const tweetContent = generateTweetContent(
           `${title} ${index + 1}/${conversationContentArray.length}`,
           message,
-          index !== 0 ? '' : shortenedUrl,
-          index !== 0 ? [] : DEFAULT_HASHTAGS
+          '',
+          []
         )
         explorer.pendingTweets.push({
           tweetContent,
