@@ -2,6 +2,7 @@
 import { TwitterApi } from 'twitter-api-v2'
 import Agent from '../../../models/Agent'
 import { connectDB } from '@/utils/db'
+import Tweet from '../../../models/Tweet'
 
 export default async function handler(req, res) {
   const { code, state, returnUrl } = req.query
@@ -37,6 +38,64 @@ export default async function handler(req, res) {
       redirectUri: process.env.TWITTER_REDIRECT_URI,
     })
 
+    // // Get authenticated user's ID
+    // const user = await loggedClient.v2.userByUsername('reality_spiral')
+    // console.log('user', user)
+    // const userId = user.data.id
+    // console.log('userId', userId)
+
+    // // Fetch all tweets for the authenticated user
+    // const tweets = []
+    // let paginationToken = null
+    // do {
+    //   const options = {
+    //     max_results: 100, // Adjust as needed
+    //     expansions: 'attachments.media_keys,referenced_tweets.id',
+    //     'media.fields': 'url,type',
+    //     'tweet.fields': 'created_at,public_metrics,referenced_tweets,text',
+    //   }
+    //   if (paginationToken) {
+    //     options.pagination_token = paginationToken
+    //   }
+
+    //   const { data, meta } = await loggedClient.v2.userTimeline(userId, options)
+    //   tweets.push(...data.data)
+    //   paginationToken = meta.next_token || null
+    // } while (paginationToken)
+
+    // console.log('tweets', tweets)
+    // for (const tweet of tweets) {
+    //   const tweetObj = {
+    //     id: tweet.id,
+    //     text: tweet.text,
+    //     type: 'tweet',
+    //   }
+
+    //   // Identify if it’s a retweet or a reply
+    //   if (tweet.referenced_tweets) {
+    //     const refTweet = tweet.referenced_tweets[0]
+    //     if (refTweet.type === 'retweeted') {
+    //       tweetObj.type = 'retweet'
+    //     } else if (refTweet.type === 'replied_to') {
+    //       tweetObj.type = 'reply'
+    //     }
+    //     tweetObj.text = refTweet.text
+    //   }
+
+    //   // Attach media URLs if media is present
+    //   if (tweet.attachments?.media_keys) {
+    //     tweetObj.media = tweet.attachments.media_keys
+    //       .map(
+    //         key => includes.media.find(media => media.media_key === key)?.url
+    //       )
+    //       .filter(Boolean)
+    //   }
+    //   await Tweet.findOneAndUpdate(
+    //     { id: tweet.id },
+    //     { text: tweet.text, type: tweet.type, media: tweet.media },
+    //     { upsert: true, new: true }
+    //   )
+    // }
     if (!accessToken || !refreshToken) {
       return res
         .status(500)
