@@ -1,5 +1,8 @@
 import { TwitterApi } from 'twitter-api-v2'
 import Agent from '@/models/Agent'
+import fs from 'fs'
+import { v4 as uuidv4 } from 'uuid'
+import path from 'path'
 
 // Helper function to determine the winning option in a poll
 function determineWinningOption(options) {
@@ -127,5 +130,36 @@ export const postTweet = async (
       // Wait for a short delay before retrying
       await delay(2000) // Wait for 2 seconds before the next attempt
     }
+  }
+}
+
+// Function to download image and tweet
+export async function tweetImageWithText(twitterClient, imageUrl, tweetText) {
+  let tempImagePath
+  try {
+    // Step 1: Download the image locally using fetch
+    const response = await fetch(imageUrl)
+    if (!response.ok)
+      throw new Error(`Failed to fetch image: ${response.statusText}`)
+
+    const imageBuffer = await response.arrayBuffer()
+    tempImagePath = path.join(__dirname, `temp-image-${uuidv4()}.png`)
+    fs.writeFileSync(tempImagePath, Buffer.from(imageBuffer))
+    // Step 2: Upload the image to Twitter
+    const mediaId = await twitterClient.v1.uploadMedia(tempImagePath)
+    console.log('Image uploaded successfully with media ID:', mediaId)
+    // Step 3: Tweet with the uploaded image
+    await twitterClient.v2.tweet({
+      text: tweetText,
+      media: { media_ids: [mediaId] },
+    })
+
+    console.log('Tweeted successfully with image!')
+  } catch (error) {
+    console.error('Error tweeting image:', error)
+  } finally {
+    // Clean up by deleting the downloaded image
+    if (tempImagePath && fs.existsSync(tempImagePath))
+      fs.unlinkSync(tempImagePath)
   }
 }
