@@ -2,7 +2,6 @@ import { connectDB } from '@/utils/db'
 import Tweet from '../../../models/Tweet'
 import { getParsedOpenAIResponse, generateImage } from '@/utils/ai'
 import { tweetImageWithText } from '@/services/twitterService'
-
 import { z } from 'zod'
 
 // Define the schema for OpenAI's parsed response
