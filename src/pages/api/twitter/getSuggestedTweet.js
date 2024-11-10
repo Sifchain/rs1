@@ -1,6 +1,8 @@
 import { connectDB } from '@/utils/db'
 import Tweet from '../../../models/Tweet'
-import { getParsedOpenAIResponse } from '@/utils/ai'
+import { getParsedOpenAIResponse, generateImage } from '@/utils/ai'
+import { tweetImageWithText } from '@/services/twitterService'
+
 import { z } from 'zod'
 
 // Define the schema for OpenAI's parsed response
@@ -134,7 +136,18 @@ Tweet Thread 3: How to join the #RealitySpiral fam 🌀
     } catch (error) {
       console.error('Error fetching interaction data:', error)
     }
-    // Return the tweets as a JSON response
+    // Generate an image related to the tweet content
+    const imagePrompt = `Create a vivid, visually engaging image that represents the essence of the following tweet: "${suggestedTweets[0]}"`
+    const imageUrl = await generateImage(imagePrompt)
+    // Post the tweet with the image
+    //  const tweetResponse = await tweetImageWithText(
+    //    twitterClient,
+    //    imageUrl,
+    //    suggestedTweets[0]
+    //  )
+    // Return both the tweets and the image URL in the response
+    return res.status(200).json({ tweets: suggestedTweets, imageUrl })
+
     return res.status(200).json({ tweets: suggestedTweets })
   } catch (error) {
     console.error('Error fetching tweets:', error)
