@@ -3,7 +3,16 @@ import Agent from '@/models/Agent'
 import fs from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
+import { getParsedOpenAIResponse } from '@/utils/ai'
+import { z } from 'zod'
+import { connectDB } from '@/utils/db'
+import Tweet from '@/models/Tweet'
 
+// Define the schema for OpenAI's parsed response
+const SummaryTweetSchema = z.object({
+  summary: z.string(),
+  suggestedTweets: z.array(z.string()),
+})
 // Helper function to determine the winning option in a poll
 function determineWinningOption(options) {
   if (
@@ -162,4 +171,42 @@ export async function tweetImageWithText(twitterClient, imageUrl, tweetText) {
     if (tempImagePath && fs.existsSync(tempImagePath))
       fs.unlinkSync(tempImagePath)
   }
+}
+
+export async function fetchTrendingTopics(
+  twitterClient,
+  topics = '/(tech|crypto|innovation)/i'
+) {
+  const trends = await twitterClient.v1.trendsByPlace(1) // 1 = Global trending topics
+  const filteredTrends = trends[0].trends.filter(
+    trend => trend.name.match(topics) // Adjust filter criteria
+  )
+  return filteredTrends.map(trend => trend.name)
+}
+
+export async function summarizeTweetsForTrend(trend) {
+  const tweets = await twitterClient.v2.search(trend, { max_results: 10 })
+  const trendTweetTexts = tweets.data.map(tweet => tweet.text).join('\n\n')
+  await connectDB()
+  const rspTweets = await Tweet.find({}).sort({ createdAt: -1 }) // Sort by creation date, newest first
+  const rspTweetTexts = rspTweets.map(tweet => tweet.text).join('\n\n')
+
+  const prompt = `Summarize the following tweets and return suggested tweets based off of @reality_spiral's previous tweets.
+
+   The tweets to summarize ${trendTweetTexts}
+   @reality_spiral's previous tweets: ${rspTweetTexts}`
+
+  try {
+    // Schema for the response
+    const parsedResponse = await getParsedOpenAIResponse(
+      prompt,
+      SummaryTweetSchema
+    )
+    summary = parsedResponse.summary
+    suggestedTweets = parsedResponse.suggestedTweets
+  } catch (error) {
+    console.error('Error fetching interaction data:', error)
+  }
+
+  return { summary, suggestedTweets }
 }
