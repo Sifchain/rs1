@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   try {
     // Connect to the database
     await connectDB()
-    const { focus, thread } = req.query
+    const { focus, thread, comments } = req.query
 
     // Retrieve all tweets from the MongoDB collection
     const tweets = await Tweet.find({}).sort({ createdAt: -1 }) // Sort by creation date, newest first
@@ -27,6 +27,8 @@ export default async function handler(req, res) {
       ${thread}
 
      ${focus ? `\nPlease focus on:\n\n${focus}` : ''}
+     ${comments ? `\nPlease use the following comments to help you:\n\n${comments}` : ''}
+
 
       Please make sure that the response feels like a natural extension of the previous tweets, maintaining the same tone and themes, and directly responds to the community's concern in the stated thread. Please return the tweet as a JSON object with an array of tweets, each tweet being a string. Please do not include any additional text or explanations. Just return the tweets as a JSON object.
 
