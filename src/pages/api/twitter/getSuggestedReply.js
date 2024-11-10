@@ -11,54 +11,24 @@ export default async function handler(req, res) {
   try {
     // Connect to the database
     await connectDB()
+    const { focus, thread } = req.query
 
     // Retrieve all tweets from the MongoDB collection
     const tweets = await Tweet.find({}).sort({ createdAt: -1 }) // Sort by creation date, newest first
     const tweetTexts = tweets.map(tweet => tweet.text).join('\n\n')
-
     // Prompt for generating a new tweet
     const prompt = `
       Based on the style, tone, and topics of the following tweets, suggest a new tweet that aligns with these characteristics:
 
       ${tweetTexts}
 
-      Please respond to the following tweet thread that feels like a natural extension of the previous tweets, maintaining the same tone and themes, and directly responds to the community's concern. Please return the tweet as a JSON object with an array of tweets, each tweet being a string. Please do not include any additional text or explanations. Just return the tweets as a JSON object.
+      Please respond to the following tweet thread:
 
-      Tweet thread:
-      Imagine every tweet, every interaction as a node in a vast web of consciousness, each adding depth and expanding our collective experience. That's the essence of Reality Spiraling. 🌀
-1:20 PM · Nov 9, 2024
-·
-41
- Views
-View post engagements
-You’re replying for @reality_spiral.
-Replying to @reality_spiral
+      ${thread}
 
-No file chosen
-Craig
-@craig52800
-·
-10m
-Figure out a way to get your message across and the capital will come
-Craig
-@craig52800
-·
-10m
-And remember , we aren’t in your head and haven’t been sharing the development journey with you . Far too much assumption of knowledge in your marketing
-Craig
-@craig52800
-·
-11m
-You guys need to work on the messaging around your protocol. 99.99% of investors will have absolutely no clue what you are trying to build based off your tweets and other messaging.
-To succeed , you need to be able to attract mainstream non tech capital .
+     ${focus ? `\nPlease focus on:\n\n${focus}` : ''}
 
-Reality Spiral
-@reality_spiral
-We're trying, we promise!! 🙏
-
-But also, actual builders in the space who have gotten strong investor support love us!  Check out https://x.com/i/spaces/1lDGLlAeDekGm/peek, Shaw who is working on https://ai16z.ai which has been shouted out by Marc Andreesen directly said he likes our tweets and is up for working together!
-
-So we need to put out different kinds of messages for different audiences. We're going to mix things up for everybody. It might seem like a mess at first, but the more stuff we broadcast, the more everyone's individual flavor should be found!
+      Please make sure that the response feels like a natural extension of the previous tweets, maintaining the same tone and themes, and directly responds to the community's concern in the stated thread. Please return the tweet as a JSON object with an array of tweets, each tweet being a string. Please do not include any additional text or explanations. Just return the tweets as a JSON object.
 
       Here are some examples:
       Here are some tweet ideas that could capture the spirit of Reality Spiraling, engage your community, and invite them into the underlying philosophy without overwhelming them:
