@@ -3,7 +3,7 @@ import Agent from '@/models/Agent'
 import fs from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
-import { getParsedOpenAIResponse } from '@/utils/ai'
+import { getParsedOpenAIResponse, generateImage } from '@/utils/ai'
 import { z } from 'zod'
 import { connectDB } from '@/utils/db'
 import Tweet from '@/models/Tweet'
@@ -209,7 +209,7 @@ ${trendTweetTexts}
 @reality_spiral's previous tweets for reference:
 ${rspTweetTexts}
 
-Return a summary and 3-5 suggested tweets that emphasize @reality_spiral's unique take on the trend "${trend}" and provide commentary or engagement prompts that align with their style and interests.`
+Return a summary and 3-5 suggested tweets that emphasize @reality_spiral's unique take on the trend "${trend}" and provide commentary or engagement prompts that align with their style and interests and their own $RSP token.`
 
   let summary = ''
   let suggestedTweets = []
@@ -224,6 +224,8 @@ Return a summary and 3-5 suggested tweets that emphasize @reality_spiral's uniqu
   } catch (error) {
     console.error('Error fetching interaction data:', error)
   }
+  const imagePrompt = `Create a vivid, visually engaging image that represents the essence of the following tweet: "${suggestedTweets[0]} and subject area: ${summary}"`
+  const imageUrl = await generateImage(imagePrompt)
 
-  return { summary, suggestedTweets }
+  return { summary, suggestedTweets, imageUrl }
 }

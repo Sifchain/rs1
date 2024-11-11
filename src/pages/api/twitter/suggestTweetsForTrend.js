@@ -11,12 +11,10 @@ export default async function handler(req, res) {
     const { trend } = req.query
     const twitterClient = new TwitterApi(process.env.TWITTER_BEARER_TOKEN)
     // Retrieve all tweets from the MongoDB collection
-    const { summary, suggestedTweets } = await summarizeTweetsForTrend(
-      twitterClient,
-      trend
-    )
+    const { summary, suggestedTweets, imageUrl } =
+      await summarizeTweetsForTrend(twitterClient, trend)
     // Return the tweets as a JSON response
-    return res.status(200).json({ summary, suggestedTweets })
+    return res.status(200).json({ summary, suggestedTweets, imageUrl })
   } catch (error) {
     console.error('Error fetching tweets:', error)
     return res
