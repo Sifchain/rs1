@@ -6,9 +6,13 @@ import {
 import { generateImage } from '@/utils/ai'
 import { TwitterApi } from 'twitter-api-v2'
 
+let isExecuted = false
 export default async function handler(req, res) {
   if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).end('Unauthorized')
+  }
+  if (isExecuted) {
+    return res.status(200).json({ message: 'Bot already executed.' })
   }
   try {
     // Fetch and process trending topics
@@ -45,6 +49,7 @@ export default async function handler(req, res) {
         )
         console.log({ tweetResponse })
         console.log(`Posted response for trend: ${trend}`)
+        isExecuted = true
       } catch (error) {
         console.error('Error summarizing and posting response:', error)
         continue
