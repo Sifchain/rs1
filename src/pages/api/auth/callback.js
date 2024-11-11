@@ -3,7 +3,10 @@ import { TwitterApi } from 'twitter-api-v2'
 import Agent from '../../../models/Agent'
 import { connectDB } from '@/utils/db'
 import Tweet from '../../../models/Tweet'
-
+import {
+  fetchTrendingTopics,
+  summarizeTweetsForTrend,
+} from '@/services/twitterService'
 export default async function handler(req, res) {
   const { code, state, returnUrl } = req.query
 
@@ -37,14 +40,20 @@ export default async function handler(req, res) {
       codeVerifier,
       redirectUri: process.env.TWITTER_REDIRECT_URI,
     })
+    // Not able to hit twitter API
+    // const trends = await fetchTrendingTopics(loggedClient)
+    // console.log('Trends:', trends)
+    // const { summary, suggestedTweets } = await summarizeTweetsForTrend(
+    //   loggedClient,
+    //   'peanut the squirrel'
+    // )
+    // console.log('Summary:', summary)
+    // console.log('Suggested tweets:', suggestedTweets)
 
-    // // Get authenticated user's ID
+    // Get authenticated user's ID
     // const user = await loggedClient.v2.userByUsername('reality_spiral')
-    // console.log('user', user)
     // const userId = user.data.id
-    // console.log('userId', userId)
-
-    // // Fetch all tweets for the authenticated user
+    // Fetch all tweets for the authenticated user
     // const tweets = []
     // let paginationToken = null
     // do {

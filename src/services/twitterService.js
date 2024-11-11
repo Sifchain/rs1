@@ -178,8 +178,9 @@ export async function fetchTrendingTopics(
   topics = '/(tech|crypto|innovation)/i'
 ) {
   const trends = await twitterClient.v1.trendsByPlace(1) // 1 = Global trending topics
+  console.log('Trends:', trends)
   const filteredTrends = trends[0].trends.filter(
-    trend => trend.name.match(topics) // Adjust filter criteria
+    trend => trend.name.match(/(tech|crypto|innovation|memecoins)/i) // Adjust filter criteria
   )
   return filteredTrends.map(trend => trend.name)
 }
@@ -199,7 +200,7 @@ export async function summarizeTweetsForTrend(twitterClient, trend) {
   const rspTweets = await Tweet.find({}).sort({ createdAt: -1 }) // Sort by creation date, newest first
   const rspTweetTexts = rspTweets.map(tweet => tweet.text).join('\n\n')
 
-  const prompt = `Summarize the following tweets and return suggested tweets based off of @reality_spiral's previous tweets.
+  const prompt = `Summarize the following tweets (tweets to summarize) about trend ${trend} and return suggested tweets about the trend: ${trend} from the @reality_spiral account based off of @reality_spiral's previous tweets
 
    The tweets to summarize ${trendTweetTexts}
    @reality_spiral's previous tweets: ${rspTweetTexts}`
