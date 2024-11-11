@@ -200,10 +200,17 @@ export async function summarizeTweetsForTrend(twitterClient, trend) {
   const rspTweets = await Tweet.find({}).sort({ createdAt: -1 }) // Sort by creation date, newest first
   const rspTweetTexts = rspTweets.map(tweet => tweet.text).join('\n\n')
 
-  const prompt = `Summarize the following tweets (tweets to summarize) about trend ${trend} and return suggested tweets about the trend: ${trend} from the @reality_spiral account based off of @reality_spiral's previous tweets
+  const prompt = `
+Summarize the following tweets about the trend "${trend}" to highlight key insights, themes, or cultural impacts that align with @reality_spiral's values and voice. Generate suggested tweets that resonate with @reality_spiral's perspective, keeping the messaging aligned with past tweets.
 
-   The tweets to summarize ${trendTweetTexts}
-   @reality_spiral's previous tweets: ${rspTweetTexts}`
+Tweets to summarize:
+${trendTweetTexts}
+
+@reality_spiral's previous tweets for reference:
+${rspTweetTexts}
+
+Return a summary and 3-5 suggested tweets that emphasize @reality_spiral's unique take on the trend "${trend}" and provide commentary or engagement prompts that align with their style and interests.`
+
   let summary = ''
   let suggestedTweets = []
   try {
