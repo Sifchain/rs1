@@ -13,6 +13,11 @@ const SummaryTweetSchema = z.object({
   summary: z.string(),
   suggestedTweets: z.array(z.string()),
 })
+const TrendsSchema = z.object({
+  trends: z.array(
+    z.object({ trend_name: z.string(), tweet_count: z.number() })
+  ),
+})
 // Helper function to determine the winning option in a poll
 function determineWinningOption(options) {
   if (
@@ -158,12 +163,19 @@ export async function tweetImageWithText(twitterClient, imageUrl, tweetText) {
     const mediaId = await twitterClient.v1.uploadMedia(tempImagePath)
     console.log('Image uploaded successfully with media ID:', mediaId)
     // Step 3: Tweet with the uploaded image
-    await twitterClient.v2.tweet({
+    const result = await twitterClient.v2.tweet({
       text: tweetText,
       media: { media_ids: [mediaId] },
     })
-
-    console.log('Tweeted successfully with image!')
+    const tweet = result.data
+    await connectDB()
+    await Tweet.findOneAndUpdate(
+      { id: tweet.id },
+      { text: tweet.text },
+      { upsert: true, new: true }
+    )
+    console.log('Tweeted successfully with image!', result)
+    return result
   } catch (error) {
     console.error('Error tweeting image:', error)
   } finally {
@@ -173,16 +185,52 @@ export async function tweetImageWithText(twitterClient, imageUrl, tweetText) {
   }
 }
 
-export async function fetchTrendingTopics(
-  twitterClient,
-  topics = '/(tech|crypto|innovation)/i'
-) {
-  const trends = await twitterClient.v1.trendsByPlace(1) // 1 = Global trending topics
-  console.log('Trends:', trends)
-  const filteredTrends = trends[0].trends.filter(
-    trend => trend.name.match(/(tech|crypto|innovation|memecoins)/i) // Adjust filter criteria
-  )
-  return filteredTrends.map(trend => trend.name)
+export async function fetchTrendingTopics() {
+  try {
+    const response = await fetch(
+      'https://api.x.com/2/trends/by/woeid/23424977',
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    const data = await response.json()
+
+    if (data && data.data) {
+      const trends = data.data.sort((a, b) => b.tweet_count - a.tweet_count)
+      // replace $ with # in trend names
+      console.log('Trends:', trends)
+      let filteredTrends = trends
+      try {
+        const response = await getParsedOpenAIResponse(
+          `From the following list of trends, filter and return only existing trends focused on our crypto Twitter community, making up approximately 80% of the result, and include about 20% from other topics. Use only the provided trends and do not add any new ones or modify the names. If no crypto trends are available, limit the output to a small number of non-crypto trends. Return the filtered list as a JSON array. Input Trends: ${JSON.stringify(trends)}`,
+          TrendsSchema
+        )
+        filteredTrends = response.trends
+      } catch (error) {
+        console.error('Error filtering trends:', error)
+        return []
+      }
+
+      // Map to extract trend names
+      const trendNames = filteredTrends.map(trend => trend.trend_name)
+      const sanitizedTrendNames = trendNames.map(name =>
+        name.replace(/\$/g, '')
+      )
+      console.log('Filtered Trends:', sanitizedTrendNames)
+      return sanitizedTrendNames
+    } else {
+      console.error('Unexpected data format:', data)
+      return []
+    }
+  } catch (error) {
+    console.error('Error fetching trends:', error)
+    return []
+  }
 }
 
 export async function summarizeTweetsForTrend(twitterClient, trend) {

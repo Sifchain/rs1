@@ -39,7 +39,6 @@ export const generateImage = async (prompt, options = {}) => {
 
     // Extract URL
     const imageUrl = imageResponse.data[0].url
-    console.log('Generated image URL:', imageUrl)
     return imageUrl
   } catch (error) {
     console.error('Error generating image:', error)
