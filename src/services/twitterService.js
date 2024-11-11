@@ -184,9 +184,17 @@ export async function fetchTrendingTopics(
   return filteredTrends.map(trend => trend.name)
 }
 
-export async function summarizeTweetsForTrend(trend) {
+export async function summarizeTweetsForTrend(twitterClient, trend) {
   const tweets = await twitterClient.v2.search(trend, { max_results: 10 })
-  const trendTweetTexts = tweets.data.map(tweet => tweet.text).join('\n\n')
+  let trendTweetTexts = ''
+  if (tweets && tweets._realData && Array.isArray(tweets._realData.data)) {
+    trendTweetTexts = tweets._realData.data
+      .map(tweet => tweet.text)
+      .join('\n\n')
+  } else {
+    return null
+    console.error('Failed to retrieve tweets or unexpected format:', tweets)
+  }
   await connectDB()
   const rspTweets = await Tweet.find({}).sort({ createdAt: -1 }) // Sort by creation date, newest first
   const rspTweetTexts = rspTweets.map(tweet => tweet.text).join('\n\n')
@@ -195,7 +203,8 @@ export async function summarizeTweetsForTrend(trend) {
 
    The tweets to summarize ${trendTweetTexts}
    @reality_spiral's previous tweets: ${rspTweetTexts}`
-
+  let summary = ''
+  let suggestedTweets = []
   try {
     // Schema for the response
     const parsedResponse = await getParsedOpenAIResponse(

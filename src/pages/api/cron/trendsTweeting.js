@@ -7,11 +7,19 @@ import { generateImage } from '@/utils/ai'
 export default async function handler(req, res) {
   try {
     // Fetch and process trending topics
-    // const trends = await fetchTrendingTopics()
+    // TESTING
+    // const trends = await fetchTrendingTopics(twitterClient, 'meme coins')
 
     // Iterate over each trend, summarize and post response
     // for (const trend of trends) {
-    //   const { summary, suggestedTweets } = await summarizeTweetsForTrend(trend)
+    // WORKING
+    // const { summary, suggestedTweets } = await summarizeTweetsForTrend(
+    //   twitterClient,
+    //   trend
+    // )
+    // console.log('Summary:', summary)
+    // console.log('Suggested tweets:', suggestedTweets)
+    // WORKING
     // Generate an image related to the tweet content
     //   const imagePrompt = `Create a vivid, visually engaging image that represents the essence of the following tweet: "${suggestedTweets[0]}"`
     //   const imageUrl = await generateImage(imagePrompt)
