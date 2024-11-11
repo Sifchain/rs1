@@ -1,6 +1,5 @@
 import { TwitterApi } from 'twitter-api-v2'
 import Agent from '@/models/Agent'
-import fs from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import { getParsedOpenAIResponse, generateImage } from '@/utils/ai'
@@ -155,12 +154,13 @@ export async function tweetImageWithText(twitterClient, imageUrl, tweetText) {
     const response = await fetch(imageUrl)
     if (!response.ok)
       throw new Error(`Failed to fetch image: ${response.statusText}`)
-
-    const imageBuffer = await response.arrayBuffer()
-    tempImagePath = path.join(__dirname, `temp-image-${uuidv4()}.png`)
-    fs.writeFileSync(tempImagePath, Buffer.from(imageBuffer))
+    // Fetch the image data as a buffer
+    const arrayBuffer = await response.arrayBuffer()
+    const imageBuffer = Buffer.from(arrayBuffer)
     // Step 2: Upload the image to Twitter
-    const mediaId = await twitterClient.v1.uploadMedia(tempImagePath)
+    const mediaId = await twitterClient.v1.uploadMedia(imageBuffer, {
+      mimeType: 'image/png', // Use the correct MIME type for your image
+    })
     console.log('Image uploaded successfully with media ID:', mediaId)
     // Step 3: Tweet with the uploaded image
     const result = await twitterClient.v2.tweet({
@@ -178,10 +178,6 @@ export async function tweetImageWithText(twitterClient, imageUrl, tweetText) {
     return result
   } catch (error) {
     console.error('Error tweeting image:', error)
-  } finally {
-    // Clean up by deleting the downloaded image
-    if (tempImagePath && fs.existsSync(tempImagePath))
-      fs.unlinkSync(tempImagePath)
   }
 }
 
