@@ -203,7 +203,7 @@ export async function fetchTrendingTopics() {
       let filteredTrends = trends
       try {
         const response = await getParsedOpenAIResponse(
-          `From the following list of trends, filter and return only existing trends focused on our crypto Twitter community, making up approximately 80% of the result, and include about 20% from other topics. Use only the provided trends and do not add any new ones or modify the names. If no crypto trends are available, limit the output to a small number of non-crypto trends. Return the filtered list as a JSON array. Input Trends: ${JSON.stringify(trends)}`,
+          `From the following list of trends, filter and return only existing trends focused on our crypto Twitter community, making up approximately 95% of the result, and include about 5% from other topics. Use only the provided trends and do not add any new ones or modify the names. If no crypto trends are available, limit the output to one non-crypto trends. Return the filtered list as a JSON array. Input Trends: ${JSON.stringify(trends)}`,
           TrendsSchema
         )
         filteredTrends = response.trends
