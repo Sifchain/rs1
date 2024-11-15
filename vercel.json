@@ -15,11 +15,5 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/trendsTweeting",
-      "schedule": "0 */3 * * *"
-    }
   ]
 }
