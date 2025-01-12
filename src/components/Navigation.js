@@ -74,6 +74,13 @@ function Navigation() {
             Agents
           </Link>
           <Link
+            onClick={() => window.location.href = 'https://sifchain.github.io/sa-eliza/#/README'}
+            fontFamily="Arial, sans-serif"
+            _hover={{ color: '#81d4fa' }}
+          >
+            Docs
+          </Link>
+          <Link
             href="https://t.me/reality_spiral"
             fontFamily="Arial, sans-serif"
             target="_blank"
