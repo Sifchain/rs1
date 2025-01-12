@@ -23,6 +23,9 @@ function Home() {
     if (isConnected) {
       router.push('/backrooms');
     }
+    if (router.pathname === '/docs') {
+      window.location.href = 'https://sifchain.github.io/sa-eliza/#/README';
+    }
   }, [isConnected, router]);
 
   if (!isConnected) {
