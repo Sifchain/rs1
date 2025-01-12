@@ -23,11 +23,14 @@ function Home() {
     if (isConnected) {
       router.push('/backrooms');
     }
+  }, [isConnected, router]);
+
+  useEffect(() => {
     if (router.pathname === '/docs') {
       window.location.href = 'https://sifchain.github.io/sa-eliza/#/README';
     }
-  }, [isConnected, router]);
-
+  }, [router.pathname]);
+  
   if (!isConnected) {
     return (
       <ChakraProvider>
